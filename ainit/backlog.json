@@ -1,0 +1,14 @@
+{
+  "project": "ainit",
+  "current_sprint": 1,
+  "last_story_id": 1,
+  "stories": [
+    {
+      "id": "STORY-1",
+      "title": "Support initializing new and existing directories",
+      "status": "implementing",
+      "branch": "feat/STORY-1-init-modes",
+      "pr_url": null
+    }
+  ]
+}

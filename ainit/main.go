@@ -51,27 +51,50 @@ func main() {
 	}
 	targetDir = absDir
 
+	// Create target directory if it doesn't exist
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		fmt.Fprintf(os.Stderr, "error: cannot create directory %s: %v\n", targetDir, err)
+		os.Exit(1)
+	}
+
 	scanner := bufio.NewScanner(os.Stdin)
 
 	fmt.Println("ainit — Multi-Agent Collaboration Project Initializer")
 	fmt.Println()
 
+	// Detect existing project metadata
+	detected := detectProject(targetDir)
+
 	// Project name
 	dirName := filepath.Base(targetDir)
-	projectName := prompt(scanner, "Project name", dirName)
+	defaultName := dirName
+	if detected.Name != "" {
+		defaultName = detected.Name
+	}
+	projectName := prompt(scanner, "Project name", defaultName)
 
 	// Description
-	description := promptRequired(scanner, "Short description")
+	defaultDesc := detected.Description
+	var description string
+	if defaultDesc != "" {
+		description = prompt(scanner, "Short description", defaultDesc)
+	} else {
+		description = promptRequired(scanner, "Short description")
+	}
 
 	fmt.Println()
 	fmt.Println("Tech stack:")
 
-	// Language — detect defaults from input
-	defaults := getDefaults("go") // start with go defaults for prompts
+	// Language — detect defaults from existing project or fallback to go
+	langKey := detected.LangKey
+	if langKey == "" {
+		langKey = "go"
+	}
+	defaults := getDefaults(langKey)
 	language := prompt(scanner, "  Language", defaults.Language)
 
 	// Re-detect defaults based on actual language input
-	langKey := detectLang(language)
+	langKey = detectLang(language)
 	defaults = getDefaults(langKey)
 
 	framework := prompt(scanner, "  Framework", defaults.Framework)
@@ -80,24 +103,34 @@ func main() {
 
 	fmt.Println()
 	fmt.Println("Directory structure (one entry per line, blank line to finish, press Enter for default):")
-	dirStructure := promptMultiline(scanner, defaults.DirStructure)
+	// Use detected directory structure if available, otherwise use language defaults
+	defaultDirStructure := defaults.DirStructure
+	if detected.DirStructure != "" {
+		defaultDirStructure = detected.DirStructure
+	}
+	dirStructure := promptMultiline(scanner, defaultDirStructure)
 
 	fmt.Println()
 	fmt.Println("Build & test:")
-	buildCmd := prompt(scanner, "  Build command", defaults.BuildCmd)
-	testCmd := prompt(scanner, "  Test command", defaults.TestCmd)
-	lintCmd := prompt(scanner, "  Lint command", defaults.LintCmd)
-
-	// Check for existing CLAUDE.md
-	claudeMDPath := filepath.Join(targetDir, "CLAUDE.md")
-	if _, err := os.Stat(claudeMDPath); err == nil {
-		fmt.Println()
-		confirm := prompt(scanner, "CLAUDE.md already exists. Overwrite? [y/N]", "N")
-		if strings.ToLower(confirm) != "y" {
-			fmt.Println("Cancelled.")
-			os.Exit(0)
-		}
+	// Use detected commands if available, otherwise use language defaults
+	defaultBuild := defaults.BuildCmd
+	if detected.BuildCmd != "" {
+		defaultBuild = detected.BuildCmd
 	}
+	defaultTest := defaults.TestCmd
+	if detected.TestCmd != "" {
+		defaultTest = detected.TestCmd
+	}
+	defaultLint := defaults.LintCmd
+	if detected.LintCmd != "" {
+		defaultLint = detected.LintCmd
+	}
+	buildCmd := prompt(scanner, "  Build command", defaultBuild)
+	testCmd := prompt(scanner, "  Test command", defaultTest)
+	lintCmd := prompt(scanner, "  Lint command", defaultLint)
+
+	// Check for existing files and confirm overwrite
+	skipFiles := confirmOverwrites(scanner, targetDir)
 
 	data := TemplateData{
 		ProjectName:  projectName,
@@ -116,22 +149,28 @@ func main() {
 	fmt.Println("Generated files:")
 
 	// 1. Generate CLAUDE.md from template
-	if err := generateClaudeMD(targetDir, data); err != nil {
-		fatal("failed to generate CLAUDE.md", err)
+	if !skipFiles["CLAUDE.md"] {
+		if err := generateClaudeMD(targetDir, data); err != nil {
+			fatal("failed to generate CLAUDE.md", err)
+		}
+		fmt.Println("  CLAUDE.md")
 	}
-	fmt.Println("  CLAUDE.md")
 
 	// 2. Copy workflow.md
-	if err := copyEmbedded(targetDir, "workflow.md", "templates/workflow.md"); err != nil {
-		fatal("failed to generate workflow.md", err)
+	if !skipFiles["workflow.md"] {
+		if err := copyEmbedded(targetDir, "workflow.md", "templates/workflow.md"); err != nil {
+			fatal("failed to generate workflow.md", err)
+		}
+		fmt.Println("  workflow.md")
 	}
-	fmt.Println("  workflow.md")
 
 	// 3. Generate backlog.json
-	if err := generateBacklog(targetDir, projectName); err != nil {
-		fatal("failed to generate backlog.json", err)
+	if !skipFiles["backlog.json"] {
+		if err := generateBacklog(targetDir, projectName); err != nil {
+			fatal("failed to generate backlog.json", err)
+		}
+		fmt.Println("  backlog.json")
 	}
-	fmt.Println("  backlog.json")
 
 	// 4. Create backlog/ directory
 	backlogDir := filepath.Join(targetDir, "backlog")
