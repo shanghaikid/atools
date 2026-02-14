@@ -2,32 +2,20 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"embed"
 	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
-	"text/template"
+	"time"
 )
 
 //go:embed templates/*
 var templateFS embed.FS
-
-// TemplateData holds all variables for CLAUDE.md template rendering.
-type TemplateData struct {
-	ProjectName  string
-	Description  string
-	Language     string
-	Framework    string
-	Database     string
-	Other        string
-	DirStructure string
-	BuildCmd     string
-	TestCmd      string
-	LintCmd      string
-}
 
 // Backlog is the backlog.json structure.
 type Backlog struct {
@@ -62,98 +50,24 @@ func main() {
 	fmt.Println("ainit — Multi-Agent Collaboration Project Initializer")
 	fmt.Println()
 
-	// Detect existing project metadata
+	// Project name (needed for backlog.json)
+	defaultName := filepath.Base(targetDir)
 	detected := detectProject(targetDir)
-
-	// Project name
-	dirName := filepath.Base(targetDir)
-	defaultName := dirName
 	if detected.Name != "" {
 		defaultName = detected.Name
 	}
 	projectName := prompt(scanner, "Project name", defaultName)
 
-	// Description
-	defaultDesc := detected.Description
-	var description string
-	if defaultDesc != "" {
-		description = prompt(scanner, "Short description", defaultDesc)
-	} else {
-		description = promptRequired(scanner, "Short description")
-	}
-
-	fmt.Println()
-	fmt.Println("Tech stack:")
-
-	// Language — detect defaults from existing project or fallback to go
-	langKey := detected.LangKey
-	if langKey == "" {
-		langKey = "go"
-	}
-	defaults := getDefaults(langKey)
-	language := prompt(scanner, "  Language", defaults.Language)
-
-	// Re-detect defaults based on actual language input
-	langKey = detectLang(language)
-	defaults = getDefaults(langKey)
-
-	framework := prompt(scanner, "  Framework", defaults.Framework)
-	database := prompt(scanner, "  Database (enter None if N/A)", defaults.Database)
-	other := prompt(scanner, "  Other tools", defaults.Other)
-
-	fmt.Println()
-	fmt.Println("Directory structure (one entry per line, blank line to finish, press Enter for default):")
-	// Use detected directory structure if available, otherwise use language defaults
-	defaultDirStructure := defaults.DirStructure
-	if detected.DirStructure != "" {
-		defaultDirStructure = detected.DirStructure
-	}
-	dirStructure := promptMultiline(scanner, defaultDirStructure)
-
-	fmt.Println()
-	fmt.Println("Build & test:")
-	// Use detected commands if available, otherwise use language defaults
-	defaultBuild := defaults.BuildCmd
-	if detected.BuildCmd != "" {
-		defaultBuild = detected.BuildCmd
-	}
-	defaultTest := defaults.TestCmd
-	if detected.TestCmd != "" {
-		defaultTest = detected.TestCmd
-	}
-	defaultLint := defaults.LintCmd
-	if detected.LintCmd != "" {
-		defaultLint = detected.LintCmd
-	}
-	buildCmd := prompt(scanner, "  Build command", defaultBuild)
-	testCmd := prompt(scanner, "  Test command", defaultTest)
-	lintCmd := prompt(scanner, "  Lint command", defaultLint)
-
 	// Check for existing files and confirm overwrite
 	skipFiles := confirmOverwrites(scanner, targetDir)
 
-	data := TemplateData{
-		ProjectName:  projectName,
-		Description:  description,
-		Language:     language,
-		Framework:    framework,
-		Database:     database,
-		Other:        other,
-		DirStructure: dirStructure,
-		BuildCmd:     buildCmd,
-		TestCmd:      testCmd,
-		LintCmd:      lintCmd,
-	}
-
 	fmt.Println()
-	fmt.Println("Generated files:")
 
-	// 1. Generate CLAUDE.md from template
+	// 1. Generate CLAUDE.md via claude CLI + append backlog protocol
 	if !skipFiles["CLAUDE.md"] {
-		if err := generateClaudeMD(targetDir, data); err != nil {
+		if err := generateClaudeMD(targetDir); err != nil {
 			fatal("failed to generate CLAUDE.md", err)
 		}
-		fmt.Println("  CLAUDE.md")
 	}
 
 	// 2. Copy workflow.md
@@ -198,6 +112,88 @@ func main() {
 	fmt.Println("Initialization complete!")
 }
 
+// generateClaudeMD uses the claude CLI to analyze the codebase and generate CLAUDE.md,
+// then appends the backlog protocol section.
+func generateClaudeMD(targetDir string) error {
+	claudeMDPath := filepath.Join(targetDir, "CLAUDE.md")
+
+	// Check if claude CLI is available
+	if _, err := exec.LookPath("claude"); err != nil {
+		fmt.Println("  claude CLI not found, skipping AI analysis.")
+		fmt.Println("  Install from https://docs.anthropic.com/en/docs/claude-code")
+		fmt.Println("  Generating CLAUDE.md with backlog protocol only...")
+		// Write just the backlog protocol section
+		protocol, err := fs.ReadFile(templateFS, "templates/backlog-protocol.md")
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(claudeMDPath, protocol, 0644); err != nil {
+			return err
+		}
+		fmt.Println("  CLAUDE.md")
+		return nil
+	}
+
+	fmt.Print("  Generating CLAUDE.md with claude CLI...")
+
+	promptText := `Analyze the codebase in the current directory and generate a CLAUDE.md file. Include:
+- Project name and one-line description
+- Tech stack (language, framework, database, other tools)
+- Directory structure overview
+- Build, test, and lint commands
+- Coding standards and conventions found in the codebase
+- Any important architectural patterns or project-specific notes
+
+Output the complete CLAUDE.md content in markdown format. Do not wrap it in code fences.`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "claude", "-p",
+		"--output-format", "text",
+		"--no-session-persistence",
+		promptText,
+	)
+	cmd.Dir = targetDir
+
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Println(" failed.")
+		if ctx.Err() == context.DeadlineExceeded {
+			fmt.Println("  Timed out. Generating CLAUDE.md with backlog protocol only...")
+		} else {
+			fmt.Printf("  claude CLI error: %v\n", err)
+			fmt.Println("  Generating CLAUDE.md with backlog protocol only...")
+		}
+		// Fallback: write just the backlog protocol
+		protocol, readErr := fs.ReadFile(templateFS, "templates/backlog-protocol.md")
+		if readErr != nil {
+			return readErr
+		}
+		if writeErr := os.WriteFile(claudeMDPath, protocol, 0644); writeErr != nil {
+			return writeErr
+		}
+		fmt.Println("  CLAUDE.md")
+		return nil
+	}
+
+	fmt.Println(" done.")
+
+	// Append backlog protocol to claude's output
+	protocol, err := fs.ReadFile(templateFS, "templates/backlog-protocol.md")
+	if err != nil {
+		return err
+	}
+
+	content := strings.TrimSpace(string(output)) + "\n\n" + string(protocol)
+	if err := os.WriteFile(claudeMDPath, []byte(content), 0644); err != nil {
+		return err
+	}
+
+	fmt.Println("  CLAUDE.md")
+	return nil
+}
+
 func prompt(scanner *bufio.Scanner, label, defaultVal string) string {
 	fmt.Printf("%s [%s]: ", label, defaultVal)
 	if scanner.Scan() {
@@ -207,66 +203,6 @@ func prompt(scanner *bufio.Scanner, label, defaultVal string) string {
 		}
 	}
 	return defaultVal
-}
-
-func promptRequired(scanner *bufio.Scanner, label string) string {
-	for {
-		fmt.Printf("%s: ", label)
-		if scanner.Scan() {
-			input := strings.TrimSpace(scanner.Text())
-			if input != "" {
-				return input
-			}
-		}
-		fmt.Println("  (required)")
-	}
-}
-
-func promptMultiline(scanner *bufio.Scanner, defaultVal string) string {
-	fmt.Print("> ")
-	if !scanner.Scan() {
-		return defaultVal
-	}
-	firstLine := strings.TrimSpace(scanner.Text())
-	if firstLine == "" {
-		return defaultVal
-	}
-
-	var lines []string
-	lines = append(lines, firstLine)
-	for {
-		fmt.Print("> ")
-		if !scanner.Scan() {
-			break
-		}
-		line := scanner.Text()
-		if strings.TrimSpace(line) == "" {
-			break
-		}
-		lines = append(lines, line)
-	}
-	return strings.Join(lines, "\n")
-}
-
-func generateClaudeMD(targetDir string, data TemplateData) error {
-	tmplBytes, err := templateFS.ReadFile("templates/CLAUDE.md.tmpl")
-	if err != nil {
-		return err
-	}
-
-	tmpl, err := template.New("CLAUDE.md").Delims("[[", "]]").Parse(string(tmplBytes))
-	if err != nil {
-		return err
-	}
-
-	outPath := filepath.Join(targetDir, "CLAUDE.md")
-	f, err := os.Create(outPath)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	return tmpl.Execute(f, data)
 }
 
 func generateBacklog(targetDir, projectName string) error {
