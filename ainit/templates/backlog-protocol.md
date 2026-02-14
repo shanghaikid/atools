@@ -1,3 +1,15 @@
+## Development Workflow (MANDATORY)
+
+When receiving a new feature request or change request, **DO NOT modify code directly**. You MUST follow this workflow:
+
+1. Read `backlog.json` to get the current `last_story_id`, increment it for the new story
+2. Create a story entry in `backlog.json` index and a `backlog/STORY-N.json` detail file, status set to `ready`
+3. Create a feature branch: `git checkout -b feat/STORY-N-slug`
+4. Progress the story through: `ready → designing → implementing → reviewing/testing → done`
+5. Each status transition must be recorded in `audit_log` and synced to both `backlog.json` and `backlog/STORY-N.json`
+
+**Code changes without a registered backlog story are NOT allowed.**
+
 ## Backlog Protocol
 
 This project uses `backlog.json` (index) + `backlog/STORY-N.json` (details) for requirements management, replacing the traditional `.context/` file approach.
