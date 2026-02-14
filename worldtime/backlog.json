@@ -1,0 +1,14 @@
+{
+  "project": "worldtime",
+  "current_sprint": 1,
+  "last_story_id": 1,
+  "stories": [
+    {
+      "id": "STORY-1",
+      "title": "World time CLI with live display",
+      "status": "implementing",
+      "branch": "feat/STORY-1-worldtime-cli",
+      "pr_url": null
+    }
+  ]
+}

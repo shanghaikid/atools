@@ -1,0 +1,154 @@
+{
+  "id": "STORY-1",
+  "title": "World time CLI with live display",
+  "description": "Build a Go CLI program that displays world time. It shows the current time for 10 major cities around the world by default, dynamically updates the display like a live clock, and allows users to specify custom cities via command-line arguments. This is a new Go project so go.mod and full project structure need to be set up from scratch.",
+  "priority": "high",
+  "sprint": 1,
+  "status": "implementing",
+  "branch": "feat/STORY-1-worldtime-cli",
+  "pr_url": null,
+  "acceptance_criteria": [
+    "Program displays current time for 10 major cities by default",
+    "Display updates dynamically (live clock, refreshing every second)",
+    "Users can specify custom cities via command-line arguments (e.g., --cities or positional args)",
+    "Time zones are displayed correctly with city names",
+    "Program handles invalid city/timezone names gracefully",
+    "Clean terminal output with proper formatting",
+    "go.mod is initialized and project builds successfully",
+    "Program exits cleanly on Ctrl+C"
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Initialize Go module and project structure",
+      "status": "done",
+      "assignee": "coder",
+      "description": "Run 'go mod init github.com/ryjiang/worldtime' to create go.mod. Create the directory structure: main.go (entry point), internal/cities/cities.go (city/timezone mapping), internal/display/display.go (terminal rendering logic)."
+    },
+    {
+      "id": "TASK-2",
+      "title": "Implement city-to-timezone mapping",
+      "status": "done",
+      "assignee": "coder",
+      "description": "Create internal/cities/cities.go. Define a City struct with Name and Timezone fields. Provide a DefaultCities() function returning 10 major cities. Provide a ParseCities(args []string) function. Include 40+ city mappings."
+    },
+    {
+      "id": "TASK-3",
+      "title": "Implement terminal display with live updates",
+      "status": "done",
+      "assignee": "coder",
+      "description": "Create internal/display/display.go with Render and Run functions using ANSI escape codes and time.Ticker."
+    },
+    {
+      "id": "TASK-4",
+      "title": "Implement main.go with CLI argument parsing",
+      "status": "done",
+      "assignee": "coder",
+      "description": "Create main.go with os.Args parsing, signal handling for SIGINT/SIGTERM, and display.Run() launch."
+    },
+    {
+      "id": "TASK-5",
+      "title": "Write unit tests",
+      "status": "done",
+      "assignee": "coder",
+      "description": "Created cities_test.go (7 tests) and display_test.go (5 tests). All 12 tests pass."
+    }
+  ],
+  "design": {
+    "summary": "A simple Go CLI application using only the standard library. The project has a flat structure with a main.go entry point and two internal packages: 'cities' for city-to-timezone mapping and parsing, and 'display' for terminal rendering with live updates. The display uses ANSI escape codes to clear and refresh the screen every second. Signal handling ensures clean exit on Ctrl+C. City names are passed as positional CLI arguments; if none are given, 10 default major cities are shown.",
+    "files_involved": [
+      {"path": "go.mod", "action": "create", "reason": "Initialize Go module for the project"},
+      {"path": "main.go", "action": "create", "reason": "Entry point: CLI argument parsing, signal handling, launching the display loop"},
+      {"path": "internal/cities/cities.go", "action": "create", "reason": "City struct definition, default cities list, city name to timezone mapping and parsing"},
+      {"path": "internal/cities/cities_test.go", "action": "create", "reason": "Unit tests for city mapping and parsing logic"},
+      {"path": "internal/display/display.go", "action": "create", "reason": "Terminal rendering: formatted table output with ANSI clear, live update loop with time.Ticker"},
+      {"path": "internal/display/display_test.go", "action": "create", "reason": "Unit tests for display rendering output format"}
+    ],
+    "decisions": [
+      {
+        "choice": "Standard library only, no external dependencies",
+        "alternatives": ["Use cobra for CLI", "Use tcell/bubbletea for TUI"],
+        "reason": "The requirements are simple enough that the standard library suffices. Keeps the project dependency-free and easy to build."
+      },
+      {
+        "choice": "Positional arguments for city names (not --cities flag)",
+        "alternatives": ["--cities flag with comma-separated values"],
+        "reason": "Simpler UX: 'worldtime London Tokyo' is more natural than 'worldtime --cities London,Tokyo'"
+      },
+      {
+        "choice": "ANSI escape codes for screen clearing",
+        "alternatives": ["Use a TUI library", "Print newlines between updates"],
+        "reason": "ANSI codes are widely supported, keep output clean without external deps. Works on macOS/Linux terminals."
+      },
+      {
+        "choice": "Internal packages under internal/",
+        "alternatives": ["Everything in main package", "pkg/ directory"],
+        "reason": "internal/ prevents external import while keeping clean separation. Appropriate for a CLI tool."
+      }
+    ],
+    "steps": [
+      "Initialize go.mod",
+      "Create internal/cities/cities.go with City struct, DefaultCities, city mapping, and ParseCities",
+      "Create internal/display/display.go with Render and Run functions",
+      "Create main.go with argument parsing, signal handling, and display launch",
+      "Create unit tests for cities and display packages",
+      "Verify build and run"
+    ]
+  },
+  "implementation": {
+    "changes": [
+      {"file": "go.mod", "action": "created", "reason": "Go module initialization"},
+      {"file": ".gitignore", "action": "created", "reason": "Ignore compiled binary"},
+      {"file": "main.go", "action": "created", "reason": "CLI entry point with argument parsing and signal handling"},
+      {"file": "internal/cities/cities.go", "action": "created", "reason": "City struct, 40+ city-timezone mappings, DefaultCities and ParseCities functions"},
+      {"file": "internal/cities/cities_test.go", "action": "created", "reason": "7 unit tests for city parsing logic"},
+      {"file": "internal/display/display.go", "action": "created", "reason": "ANSI-based terminal rendering with live update loop"},
+      {"file": "internal/display/display_test.go", "action": "created", "reason": "5 unit tests for display rendering"}
+    ],
+    "build_status": "pass",
+    "deviations": [
+      {"from": "design", "change": "Added .gitignore file", "reason": "Prevent compiled binary from being committed"},
+      {"from": "design", "change": "Used custom titleCase instead of strings.Title", "reason": "strings.Title is deprecated since Go 1.18"}
+    ]
+  },
+  "review": null,
+  "testing": null,
+  "audit_log": [
+    {
+      "timestamp": "2026-02-14T00:00:00Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Created story for world time CLI: live-updating display of current time across 10 major cities, with support for custom city arguments"
+    },
+    {
+      "timestamp": "2026-02-14T00:01:00Z",
+      "agent": "team-lead",
+      "action": "branch_created",
+      "detail": "Created feature branch feat/STORY-1-worldtime-cli"
+    },
+    {
+      "timestamp": "2026-02-14T00:02:00Z",
+      "agent": "team-lead",
+      "action": "status_changed",
+      "detail": "Status changed from ready to designing, launching architect"
+    },
+    {
+      "timestamp": "2026-02-14T00:03:00Z",
+      "agent": "architect",
+      "action": "design_completed",
+      "detail": "Design complete: 6 files, 5 tasks, standard library only approach with internal packages for cities and display"
+    },
+    {
+      "timestamp": "2026-02-14T00:04:00Z",
+      "agent": "team-lead",
+      "action": "status_changed",
+      "detail": "Status changed from designing to implementing, launching coder"
+    },
+    {
+      "timestamp": "2026-02-14T00:05:00Z",
+      "agent": "coder",
+      "action": "implementation_completed",
+      "detail": "All 5 tasks done. 7 files created. Build passes. 12/12 tests pass."
+    }
+  ]
+}
