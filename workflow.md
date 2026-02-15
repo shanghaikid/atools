@@ -121,7 +121,7 @@ backlog → ready → designing → implementing → reviewing/testing → done
 3. **Review & test**: reviewer uses `git diff main...{branch}` to review, tester runs tests on the branch
 4. **Merge**: `git checkout main && git merge --squash {branch} && git commit`
 5. **Conflict resolution**: if merge conflicts occur, resolve them before committing
-6. **Cleanup**: `git branch -d feat/STORY-{id}-{slug}`
+6. **Cleanup**: `git branch -D feat/STORY-{id}-{slug}` (squash merge requires `-D`)
 
 ## Model Tier Strategy
 
