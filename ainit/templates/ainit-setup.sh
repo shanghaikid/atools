@@ -39,11 +39,20 @@ for f in "$TEMPLATE_DIR"/agents/*.md; do
 done
 echo "  .claude/agents/ ($(ls .claude/agents/*.md 2>/dev/null | wc -l | tr -d ' ') agents)"
 
-# --- Step 2: Install backlog CLI ---
+# --- Step 2: Copy skills (reference docs) ---
+if [ -d "$TEMPLATE_DIR/skills" ]; then
+  mkdir -p .claude/skills
+  for f in "$TEMPLATE_DIR"/skills/*.md; do
+    [ -f "$f" ] && cp "$f" .claude/skills/
+  done
+  echo "  .claude/skills/ ($(ls .claude/skills/*.md 2>/dev/null | wc -l | tr -d ' ') skills)"
+fi
+
+# --- Step 3: Install backlog CLI ---
 cp "$TEMPLATE_DIR/backlog.mjs" backlog.mjs
 echo "  backlog.mjs"
 
-# --- Step 3: Create backlog infrastructure ---
+# --- Step 4: Create backlog infrastructure ---
 if [ ! -f backlog.json ]; then
   printf '{"project": "%s", "current_sprint": 1, "last_story_id": 0, "stories": []}\n' "$PROJECT_NAME" > backlog.json
   echo "  backlog.json (created)"
@@ -53,11 +62,11 @@ fi
 mkdir -p backlog
 echo "  backlog/"
 
-# --- Step 4: Copy workflow.md ---
+# --- Step 5: Copy workflow.md ---
 cp "$TEMPLATE_DIR/workflow.md" workflow.md
 echo "  workflow.md"
 
-# --- Step 5: Update CLAUDE.md ---
+# --- Step 6: Update CLAUDE.md ---
 if [ -f CLAUDE.md ]; then
   if grep -q "## Development Workflow (MANDATORY)" CLAUDE.md 2>/dev/null; then
     echo "  CLAUDE.md (backlog protocol already present, skipped)"

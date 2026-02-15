@@ -1,0 +1,44 @@
+{
+  "id": "STORY-2",
+  "title": "Enhance agents and add skills from everything-claude-code",
+  "description": "Absorb and optimize agent patterns and skills from everything-claude-code reference repo. Enhance existing 6 agents with richer checklists (security, code quality, confidence-based filtering, language-agnostic patterns). Add 2 new specialist agents (security-reviewer, build-resolver). Add installable skills system for reference knowledge. All content must be language-agnostic, supporting frontend, backend, Go, Python, TypeScript, Java, etc.",
+  "priority": "high",
+  "sprint": 1,
+  "status": "done",
+  "branch": "feat/STORY-2-enhance-agents-and-add-skills-from-every",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "Existing 6 agents enhanced with richer review checklists and patterns",
+    "New security-reviewer agent added",
+    "New build-resolver agent added",
+    "Skills directory with 4+ reference skills installed by ainit",
+    "All agents and skills are language-agnostic",
+    "make build passes",
+    "make test passes"
+  ],
+  "tasks": [],
+  "design": null,
+  "implementation": null,
+  "review": null,
+  "testing": null,
+  "audit_log": [
+    {
+      "timestamp": "2026-02-15T07:55:59.425Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Enhance agents and add skills from everything-claude-code"
+    },
+    {
+      "timestamp": "2026-02-15T07:56:05.110Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Enhance agents and add skills from everything-claude-code reference"
+    },
+    {
+      "timestamp": "2026-02-15T08:05:46.503Z",
+      "agent": "team-lead",
+      "action": "implementation_completed",
+      "detail": "Enhanced 6 existing agents with richer checklists, added security-reviewer and build-resolver agents, added 4 skills (coding-patterns, testing-patterns, security-checklist, verification-loop). Updated installer and setup script."
+    }
+  ]
+}

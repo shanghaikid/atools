@@ -61,23 +61,28 @@ node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail 
 - coder implements tasks one by one using CLI
 
 **Phase 3: Validation (parallel)**
-- Launch tester (sonnet) and reviewer (haiku) simultaneously
-- Both reference the story file path
-- Reviewer uses `git diff main...{branch}` to get code changes
+- Launch tester (sonnet), reviewer (haiku), and security-reviewer (sonnet) simultaneously
+- All reference the story file path
+- Reviewer and security-reviewer use `git diff main...{branch}` to get code changes
 
 **Phase 4: Decision**
-- Read review and testing verdicts:
+- Read review, security review, and testing verdicts:
   ```bash
   node backlog.mjs show STORY-N
   ```
-- critical or test failure → update status and log:
+- critical finding (from reviewer or security-reviewer) or test failure → update status and log:
   ```bash
   node backlog.mjs status STORY-N implementing
   node backlog.mjs log STORY-N --agent team-lead --action rework_required --detail "reason"
   ```
-  then relaunch coder
+  then relaunch coder (or build-resolver if the issue is a build failure)
 - pass → proceed to phase 5
 - **Maximum 2 rework rounds**
+
+**Build Failure Recovery**
+- If the coder reports `build_status: fail`, launch build-resolver (sonnet) to fix build errors
+- build-resolver makes surgical fixes only, then reports back
+- After build-resolver succeeds, proceed with the normal validation phase
 
 **Phase 5: Merge & Wrap Up** (automatic — do NOT wait for user confirmation)
 ```bash
@@ -114,8 +119,21 @@ Task(
 ```
 
 Use `model = "haiku"` for reviewer and docs-sync.
+Use `model = "sonnet"` for security-reviewer and build-resolver.
 
 All agents use the backlog CLI for reading and writing story data.
+
+### Available Agents
+
+| Agent | Model | When to Use |
+|-------|-------|-------------|
+| architect | sonnet | Design phase — analyze requirements, create design |
+| coder | sonnet | Implementation phase — write code per design |
+| tester | sonnet | Validation phase — write and run tests |
+| reviewer | haiku | Validation phase — code quality review |
+| security-reviewer | sonnet | Validation phase — security-focused review (parallel with reviewer) |
+| build-resolver | sonnet | Recovery — fix build errors with surgical changes |
+| docs-sync | haiku | Post-merge — update documentation |
 
 ## Decision Rules
 
