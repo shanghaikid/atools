@@ -45,6 +45,11 @@ func main() {
 			os.Exit(1)
 		}
 	}
+
+	if err := installFile("templates/backlog.mjs", filepath.Join(templateDir, "backlog.mjs")); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
 	fmt.Println("  ~/.claude/ainit-templates/")
 
 	fmt.Println()

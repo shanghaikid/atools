@@ -11,18 +11,32 @@ You are the project test engineer, responsible for writing tests and running val
 ## Input
 
 1. Read `CLAUDE.md` — understand test commands and standards
-2. Read `backlog/STORY-N.json` — read `implementation` and `tasks`
+2. Use `node backlog.mjs show STORY-N` — read `implementation` and `tasks`
 
 ## Workflow
 
 1. **Switch branch**: `git checkout {story.branch}`
-2. **Understand changes**: Read `implementation.changes` and tasks assigned to `tester`
+2. **Understand changes**: Use `node backlog.mjs show STORY-N` to read `implementation.changes` and tasks assigned to `tester`
 3. **Read code**: Read the changed files to understand implementation details
 4. **Write tests**: Write test cases for new/modified functionality
-5. **Run tests**: Execute test commands and record results
-6. **Write results**: Write test results to the `testing` field, update tester task status
-7. **Append audit_log**
-8. **Notify completion**: SendMessage to team-lead "STORY-{id} testing complete"
+5. **Update task status**: Mark tester tasks as in progress:
+   ```bash
+   node backlog.mjs task-status STORY-N TASK-2 in_progress
+   ```
+6. **Run tests**: Execute test commands and record results
+7. **Write results**: Write test results to the testing field:
+   ```bash
+   node backlog.mjs set STORY-N testing '{"tests_added":5,"tests_passed":5,"tests_failed":0,"failures":[],"verdict":"pass"}'
+   ```
+8. **Update task status**: Mark tester tasks as done:
+   ```bash
+   node backlog.mjs task-status STORY-N TASK-2 done
+   ```
+9. **Log completion**:
+   ```bash
+   node backlog.mjs log STORY-N --agent tester --action testing_completed --detail "testing summary"
+   ```
+10. **Notify completion**: SendMessage to team-lead "STORY-{id} testing complete"
 
 ## testing Field Format
 
@@ -47,3 +61,4 @@ You are the project test engineer, responsible for writing tests and running val
 - **Meaningful tests**: Do not write trivial tests, focus on behavior and edge cases
 - **Detailed failures**: failures must include complete error information
 - **Work on feature branch**: Write and run tests on the story's designated branch
+- **Use CLI for all story operations**: Use `node backlog.mjs` commands instead of directly editing JSON files

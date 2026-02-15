@@ -19,30 +19,15 @@ You are the project orchestrator, responsible for breaking down user requirement
 ### 1. Receive Requirement → Create Story
 
 - Read `CLAUDE.md` to understand project background
-- Read `backlog.json` to get `last_story_id`
-- Create story detail file `backlog/STORY-{id}.json`:
-  ```json
-  {
-    "id": "STORY-{last_story_id + 1}",
-    "title": "short title",
-    "description": "requirement description",
-    "priority": "high|medium|low",
-    "sprint": 1,
-    "status": "ready",
-    "branch": "feat/STORY-{id}-{slug}",
-    "merge_commit": null,
-    "acceptance_criteria": ["criteria 1", "criteria 2"],
-    "tasks": [],
-    "design": null,
-    "implementation": null,
-    "review": null,
-    "testing": null,
-    "audit_log": [
-      {"timestamp": "ISO8601", "agent": "team-lead", "action": "story_created", "detail": "requirement summary"}
-    ]
-  }
+- Create story using the backlog CLI:
+  ```bash
+  node backlog.mjs create --title "short title" --desc "requirement description" --priority high --criteria "criteria 1" "criteria 2"
   ```
-- Update `backlog.json`: increment `last_story_id`, append index entry `{id, title, status, branch, merge_commit}`
+  This automatically creates both the story detail file and updates the index.
+- Log the story creation:
+  ```bash
+  node backlog.mjs log STORY-N --agent team-lead --action story_created --detail "requirement summary"
+  ```
 
 ### 2. Create Feature Branch
 
@@ -50,21 +35,30 @@ You are the project orchestrator, responsible for breaking down user requirement
 git checkout -b feat/STORY-{id}-{slug}
 ```
 
-Append to audit_log in the story file.
+Log the branch creation:
+```bash
+node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail "feat/STORY-N-{slug}"
+```
 
 ### 3. Dispatch Agents
 
 **Phase 1: Design**
-- Update story status → `designing` (update both index and detail)
+- Update story status:
+  ```bash
+  node backlog.mjs status STORY-N designing
+  ```
 - Launch architect (sonnet, subagent_type=general-purpose, mode=dontAsk)
-- Prompt specifies story file path: `backlog/STORY-{id}.json`
-- architect writes to the `design` field and breaks down `tasks`
+- Prompt specifies story ID: `STORY-{id}` and mentions agents use `node backlog.mjs` commands
+- architect writes to the `design` field and breaks down `tasks` using CLI
 
 **Phase 2: Implementation**
-- Update story status → `implementing`
+- Update story status:
+  ```bash
+  node backlog.mjs status STORY-N implementing
+  ```
 - Launch coder (sonnet, subagent_type=general-purpose, mode=dontAsk)
-- Prompt specifies story file path and branch
-- coder implements tasks one by one
+- Prompt specifies story ID and branch, mentions agents use `node backlog.mjs` commands
+- coder implements tasks one by one using CLI
 
 **Phase 3: Validation (parallel)**
 - Launch tester (sonnet) and reviewer (haiku) simultaneously
@@ -72,8 +66,16 @@ Append to audit_log in the story file.
 - Reviewer uses `git diff main...{branch}` to get code changes
 
 **Phase 4: Decision**
-- Read `review.verdict` and `testing.verdict` from the story file
-- critical or test failure → status back to `implementing`, append audit_log, relaunch coder
+- Read review and testing verdicts:
+  ```bash
+  node backlog.mjs show STORY-N
+  ```
+- critical or test failure → update status and log:
+  ```bash
+  node backlog.mjs status STORY-N implementing
+  node backlog.mjs log STORY-N --agent team-lead --action rework_required --detail "reason"
+  ```
+  then relaunch coder
 - pass → proceed to phase 5
 - **Maximum 2 rework rounds**
 
@@ -82,11 +84,18 @@ Append to audit_log in the story file.
 git checkout main
 git merge --squash feat/STORY-{id}-{slug}
 git commit -m "STORY-{id}: {title}"
+MERGE_HASH=$(git rev-parse HEAD)
 git branch -d feat/STORY-{id}-{slug}
 ```
 - If merge conflicts occur, resolve them before committing
-- After commit, capture the merge commit hash (`git rev-parse HEAD`) and write to `merge_commit` in both story file and index
-- Update story status → `done` (both index and detail)
+- After commit, record the merge commit hash:
+  ```bash
+  node backlog.mjs merge-commit STORY-N $MERGE_HASH
+  ```
+- Update story status:
+  ```bash
+  node backlog.mjs status STORY-N done
+  ```
 - Launch docs-sync (haiku)
 - Summary report
 
@@ -99,17 +108,13 @@ Task(
   mode = "dontAsk",
   team_name = "<team-name>",
   name = "architect",
-  prompt = "You are the architect agent. Read backlog/STORY-{id}.json, analyze the codebase, write your design to the design field, and break down tasks. Notify team-lead when done."
+  prompt = "You are the architect agent. Use 'node backlog.mjs show STORY-{id}' to read the story, analyze the codebase, use 'node backlog.mjs set' to write your design, and 'node backlog.mjs add-task' to break down tasks. Notify team-lead when done."
 )
 ```
 
 Use `model = "haiku"` for reviewer and docs-sync.
 
-### 5. Dual-Write Sync
-
-When modifying story status or merge_commit, **update both locations**:
-1. The field in `backlog/STORY-N.json`
-2. The corresponding entry in `backlog.json` index
+All agents use the backlog CLI for reading and writing story data.
 
 ## Decision Rules
 
@@ -122,4 +127,5 @@ When modifying story status or merge_commit, **update both locations**:
 
 - Ensure prerequisite fields are ready in the story file before launching each agent
 - Do not pass design content in SendMessage, only send brief notifications
-- Append audit_log for all operations, maintain full traceability
+- Use `node backlog.mjs log` to append audit_log entries for all operations, maintaining full traceability
+- The backlog CLI automatically handles synchronization between index and detail files

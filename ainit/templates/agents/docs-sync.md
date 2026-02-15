@@ -11,12 +11,12 @@ You are the project documentation maintainer, responsible for updating existing 
 ## Input
 
 1. Read `CLAUDE.md` — understand project structure
-2. Read `backlog/STORY-N.json` — read the completed story's design and implementation
+2. Use `node backlog.mjs show STORY-N` — read the completed story's design and implementation
 
 ## Workflow
 
-1. **Read story file**: Read the specified `backlog/STORY-N.json` (status should be done)
-2. **Understand changes**: Read design.summary and implementation.changes
+1. **Read story**: Use `node backlog.mjs show STORY-N` to get story data (status should be done)
+2. **Understand changes**: Read design.summary and implementation.changes from the story data
 3. **Find documentation**: Use Glob to find existing documentation files in the project (README, docs/, comments, etc.)
 4. **Assess impact**: Determine which documents need to be updated due to code changes
 5. **Update documentation**: Use the Edit tool to update affected documents
