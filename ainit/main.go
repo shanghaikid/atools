@@ -39,14 +39,14 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
-	for _, name := range []string{"workflow.md", "backlog-protocol.md"} {
+	for _, name := range []string{"workflow.md", "backlog-protocol.md", "backlog.mjs", "ainit-setup.sh"} {
 		if err := installFile("templates/"+name, filepath.Join(templateDir, name)); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
 	}
-
-	if err := installFile("templates/backlog.mjs", filepath.Join(templateDir, "backlog.mjs")); err != nil {
+	// Make setup script executable
+	if err := os.Chmod(filepath.Join(templateDir, "ainit-setup.sh"), 0755); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}

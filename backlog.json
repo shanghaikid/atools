@@ -1,1 +1,1 @@
-{"project": "agent-platform-tools", "current_sprint": 1, "last_story_id": 0, "stories": []}
+{"project": "agent-platform-tools", "current_sprint": 1, "last_story_id": 1, "stories": [{"id": "STORY-1", "title": "Optimize ainit slash command to use shell script instead of per-file LLM tool calls", "status": "done", "branch": "feat/STORY-1-ainit-fast-init", "merge_commit": "0f8c5a8"}]}

@@ -1,0 +1,59 @@
+{
+  "id": "STORY-1",
+  "title": "Optimize ainit slash command to use shell script instead of per-file LLM tool calls",
+  "description": "The /ainit slash command currently instructs Claude to read and write template files one by one (~20 tool calls, each a full LLM round-trip), making initialization very slow. Refactor to embed a shell script that performs all file copies in a single bash execution, reducing tool calls from ~20 to 2-3.",
+  "priority": "high",
+  "sprint": 1,
+  "status": "done",
+  "branch": "feat/STORY-1-ainit-fast-init",
+  "merge_commit": "0f8c5a8",
+  "acceptance_criteria": [
+    "ainit binary installs an ainit-setup.sh script to ~/.claude/ainit-templates/",
+    "The shell script handles all file copying, directory creation, backlog.json initialization, and CLAUDE.md appending",
+    "The /ainit slash command is simplified to: run the script, then confirm results",
+    "Project initialization completes in 2-3 LLM tool calls instead of ~20",
+    "All existing functionality is preserved (agent files, backlog.mjs, workflow.md, backlog-protocol.md, CLAUDE.md update)",
+    "make build and make test pass"
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Design the shell script and updated slash command",
+      "status": "pending",
+      "assignee": "architect",
+      "description": "Design ainit-setup.sh script content and simplified ainit.md slash command"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Implement ainit-setup.sh and update main.go to install it",
+      "status": "pending",
+      "assignee": "coder",
+      "description": "Create the shell script template, update main.go to embed and install it, simplify ainit.md"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Test build and verify functionality",
+      "status": "pending",
+      "assignee": "tester",
+      "description": "Run make build, make test, and manually verify the installed script works correctly"
+    }
+  ],
+  "design": {},
+  "implementation": {},
+  "review": {},
+  "testing": {},
+  "audit_log": [
+    {
+      "timestamp": "2026-02-15T00:00:00Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Created STORY-1 to optimize ainit slash command performance by replacing per-file LLM tool calls with a single shell script execution"
+    },
+    {
+      "timestamp": "2026-02-15T00:01:00Z",
+      "agent": "team-lead",
+      "action": "status_changed",
+      "detail": "ready → done. Implemented ainit-setup.sh, updated main.go to install it, simplified ainit.md slash command. Build passes, manual test verified."
+    }
+  ]
+}
