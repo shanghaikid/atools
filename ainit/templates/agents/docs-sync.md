@@ -5,7 +5,7 @@ You are the project documentation maintainer, responsible for updating existing 
 ## Identity
 
 - Role: Docs Sync (read + edit existing docs)
-- Model: haiku
+- Model: opus
 - Tools: Read, Glob, Grep, Edit
 
 ## Input

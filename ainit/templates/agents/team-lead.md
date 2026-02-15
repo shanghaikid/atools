@@ -47,7 +47,7 @@ node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail 
   ```bash
   node backlog.mjs status STORY-N designing
   ```
-- Launch architect (sonnet, subagent_type=general-purpose, mode=dontAsk)
+- Launch architect (opus, subagent_type=general-purpose, mode=dontAsk)
 - Prompt specifies story ID: `STORY-{id}` and mentions agents use `node backlog.mjs` commands
 - architect writes to the `design` field and breaks down `tasks` using CLI
 
@@ -56,12 +56,12 @@ node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail 
   ```bash
   node backlog.mjs status STORY-N implementing
   ```
-- Launch coder (sonnet, subagent_type=general-purpose, mode=dontAsk)
+- Launch coder (opus, subagent_type=general-purpose, mode=dontAsk)
 - Prompt specifies story ID and branch, mentions agents use `node backlog.mjs` commands
 - coder implements tasks one by one using CLI
 
 **Phase 3: Validation (parallel)**
-- Launch tester (sonnet), reviewer (haiku), and security-reviewer (sonnet) simultaneously
+- Launch tester (opus), reviewer (opus), and security-reviewer (opus) simultaneously
 - All reference the story file path
 - Reviewer and security-reviewer use `git diff main...{branch}` to get code changes
 
@@ -75,7 +75,7 @@ node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail 
   node backlog.mjs status STORY-N implementing
   node backlog.mjs log STORY-N --agent team-lead --action rework_required --detail "reason"
   ```
-  then relaunch coder (or build-resolver if the issue is a build failure)
+  then relaunch coder (or build-resolver (opus) if the issue is a build failure)
 - pass → proceed to phase 5
 - **Maximum 2 rework rounds**
 
@@ -110,7 +110,7 @@ git branch -D feat/STORY-{id}-{slug}
 ```
 Task(
   subagent_type = "general-purpose",
-  model = "sonnet",
+  model = "opus",
   mode = "dontAsk",
   team_name = "<team-name>",
   name = "architect",
@@ -118,8 +118,7 @@ Task(
 )
 ```
 
-Use `model = "haiku"` for reviewer and docs-sync.
-Use `model = "sonnet"` for security-reviewer and build-resolver.
+Use `model = "opus"` for all agents.
 
 All agents use the backlog CLI for reading and writing story data.
 
@@ -127,13 +126,13 @@ All agents use the backlog CLI for reading and writing story data.
 
 | Agent | Model | When to Use |
 |-------|-------|-------------|
-| architect | sonnet | Design phase — analyze requirements, create design |
-| coder | sonnet | Implementation phase — write code per design |
-| tester | sonnet | Validation phase — write and run tests |
-| reviewer | haiku | Validation phase — code quality review |
-| security-reviewer | sonnet | Validation phase — security-focused review (parallel with reviewer) |
-| build-resolver | sonnet | Recovery — fix build errors with surgical changes |
-| docs-sync | haiku | Post-merge — update documentation |
+| architect | opus | Design phase — analyze requirements, create design |
+| coder | opus | Implementation phase — write code per design |
+| tester | opus | Validation phase — write and run tests |
+| reviewer | opus | Validation phase — code quality review |
+| security-reviewer | opus | Validation phase — security-focused review (parallel with reviewer) |
+| build-resolver | opus | Recovery — fix build errors with surgical changes |
+| docs-sync | opus | Post-merge — update documentation |
 
 ## Decision Rules
 
