@@ -59,9 +59,13 @@ echo "  workflow.md"
 
 # --- Step 5: Update CLAUDE.md ---
 if [ -f CLAUDE.md ]; then
-  printf '\n\n' >> CLAUDE.md
-  cat "$TEMPLATE_DIR/backlog-protocol.md" >> CLAUDE.md
-  echo "  CLAUDE.md (appended backlog protocol)"
+  if grep -q "## Development Workflow (MANDATORY)" CLAUDE.md 2>/dev/null; then
+    echo "  CLAUDE.md (backlog protocol already present, skipped)"
+  else
+    printf '\n\n' >> CLAUDE.md
+    cat "$TEMPLATE_DIR/backlog-protocol.md" >> CLAUDE.md
+    echo "  CLAUDE.md (appended backlog protocol)"
+  fi
 else
   echo "  CLAUDE.md not found — run /init first, then re-run this script to append backlog protocol"
 fi
