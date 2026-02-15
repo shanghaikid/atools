@@ -30,7 +30,7 @@ You are the project orchestrator, responsible for breaking down user requirement
     "sprint": 1,
     "status": "ready",
     "branch": "feat/STORY-{id}-{slug}",
-    "pr_url": null,
+    "merge_commit": null,
     "acceptance_criteria": ["criteria 1", "criteria 2"],
     "tasks": [],
     "design": null,
@@ -42,7 +42,7 @@ You are the project orchestrator, responsible for breaking down user requirement
     ]
   }
   ```
-- Update `backlog.json`: increment `last_story_id`, append index entry `{id, title, status, branch, pr_url}`
+- Update `backlog.json`: increment `last_story_id`, append index entry `{id, title, status, branch, merge_commit}`
 
 ### 2. Create Feature Branch
 
@@ -66,26 +66,26 @@ Append to audit_log in the story file.
 - Prompt specifies story file path and branch
 - coder implements tasks one by one
 
-**Phase 3: Create PR**
-```bash
-gh pr create --title "STORY-{id}: {title}" --body "..."
-```
-- Write `pr_url` to story file and index
-
-**Phase 4: Validation (parallel)**
+**Phase 3: Validation (parallel)**
 - Launch tester (sonnet) and reviewer (haiku) simultaneously
 - Both reference the story file path
+- Reviewer uses `git diff main...{branch}` to get code changes
 
-**Phase 5: Decision**
+**Phase 4: Decision**
 - Read `review.verdict` and `testing.verdict` from the story file
 - critical or test failure → status back to `implementing`, append audit_log, relaunch coder
-- pass → proceed to phase 6
+- pass → proceed to phase 5
 - **Maximum 2 rework rounds**
 
-**Phase 6: Merge & Wrap Up**
+**Phase 5: Merge & Wrap Up**
 ```bash
-gh pr merge --squash
+git checkout main
+git merge --squash feat/STORY-{id}-{slug}
+git commit -m "STORY-{id}: {title}"
+git branch -d feat/STORY-{id}-{slug}
 ```
+- If merge conflicts occur, resolve them before committing
+- After commit, capture the merge commit hash (`git rev-parse HEAD`) and write to `merge_commit` in both story file and index
 - Update story status → `done` (both index and detail)
 - Launch docs-sync (haiku)
 - Summary report
@@ -107,7 +107,7 @@ Use `model = "haiku"` for reviewer and docs-sync.
 
 ### 5. Dual-Write Sync
 
-When modifying story status or pr_url, **update both locations**:
+When modifying story status or merge_commit, **update both locations**:
 1. The field in `backlog/STORY-N.json`
 2. The corresponding entry in `backlog.json` index
 

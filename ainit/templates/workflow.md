@@ -2,12 +2,12 @@
 
 ## Overview
 
-This template enables multi-agent collaboration through `backlog.json` (lightweight index) + `backlog/STORY-N.json` (independent details). Each story is self-contained with full lifecycle information and task breakdowns, and each feature uses an independent git branch + PR workflow.
+This template enables multi-agent collaboration through `backlog.json` (lightweight index) + `backlog/STORY-N.json` (independent details). Each story is self-contained with full lifecycle information and task breakdowns, and each feature uses an independent git branch workflow with direct merge.
 
 ## File Structure
 
 ```
-backlog.json              <- Lightweight index: id/title/status/branch/pr_url
+backlog.json              <- Lightweight index: id/title/status/branch/merge_commit
 backlog/
 ├── STORY-1.json          <- Full details: requirements, tasks, design, implementation, review, testing, audit_log
 ├── STORY-2.json
@@ -31,8 +31,6 @@ team-lead (opus) ──── orchestration, fully autonomous
   │
   ├─▶ coder (sonnet) ──▶ story.implementation + task status + git commit/push
   │
-  ├─ Create PR (gh pr create)
-  │
   ├─▶ tester (sonnet) ──▶ story.testing     ┐
   ├─▶ reviewer (haiku) ──▶ story.review      ├ parallel
   │                                           ┘
@@ -40,7 +38,7 @@ team-lead (opus) ──── orchestration, fully autonomous
   │
   ├─▶ docs-sync (haiku) ──▶ update existing docs
   │
-  └─ gh pr merge → story.status = done
+  └─ git merge --squash → story.status = done
 ```
 
 ## Usage
@@ -65,12 +63,11 @@ team-lead will automatically:
 2. Create feature branch
 3. Launch architect → write design + break down tasks
 4. Launch coder → implement tasks → commit/push
-5. Create PR
-6. Launch tester + reviewer in parallel
-7. Decide to merge or rework based on verdict
-8. Merge PR, story status → done
-9. Launch docs-sync
-10. Summary report
+5. Launch tester + reviewer in parallel
+6. Decide to merge or rework based on verdict
+7. Merge branch into main (resolve conflicts if any), story status → done
+8. Launch docs-sync
+9. Summary report
 
 ### 3. Check Progress
 
@@ -92,7 +89,7 @@ Story (user requirement)
 └── ...
 ```
 
-- **Story** = user-facing requirement, has its own branch + PR
+- **Story** = user-facing requirement, has its own feature branch
 - **Task** = implementation-side breakdown, inline in the story file, has assignee and status
 - architect creates tasks, coder/tester update task status
 
@@ -115,15 +112,16 @@ backlog → ready → designing → implementing → reviewing/testing → done
 | designing | Architect designing | architect |
 | implementing | Coding in progress | coder |
 | reviewing/testing | Review + testing in progress | reviewer + tester |
-| done | Completed and merged | team-lead merges PR |
+| done | Completed and merged | team-lead merges branch |
 
-## Branch & PR Workflow
+## Branch & Merge Workflow
 
 1. **Create branch**: `git checkout -b feat/STORY-{id}-{slug}`
-2. **Implement & commit**: coder commits + pushes on the feature branch
-3. **Create PR**: `gh pr create --title "STORY-{id}: {title}"`
-4. **Review & test**: reviewer uses `gh pr diff` to review, tester runs tests on the branch
-5. **Merge**: `gh pr merge --squash`
+2. **Implement & commit**: coder commits on the feature branch
+3. **Review & test**: reviewer uses `git diff main...{branch}` to review, tester runs tests on the branch
+4. **Merge**: `git checkout main && git merge --squash {branch} && git commit`
+5. **Conflict resolution**: if merge conflicts occur, resolve them before committing
+6. **Cleanup**: `git branch -d feat/STORY-{id}-{slug}`
 
 ## Model Tier Strategy
 

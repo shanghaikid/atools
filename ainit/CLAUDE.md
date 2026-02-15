@@ -47,7 +47,7 @@ This project uses `backlog.json` (index) + `backlog/STORY-N.json` (details) for 
 ### File Structure
 
 ```
-backlog.json              <- Lightweight index: id/title/status/branch/pr_url only
+backlog.json              <- Lightweight index: id/title/status/branch/merge_commit only
 backlog/
 ├── STORY-1.json          <- Full story details, agent only needs to read this one file
 ├── STORY-2.json
@@ -67,7 +67,7 @@ backlog/
       "title": "short title",
       "status": "backlog|ready|designing|implementing|reviewing|testing|done",
       "branch": "feat/STORY-N-slug",
-      "pr_url": null
+      "merge_commit": null
     }
   ]
 }
@@ -84,7 +84,7 @@ backlog/
   "sprint": 1,
   "status": "backlog|ready|designing|implementing|reviewing|testing|done",
   "branch": "feat/STORY-N-slug",
-  "pr_url": null,
+  "merge_commit": null,
   "acceptance_criteria": ["criteria 1", "criteria 2"],
 
   "tasks": [
@@ -107,13 +107,13 @@ backlog/
 
 ### Rules
 
-1. **Lightweight index**: `backlog.json` only stores summary info (id/title/status/branch/pr_url) for quick browsing
+1. **Lightweight index**: `backlog.json` only stores summary info (id/title/status/branch/merge_commit) for quick browsing
 2. **Independent details**: Each story's full data lives in `backlog/STORY-N.json`, agent only needs to read one file
 3. **Dual-write sync**: When modifying story status, update both the index and the detail file
 4. **Inline tasks**: Task breakdowns are stored in the `tasks` array within the story file, no separate files
 5. **Reason required**: `reason` field is mandatory for file changes and design deviations
 6. **Append-only audit_log**: Fully traceable, no deletion or modification of existing log entries
-7. **Independent branches**: Each story uses its own feature branch + PR workflow
+7. **Independent branches**: Each story uses its own feature branch, merged directly after review
 
 ### Agent Read/Write Permissions
 
@@ -123,7 +123,7 @@ backlog/
 | architect | assigned story file | story.design, story.tasks |
 | coder | assigned story file | story.implementation, story.tasks status |
 | tester | assigned story file | story.testing |
-| reviewer | assigned story file + PR diff | story.review |
+| reviewer | assigned story file + branch diff | story.review |
 | docs-sync | story files with status=done | does not write backlog, only updates docs |
 
 ### Status Flow

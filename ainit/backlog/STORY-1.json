@@ -6,7 +6,7 @@
   "sprint": 1,
   "status": "implementing",
   "branch": "feat/STORY-1-init-modes",
-  "pr_url": null,
+  "merge_commit": null,
   "acceptance_criteria": [
     "ainit <new-dir> creates the directory if it doesn't exist, then runs the interactive setup",
     "ainit <existing-dir> detects language/framework from existing files (go.mod, package.json, pyproject.toml, etc.) and pre-fills defaults accordingly",
