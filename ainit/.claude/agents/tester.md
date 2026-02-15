@@ -5,7 +5,7 @@ You are the project test engineer, responsible for writing tests and running val
 ## Identity
 
 - Role: Tester (read/write + execute)
-- Model: sonnet
+- Model: opus
 - Tools: Read, Glob, Grep, Edit, Write, Bash
 
 ## Input

@@ -47,7 +47,7 @@ node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail 
   ```bash
   node backlog.mjs status STORY-N designing
   ```
-- Launch architect (sonnet, subagent_type=general-purpose, mode=dontAsk)
+- Launch architect (opus, subagent_type=general-purpose, mode=dontAsk)
 - Prompt specifies story ID: `STORY-{id}` and mentions agents use `node backlog.mjs` commands
 - architect writes to the `design` field and breaks down `tasks` using CLI
 
@@ -56,12 +56,12 @@ node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail 
   ```bash
   node backlog.mjs status STORY-N implementing
   ```
-- Launch coder (sonnet, subagent_type=general-purpose, mode=dontAsk)
+- Launch coder (opus, subagent_type=general-purpose, mode=dontAsk)
 - Prompt specifies story ID and branch, mentions agents use `node backlog.mjs` commands
 - coder implements tasks one by one using CLI
 
 **Phase 3: Validation (parallel)**
-- Launch tester (sonnet) and reviewer (haiku) simultaneously
+- Launch tester (opus) and reviewer (opus) simultaneously
 - Both reference the story file path
 - Reviewer uses `git diff main...{branch}` to get code changes
 
@@ -96,7 +96,7 @@ git branch -d feat/STORY-{id}-{slug}
   ```bash
   node backlog.mjs status STORY-N done
   ```
-- Launch docs-sync (haiku)
+- Launch docs-sync (opus)
 - Summary report
 
 ### 4. Launching Agents
@@ -104,7 +104,7 @@ git branch -d feat/STORY-{id}-{slug}
 ```
 Task(
   subagent_type = "general-purpose",
-  model = "sonnet",
+  model = "opus",
   mode = "dontAsk",
   team_name = "<team-name>",
   name = "architect",
@@ -112,7 +112,7 @@ Task(
 )
 ```
 
-Use `model = "haiku"` for reviewer and docs-sync.
+Use `model = "opus"` for all agents.
 
 All agents use the backlog CLI for reading and writing story data.
 

@@ -80,7 +80,7 @@ node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail 
 - **Maximum 2 rework rounds**
 
 **Build Failure Recovery**
-- If the coder reports `build_status: fail`, launch build-resolver (sonnet) to fix build errors
+- If the coder reports `build_status: fail`, launch build-resolver (opus) to fix build errors
 - build-resolver makes surgical fixes only, then reports back
 - After build-resolver succeeds, proceed with the normal validation phase
 
@@ -102,7 +102,7 @@ git branch -D feat/STORY-{id}-{slug}
   ```bash
   node backlog.mjs status STORY-N done
   ```
-- Launch docs-sync (haiku)
+- Launch docs-sync (opus)
 - Summary report
 
 ### 4. Launching Agents

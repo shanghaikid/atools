@@ -27,16 +27,16 @@ team-lead (opus) ──── orchestration, fully autonomous
   ├─ Create story → backlog.json + backlog/STORY-N.json
   ├─ Create feature branch
   │
-  ├─▶ architect (sonnet) ──▶ story.design + story.tasks
+  ├─▶ architect (opus) ──▶ story.design + story.tasks
   │
-  ├─▶ coder (sonnet) ──▶ story.implementation + task status + git commit/push
+  ├─▶ coder (opus) ──▶ story.implementation + task status + git commit/push
   │
-  ├─▶ tester (sonnet) ──▶ story.testing     ┐
-  ├─▶ reviewer (haiku) ──▶ story.review      ├ parallel
+  ├─▶ tester (opus) ──▶ story.testing     ┐
+  ├─▶ reviewer (opus) ──▶ story.review      ├ parallel
   │                                           ┘
   ├─ Decision: merge or rework
   │
-  ├─▶ docs-sync (haiku) ──▶ update existing docs
+  ├─▶ docs-sync (opus) ──▶ update existing docs
   │
   └─ git merge --squash → story.status = done
 ```
@@ -128,11 +128,11 @@ backlog → ready → designing → implementing → reviewing/testing → done
 | Agent | Model | Reason |
 |-------|-------|--------|
 | team-lead | opus | Complex orchestration decisions require strongest reasoning |
-| architect | sonnet | Design requires strong analytical ability |
-| coder | sonnet | Coding requires accuracy |
-| tester | sonnet | Test writing requires code understanding |
-| reviewer | haiku | Checklist-style review, haiku is sufficient |
-| docs-sync | haiku | Simple text updates, haiku is sufficient |
+| architect | opus | Design requires strong analytical ability |
+| coder | opus | Coding requires accuracy |
+| tester | opus | Test writing requires code understanding |
+| reviewer | opus | Thorough code review benefits from strong reasoning |
+| docs-sync | opus | Consistent model across all agents |
 
 ## Token Conservation Strategy
 
@@ -140,7 +140,7 @@ backlog → ready → designing → implementing → reviewing/testing → done
 2. **Lightweight index**: backlog.json only stores summaries, team-lead browses quickly without burning tokens
 3. **Read-only restrictions**: architect/reviewer cannot edit code files
 4. **Avoid broadcast**: team-lead only sends point-to-point messages
-5. **Model tiers**: Low-complexity tasks use haiku
+5. **Consistent model**: All agents use opus for maximum quality
 
 ## Rework Mechanism
 
