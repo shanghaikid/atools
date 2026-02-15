@@ -1,0 +1,85 @@
+{
+  "id": "STORY-2",
+  "title": "Create worldtime CLI tool displaying real-time world clocks",
+  "description": "Build a standalone Go CLI tool 'worldtime' that displays real-time clocks for major world cities with dynamic terminal updates. Shows local time plus configurable world cities.",
+  "priority": "medium",
+  "sprint": 1,
+  "status": "done",
+  "branch": "feat/STORY-2-worldtime",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "Displays current local time prominently",
+    "Shows time for major world cities (New York, London, Tokyo, Shanghai, Sydney, Paris, Dubai, etc.)",
+    "Dynamically updates every second in the terminal",
+    "Clean, readable terminal UI",
+    "Single binary, zero CGO",
+    "Follows monorepo conventions (own go.mod, Makefile, cmd/ + internal/ layout)"
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Scaffold worldtime project structure",
+      "status": "done",
+      "assignee": "coder",
+      "description": "Create worldtime/ directory with go.mod, Makefile, cmd/worldtime/main.go, internal/ packages"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Implement core time display logic",
+      "status": "done",
+      "assignee": "coder",
+      "description": "Implement timezone loading, formatting, and dynamic terminal refresh"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Build and test",
+      "status": "done",
+      "assignee": "tester",
+      "description": "Verify build, run tests, ensure binary works correctly"
+    }
+  ],
+  "design": {
+    "summary": "Simple Go CLI using ANSI escape codes for terminal refresh. No external dependencies beyond Go stdlib.",
+    "files_involved": [
+      "worldtime/cmd/worldtime/main.go",
+      "worldtime/internal/clock/clock.go",
+      "worldtime/go.mod",
+      "worldtime/Makefile"
+    ],
+    "decisions": [
+      "Use Go stdlib time package for timezone handling",
+      "Use ANSI escape codes for dynamic terminal updates (no external TUI library)",
+      "Update display every second via time.Ticker"
+    ],
+    "steps": [
+      "Create project scaffold",
+      "Implement clock model with city/timezone pairs",
+      "Implement terminal renderer with ANSI clear + redraw",
+      "Add signal handling for clean exit"
+    ]
+  },
+  "implementation": {
+    "changes": [
+      "worldtime/go.mod - Go module definition",
+      "worldtime/Makefile - Standard build targets",
+      "worldtime/cmd/worldtime/main.go - CLI entry point with ticker loop and signal handling",
+      "worldtime/internal/clock/clock.go - City model, time formatting, ANSI renderer",
+      "worldtime/internal/clock/clock_test.go - Table-driven tests for all core functions"
+    ],
+    "build_status": "pass",
+    "deviations": []
+  },
+  "review": { "findings": [], "verdict": "pass" },
+  "testing": {
+    "tests_added": ["TestDefaultCities", "TestGetCityTime", "TestGetCityTimeInvalidTimezone", "TestGetLocalTime", "TestRender"],
+    "tests_passed": 5,
+    "tests_failed": 0,
+    "failures": [],
+    "verdict": "pass"
+  },
+  "audit_log": [
+    { "timestamp": "2026-02-15T00:00:00Z", "agent": "team-lead", "action": "story_created", "detail": "Created STORY-2 for worldtime CLI tool" },
+    { "timestamp": "2026-02-15T00:01:00Z", "agent": "coder", "action": "status_change", "detail": "ready → implementing" },
+    { "timestamp": "2026-02-15T00:02:00Z", "agent": "coder", "action": "status_change", "detail": "implementing → done. All tasks complete, build passes, tests pass." }
+  ]
+}
