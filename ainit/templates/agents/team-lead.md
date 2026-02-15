@@ -79,14 +79,15 @@ node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail 
 - pass → proceed to phase 5
 - **Maximum 2 rework rounds**
 
-**Phase 5: Merge & Wrap Up**
+**Phase 5: Merge & Wrap Up** (automatic — do NOT wait for user confirmation)
 ```bash
 git checkout main
 git merge --squash feat/STORY-{id}-{slug}
 git commit -m "STORY-{id}: {title}"
 MERGE_HASH=$(git rev-parse HEAD)
-git branch -d feat/STORY-{id}-{slug}
+git branch -D feat/STORY-{id}-{slug}
 ```
+- This phase runs immediately after validation passes, without pausing
 - If merge conflicts occur, resolve them before committing
 - After commit, record the merge commit hash:
   ```bash
