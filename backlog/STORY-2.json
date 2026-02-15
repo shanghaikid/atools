@@ -6,7 +6,7 @@
   "sprint": 1,
   "status": "done",
   "branch": "feat/STORY-2-worldtime",
-  "merge_commit": null,
+  "merge_commit": "4d99997",
   "acceptance_criteria": [
     "Displays current local time prominently",
     "Shows time for major world cities (New York, London, Tokyo, Shanghai, Sydney, Paris, Dubai, etc.)",
