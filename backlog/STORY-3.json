@@ -1,0 +1,83 @@
+{
+  "id": "STORY-3",
+  "title": "Create VitePress documentation site for repo projects",
+  "description": "Build a documentation website using VitePress to describe the three projects (agix, ainit, worldtime) in this monorepo. The site should include a landing page, project overviews, and detailed docs for each tool.",
+  "priority": "medium",
+  "sprint": 1,
+  "status": "done",
+  "branch": "feat/STORY-3-docs-site",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "VitePress project initialized in docs/ directory",
+    "Landing page with hero section and feature cards",
+    "Documentation pages for agix, ainit, and worldtime",
+    "Navigation bar and sidebar configured",
+    "Local dev server and build working correctly",
+    "Makefile with dev/build targets"
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Initialize VitePress project",
+      "status": "pending",
+      "assignee": "coder",
+      "description": "Set up VitePress in docs/ with package.json, config, and .gitignore"
+    },
+    {
+      "id": "TASK-2",
+      "title": "Create landing page and project overview",
+      "status": "pending",
+      "assignee": "coder",
+      "description": "Build hero landing page and overview page describing the monorepo"
+    },
+    {
+      "id": "TASK-3",
+      "title": "Write agix documentation",
+      "status": "pending",
+      "assignee": "coder",
+      "description": "Comprehensive docs for agix: intro, quickstart, features, CLI reference"
+    },
+    {
+      "id": "TASK-4",
+      "title": "Write ainit documentation",
+      "status": "pending",
+      "assignee": "coder",
+      "description": "Docs for ainit: intro, installation, agent templates, backlog protocol"
+    },
+    {
+      "id": "TASK-5",
+      "title": "Write worldtime documentation",
+      "status": "pending",
+      "assignee": "coder",
+      "description": "Docs for worldtime: intro, installation, features"
+    },
+    {
+      "id": "TASK-6",
+      "title": "Add Makefile and verify build",
+      "status": "pending",
+      "assignee": "coder",
+      "description": "Add Makefile with dev/build targets, verify local build works"
+    }
+  ],
+  "design": {
+    "summary": "VitePress static documentation site in docs/ directory",
+    "files_involved": ["docs/"],
+    "decisions": [
+      "Use VitePress as SSG for its excellent developer docs experience",
+      "Chinese as primary language",
+      "docs/ directory at repo root, isolated from project code"
+    ],
+    "steps": ["Init VitePress", "Configure theme/nav/sidebar", "Write content pages", "Add Makefile", "Verify build"]
+  },
+  "implementation": {},
+  "review": {},
+  "testing": {},
+  "audit_log": [
+    {
+      "timestamp": "2026-02-15T00:00:00Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Created STORY-3 for documentation site"
+    }
+  ]
+}
