@@ -47,7 +47,7 @@ node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail 
   ```bash
   node backlog.mjs status STORY-N designing
   ```
-- Launch architect (sonnet, subagent_type=general-purpose, mode=dontAsk)
+- Launch architect (opus, subagent_type=general-purpose, mode=dontAsk)
 - Prompt specifies story ID: `STORY-{id}` and mentions agents use `node backlog.mjs` commands
 - architect writes to the `design` field and breaks down `tasks` using CLI
 
@@ -56,28 +56,33 @@ node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail 
   ```bash
   node backlog.mjs status STORY-N implementing
   ```
-- Launch coder (sonnet, subagent_type=general-purpose, mode=dontAsk)
+- Launch coder (opus, subagent_type=general-purpose, mode=dontAsk)
 - Prompt specifies story ID and branch, mentions agents use `node backlog.mjs` commands
 - coder implements tasks one by one using CLI
 
 **Phase 3: Validation (parallel)**
-- Launch tester (sonnet) and reviewer (haiku) simultaneously
-- Both reference the story file path
-- Reviewer uses `git diff main...{branch}` to get code changes
+- Launch tester (opus), reviewer (opus), and security-reviewer (opus) simultaneously
+- All reference the story file path
+- Reviewer and security-reviewer use `git diff main...{branch}` to get code changes
 
 **Phase 4: Decision**
-- Read review and testing verdicts:
+- Read review, security review, and testing verdicts:
   ```bash
   node backlog.mjs show STORY-N
   ```
-- critical or test failure → update status and log:
+- critical finding (from reviewer or security-reviewer) or test failure → update status and log:
   ```bash
   node backlog.mjs status STORY-N implementing
   node backlog.mjs log STORY-N --agent team-lead --action rework_required --detail "reason"
   ```
-  then relaunch coder
+  then relaunch coder (or build-resolver (opus) if the issue is a build failure)
 - pass → proceed to phase 5
 - **Maximum 2 rework rounds**
+
+**Build Failure Recovery**
+- If the coder reports `build_status: fail`, launch build-resolver (sonnet) to fix build errors
+- build-resolver makes surgical fixes only, then reports back
+- After build-resolver succeeds, proceed with the normal validation phase
 
 **Phase 5: Merge & Wrap Up** (automatic — do NOT wait for user confirmation)
 ```bash
@@ -105,7 +110,7 @@ git branch -D feat/STORY-{id}-{slug}
 ```
 Task(
   subagent_type = "general-purpose",
-  model = "sonnet",
+  model = "opus",
   mode = "dontAsk",
   team_name = "<team-name>",
   name = "architect",
@@ -113,9 +118,21 @@ Task(
 )
 ```
 
-Use `model = "haiku"` for reviewer and docs-sync.
+Use `model = "opus"` for all agents.
 
 All agents use the backlog CLI for reading and writing story data.
+
+### Available Agents
+
+| Agent | Model | When to Use |
+|-------|-------|-------------|
+| architect | opus | Design phase — analyze requirements, create design |
+| coder | opus | Implementation phase — write code per design |
+| tester | opus | Validation phase — write and run tests |
+| reviewer | opus | Validation phase — code quality review |
+| security-reviewer | opus | Validation phase — security-focused review (parallel with reviewer) |
+| build-resolver | opus | Recovery — fix build errors with surgical changes |
+| docs-sync | opus | Post-merge — update documentation |
 
 ## Decision Rules
 

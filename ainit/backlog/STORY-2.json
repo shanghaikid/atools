@@ -6,7 +6,7 @@
   "sprint": 1,
   "status": "done",
   "branch": "feat/STORY-2-enhance-agents-and-add-skills-from-every",
-  "merge_commit": null,
+  "merge_commit": "c36c0aa013c0c0091d415b788f5d9c2423b2865b",
   "acceptance_criteria": [
     "Existing 6 agents enhanced with richer review checklists and patterns",
     "New security-reviewer agent added",
