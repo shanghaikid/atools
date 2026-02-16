@@ -1,0 +1,30 @@
+{
+  "id": "STORY-8",
+  "title": "Fix safe_copy scope: always overwrite templates",
+  "description": "safe_copy should only protect user data (backlog.json). Agent templates, backlog.mjs, workflow.md, and skills should always be copied fresh since Step 2 customizes them. Current behavior skips template updates on re-install.",
+  "priority": "high",
+  "sprint": 1,
+  "status": "done",
+  "branch": "feat/STORY-8-fix-safe-copy-scope-always-overwrite-tem",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "Agent templates always overwritten on re-install",
+    "backlog.mjs and workflow.md always overwritten",
+    "Only backlog.json protected by safe_copy",
+    "Re-running ainit refreshes templates then re-customizes"
+  ],
+  "tasks": [],
+  "design": null,
+  "implementation": null,
+  "review": null,
+  "security_review": null,
+  "testing": null,
+  "audit_log": [
+    {
+      "timestamp": "2026-02-16T00:10:57.293Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Fix safe_copy scope: always overwrite templates"
+    }
+  ]
+}

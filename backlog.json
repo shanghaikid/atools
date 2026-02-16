@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 7,
+  "last_story_id": 8,
   "stories": [
     {
       "id": "STORY-1",
@@ -51,6 +51,13 @@
       "status": "done",
       "branch": "feat/STORY-7-smart-post-install-customization-for-ain",
       "merge_commit": "f826e40f1afcd17d7809192bfb6e7be89888c66c"
+    },
+    {
+      "id": "STORY-8",
+      "title": "Fix safe_copy scope: always overwrite templates",
+      "status": "done",
+      "branch": "feat/STORY-8-fix-safe-copy-scope-always-overwrite-tem",
+      "merge_commit": null
     }
   ]
 }

@@ -3,19 +3,19 @@ set -euo pipefail
 
 # ainit-setup.sh — Initialize a project for multi-agent collaboration.
 # Copies agent templates, backlog CLI, workflow docs, and sets up backlog infrastructure.
-# Usage: bash ~/.claude/ainit-templates/ainit-setup.sh [--force] [--dry-run] [project-root]
+# Templates are always overwritten (Step 2 of /ainit customizes them per-project).
+# User data (backlog.json, CLAUDE.md) is never overwritten.
+# Usage: bash ~/.claude/ainit-templates/ainit-setup.sh [--dry-run] [project-root]
 
 TEMPLATE_DIR="$HOME/.claude/ainit-templates"
-FORCE=false
 DRY_RUN=false
 
 # --- Parse flags ---
 POSITIONAL=()
 for arg in "$@"; do
   case "$arg" in
-    --force)  FORCE=true ;;
     --dry-run) DRY_RUN=true ;;
-    *)        POSITIONAL+=("$arg") ;;
+    *)         POSITIONAL+=("$arg") ;;
   esac
 done
 PROJECT_DIR="${POSITIONAL[0]:-.}"
@@ -28,32 +28,19 @@ if ! command -v node &>/dev/null; then
   echo ""
 fi
 
-# --- safe_copy: skip existing files unless --force ---
-safe_copy() {
+# --- copy_template: always overwrite (templates are re-customized by Step 2) ---
+copy_template() {
   local src="$1"
   local dst="$2"
   if $DRY_RUN; then
-    if [ -f "$dst" ] && ! $FORCE; then
-      echo "  [dry-run] SKIP $dst (already exists)"
-    elif [ -f "$dst" ] && $FORCE; then
-      echo "  [dry-run] OVERWRITE $dst (backup → ${dst}.bak.*)"
+    if [ -f "$dst" ]; then
+      echo "  [dry-run] UPDATE $dst"
     else
       echo "  [dry-run] COPY → $dst"
     fi
     return
   fi
-  if [ -f "$dst" ]; then
-    if $FORCE; then
-      cp "$dst" "${dst}.bak.$(date +%s)"
-      cp "$src" "$dst"
-      echo "  $dst (backed up & overwritten)"
-    else
-      echo "  $dst (already exists, skipped)"
-    fi
-  else
-    cp "$src" "$dst"
-    echo "  $dst"
-  fi
+  cp "$src" "$dst"
 }
 
 # --- Detect project name ---
@@ -83,35 +70,38 @@ detect_project_name() {
 
 PROJECT_NAME=$(detect_project_name)
 
-# --- Step 1: Copy agent files ---
+# --- Step 1: Copy agent templates (always overwrite) ---
 mkdir -p .claude/agents
 for f in "$TEMPLATE_DIR"/agents/*.md; do
-  safe_copy "$f" ".claude/agents/$(basename "$f")"
+  copy_template "$f" ".claude/agents/$(basename "$f")"
 done
 if ! $DRY_RUN; then
   echo "  .claude/agents/ ($(ls .claude/agents/*.md 2>/dev/null | wc -l | tr -d ' ') agents)"
 fi
 
-# --- Step 2: Copy skills (reference docs) ---
+# --- Step 2: Copy skills (always overwrite) ---
 if [ -d "$TEMPLATE_DIR/skills" ]; then
   mkdir -p .claude/skills
   for f in "$TEMPLATE_DIR"/skills/*.md; do
-    [ -f "$f" ] && safe_copy "$f" ".claude/skills/$(basename "$f")"
+    [ -f "$f" ] && copy_template "$f" ".claude/skills/$(basename "$f")"
   done
   if ! $DRY_RUN; then
     echo "  .claude/skills/ ($(ls .claude/skills/*.md 2>/dev/null | wc -l | tr -d ' ') skills)"
   fi
 fi
 
-# --- Step 3: Install backlog CLI (into .claude/) ---
-safe_copy "$TEMPLATE_DIR/backlog.mjs" .claude/backlog.mjs
+# --- Step 3: Install backlog CLI (always overwrite) ---
+copy_template "$TEMPLATE_DIR/backlog.mjs" .claude/backlog.mjs
+if ! $DRY_RUN; then
+  echo "  .claude/backlog.mjs"
+fi
 
-# --- Step 4: Create backlog infrastructure ---
+# --- Step 4: Create backlog infrastructure (protect user data) ---
 if $DRY_RUN; then
   if [ ! -f backlog.json ]; then
     echo "  [dry-run] CREATE backlog.json"
   else
-    echo "  [dry-run] SKIP backlog.json (already exists)"
+    echo "  [dry-run] SKIP backlog.json (user data, already exists)"
   fi
   echo "  [dry-run] MKDIR backlog/"
 else
@@ -125,10 +115,13 @@ else
   echo "  backlog/"
 fi
 
-# --- Step 5: Copy workflow.md (into .claude/) ---
-safe_copy "$TEMPLATE_DIR/workflow.md" .claude/workflow.md
+# --- Step 5: Copy workflow.md (always overwrite) ---
+copy_template "$TEMPLATE_DIR/workflow.md" .claude/workflow.md
+if ! $DRY_RUN; then
+  echo "  .claude/workflow.md"
+fi
 
-# --- Step 6: Update CLAUDE.md ---
+# --- Step 6: Update CLAUDE.md (idempotent append, protect user content) ---
 if $DRY_RUN; then
   if [ -f CLAUDE.md ]; then
     if grep -q '<!-- ainit:backlog-protocol -->' CLAUDE.md 2>/dev/null; then
@@ -157,6 +150,6 @@ echo ""
 if $DRY_RUN; then
   echo "Dry run complete. No files were modified."
 else
-  echo "Done! Project '$PROJECT_NAME' is ready for multi-agent collaboration."
-  echo "Start by saying: \"Use the team-lead agent to implement XXX feature\""
+  echo "Done! Project '$PROJECT_NAME' templates installed."
+  echo "Step 2 of /ainit will now customize them for this project's tech stack."
 fi
