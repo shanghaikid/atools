@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 8,
+  "last_story_id": 18,
   "stories": [
     {
       "id": "STORY-1",
@@ -58,6 +58,76 @@
       "status": "done",
       "branch": "feat/STORY-8-fix-safe-copy-scope-always-overwrite-tem",
       "merge_commit": "8c524e8c66a002466ef1bfba9d13981bf6364e1e"
+    },
+    {
+      "id": "STORY-9",
+      "title": "Per-agent rate limiter",
+      "status": "ready",
+      "branch": "feat/STORY-9-rate-limiter",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-10",
+      "title": "Multi-provider failover",
+      "status": "ready",
+      "branch": "feat/STORY-10-multi-provider-failover",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-11",
+      "title": "Smart routing",
+      "status": "ready",
+      "branch": "feat/STORY-11-smart-routing",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-12",
+      "title": "Burn rate alert",
+      "status": "ready",
+      "branch": "feat/STORY-12-burn-rate-alert",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-13",
+      "title": "Web dashboard",
+      "status": "ready",
+      "branch": "feat/STORY-13-web-dashboard",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-14",
+      "title": "Prompt firewall",
+      "status": "ready",
+      "branch": "feat/STORY-14-prompt-firewall",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-15",
+      "title": "Quality gate",
+      "status": "ready",
+      "branch": "feat/STORY-15-quality-gate",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-16",
+      "title": "Semantic cache",
+      "status": "ready",
+      "branch": "feat/STORY-16-semantic-cache",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-17",
+      "title": "Context compressor",
+      "status": "ready",
+      "branch": "feat/STORY-17-context-compressor",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-18",
+      "title": "A/B testing experiments",
+      "status": "ready",
+      "branch": "feat/STORY-18-ab-testing",
+      "merge_commit": null
     }
   ]
 }

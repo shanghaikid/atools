@@ -1,0 +1,31 @@
+{
+  "id": "STORY-17",
+  "title": "Context compressor",
+  "description": "Summarize older messages when conversation exceeds token threshold. Estimate tokens via word count heuristic (words * 1.3). Split into system + old + recent, summarize old via cheap LLM call. Reuse proxy's buildUpstreamRequest via closure to avoid circular dependency.",
+  "priority": "low",
+  "sprint": 1,
+  "status": "ready",
+  "branch": "feat/STORY-17-context-compressor",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "New internal/compressor package with token estimation and message summarization",
+    "Config supports compression.enabled, threshold_tokens, keep_recent, summary_model",
+    "Token estimation via word count heuristic (words * 1.3)",
+    "When over threshold, splits messages and summarizes old ones via cheap LLM",
+    "Reuses proxy buildUpstreamRequest via closure (no circular dependency)",
+    "All tests pass, go vet clean"
+  ],
+  "tasks": [],
+  "design": {},
+  "implementation": {},
+  "review": {},
+  "testing": {},
+  "audit_log": [
+    {
+      "timestamp": "2026-02-16T00:00:00Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Created STORY-17: Context compressor (P2)"
+    }
+  ]
+}

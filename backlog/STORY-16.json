@@ -1,0 +1,34 @@
+{
+  "id": "STORY-16",
+  "title": "Semantic cache",
+  "description": "Embedding-based response cache. SHA-256 fast path for exact match, cosine similarity for semantic match. Uses OpenAI text-embedding-3-small. New SQLite table cache_entries with BLOB embeddings. Returns X-Cache: HIT/MISS header. Non-streaming only.",
+  "priority": "low",
+  "sprint": 1,
+  "status": "ready",
+  "branch": "feat/STORY-16-semantic-cache",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "New internal/cache package with exact and semantic matching",
+    "Config supports cache.enabled, similarity_threshold, ttl_minutes",
+    "SHA-256 fast path for exact content match",
+    "Cosine similarity for semantic match using embeddings",
+    "Uses OpenAI text-embedding-3-small for embedding generation",
+    "New cache_entries table in SQLite with BLOB embeddings",
+    "Returns X-Cache: HIT or X-Cache: MISS header",
+    "Non-streaming only, TTL-based expiration",
+    "All tests pass, go vet clean"
+  ],
+  "tasks": [],
+  "design": {},
+  "implementation": {},
+  "review": {},
+  "testing": {},
+  "audit_log": [
+    {
+      "timestamp": "2026-02-16T00:00:00Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Created STORY-16: Semantic cache (P2)"
+    }
+  ]
+}

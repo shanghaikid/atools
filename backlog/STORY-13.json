@@ -1,0 +1,33 @@
+{
+  "id": "STORY-13",
+  "title": "Web dashboard",
+  "description": "Embedded web dashboard served from the same binary using Go embed. HTML + vanilla JS + Chart.js (CDN). Shows summary cards, cost chart, agent table, budget bars, recent requests. Auto-refresh every 5s. API endpoints on same HTTP server.",
+  "priority": "medium",
+  "sprint": 1,
+  "status": "ready",
+  "branch": "feat/STORY-13-web-dashboard",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "New internal/dashboard package with embedded static files",
+    "Config supports dashboard.enabled",
+    "API endpoints: /api/stats, /api/agents, /api/budgets, /api/costs/daily, /api/logs",
+    "GET /dashboard serves HTML SPA",
+    "Dashboard shows summary cards, cost chart, agent table, budget bars, recent requests",
+    "Auto-refresh every 5 seconds",
+    "Reuses existing store queries",
+    "All tests pass, go vet clean"
+  ],
+  "tasks": [],
+  "design": {},
+  "implementation": {},
+  "review": {},
+  "testing": {},
+  "audit_log": [
+    {
+      "timestamp": "2026-02-16T00:00:00Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Created STORY-13: Web dashboard (P1)"
+    }
+  ]
+}

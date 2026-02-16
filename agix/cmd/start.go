@@ -10,6 +10,7 @@ import (
 
 	"github.com/agent-platform/agix/internal/config"
 	"github.com/agent-platform/agix/internal/proxy"
+	"github.com/agent-platform/agix/internal/ratelimit"
 	"github.com/agent-platform/agix/internal/store"
 	"github.com/agent-platform/agix/internal/ui"
 	"github.com/spf13/cobra"
@@ -50,8 +51,26 @@ Agents should point their API base URL to http://localhost:<port>.`,
 			defer toolMgr.Close()
 		}
 
+		// Build proxy options
+		var proxyOpts []proxy.Option
+		if toolMgr != nil {
+			proxyOpts = append(proxyOpts, proxy.WithToolManager(toolMgr))
+		}
+
+		// Initialize rate limiter
+		if len(cfg.RateLimits) > 0 {
+			limits := make(map[string]ratelimit.Limit, len(cfg.RateLimits))
+			for agent, rl := range cfg.RateLimits {
+				limits[agent] = ratelimit.Limit{
+					RequestsPerMinute: rl.RequestsPerMinute,
+					RequestsPerHour:   rl.RequestsPerHour,
+				}
+			}
+			proxyOpts = append(proxyOpts, proxy.WithRateLimiter(ratelimit.New(limits)))
+		}
+
 		// Create proxy
-		p := proxy.New(cfg, st, toolMgr)
+		p := proxy.New(cfg, st, proxyOpts...)
 
 		addr := fmt.Sprintf(":%d", cfg.Port)
 		srv := &http.Server{

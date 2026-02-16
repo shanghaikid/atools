@@ -1,0 +1,31 @@
+{
+  "id": "STORY-18",
+  "title": "A/B testing experiments",
+  "description": "FNV-1a consistent hashing for sticky variant assignment. Hash agentName:experimentName mod 100, compare to traffic_pct. Add experiment_id and experiment_variant columns to store. New CLI subcommand: agix experiment list|stats <name>.",
+  "priority": "low",
+  "sprint": 1,
+  "status": "ready",
+  "branch": "feat/STORY-18-ab-testing",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "New internal/experiment package with FNV-1a consistent hashing",
+    "Config supports experiments array with name, enabled, control_model, variant_model, traffic_pct",
+    "Sticky variant assignment via hash(agentName:experimentName) mod 100",
+    "experiment_id and experiment_variant columns added to requests table",
+    "New CLI: agix experiment list and agix experiment stats <name>",
+    "All tests pass, go vet clean"
+  ],
+  "tasks": [],
+  "design": {},
+  "implementation": {},
+  "review": {},
+  "testing": {},
+  "audit_log": [
+    {
+      "timestamp": "2026-02-16T00:00:00Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Created STORY-18: A/B testing experiments (P3)"
+    }
+  ]
+}

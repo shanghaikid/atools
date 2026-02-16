@@ -1,0 +1,31 @@
+{
+  "id": "STORY-15",
+  "title": "Quality gate",
+  "description": "Post-response quality checks for empty, truncated (finish_reason: length), and refusal responses. Configurable actions: retry, warn (header), reject (422). Non-streaming only.",
+  "priority": "low",
+  "sprint": 1,
+  "status": "ready",
+  "branch": "feat/STORY-15-quality-gate",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "New internal/qualitygate package with response quality checks",
+    "Config supports quality_gate.enabled, max_retries, on_empty, on_truncated, on_refusal",
+    "Detects empty responses, truncated (finish_reason: length), and refusal responses",
+    "Actions: retry (re-send), warn (add header), reject (return 422)",
+    "Non-streaming only",
+    "All tests pass, go vet clean"
+  ],
+  "tasks": [],
+  "design": {},
+  "implementation": {},
+  "review": {},
+  "testing": {},
+  "audit_log": [
+    {
+      "timestamp": "2026-02-16T00:00:00Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Created STORY-15: Quality gate (P2)"
+    }
+  ]
+}

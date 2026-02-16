@@ -1,0 +1,32 @@
+{
+  "id": "STORY-14",
+  "title": "Prompt firewall",
+  "description": "Scan user messages against compiled regex rules before forwarding to LLM. Support block (403), warn (X-Firewall-Warning header), and log actions. Include built-in default rules for common injection and PII patterns.",
+  "priority": "low",
+  "sprint": 1,
+  "status": "ready",
+  "branch": "feat/STORY-14-prompt-firewall",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "New internal/firewall package with compiled regex rule engine",
+    "Config supports firewall.enabled and firewall.rules array",
+    "Each rule has name, category, pattern (regex), and action (block/warn/log)",
+    "Block returns 403 with error, warn adds X-Firewall-Warning header, log prints to stdout",
+    "Built-in default rules for injection and PII patterns",
+    "Scan occurs after rate limit check, before cache/routing",
+    "All tests pass, go vet clean"
+  ],
+  "tasks": [],
+  "design": {},
+  "implementation": {},
+  "review": {},
+  "testing": {},
+  "audit_log": [
+    {
+      "timestamp": "2026-02-16T00:00:00Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Created STORY-14: Prompt firewall (P2)"
+    }
+  ]
+}

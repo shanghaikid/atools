@@ -15,25 +15,39 @@ import (
 
 	"github.com/agent-platform/agix/internal/config"
 	"github.com/agent-platform/agix/internal/pricing"
+	"github.com/agent-platform/agix/internal/ratelimit"
 	"github.com/agent-platform/agix/internal/store"
 	"github.com/agent-platform/agix/internal/toolmgr"
 )
 
 // Proxy is an HTTP reverse proxy that tracks API usage and costs.
 type Proxy struct {
-	cfg     *config.Config
-	store   *store.Store
-	toolMgr *toolmgr.Manager
-	client  *http.Client
-	mux     *http.ServeMux
+	cfg         *config.Config
+	store       *store.Store
+	toolMgr     *toolmgr.Manager
+	rateLimiter *ratelimit.Limiter
+	client      *http.Client
+	mux         *http.ServeMux
 }
 
-// New creates a new Proxy. toolMgr may be nil if no MCP servers are configured.
-func New(cfg *config.Config, st *store.Store, toolMgr *toolmgr.Manager) *Proxy {
+// Option configures a Proxy.
+type Option func(*Proxy)
+
+// WithToolManager sets the MCP tool manager.
+func WithToolManager(m *toolmgr.Manager) Option {
+	return func(p *Proxy) { p.toolMgr = m }
+}
+
+// WithRateLimiter sets the per-agent rate limiter.
+func WithRateLimiter(l *ratelimit.Limiter) Option {
+	return func(p *Proxy) { p.rateLimiter = l }
+}
+
+// New creates a new Proxy with the given options.
+func New(cfg *config.Config, st *store.Store, opts ...Option) *Proxy {
 	p := &Proxy{
-		cfg:     cfg,
-		store:   st,
-		toolMgr: toolMgr,
+		cfg:   cfg,
+		store: st,
 		client: &http.Client{
 			Timeout: 5 * time.Minute,
 			Transport: &http.Transport{
@@ -47,6 +61,9 @@ func New(cfg *config.Config, st *store.Store, toolMgr *toolmgr.Manager) *Proxy {
 			},
 		},
 		mux: http.NewServeMux(),
+	}
+	for _, opt := range opts {
+		opt(p)
 	}
 	p.mux.HandleFunc("/v1/chat/completions", p.handleChatCompletions)
 	p.mux.HandleFunc("/v1/models", p.handleModels)
@@ -124,6 +141,16 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	// Determine provider and upstream URL
 	provider := pricing.ProviderForModel(req.Model)
 	agentName := r.Header.Get("X-Agent-Name")
+
+	// Check rate limit before budget
+	if p.rateLimiter != nil && agentName != "" {
+		result := p.rateLimiter.Allow(agentName)
+		if !result.Allowed {
+			w.Header().Set("Retry-After", fmt.Sprintf("%d", int(result.RetryAfter.Seconds())))
+			http.Error(w, fmt.Sprintf(`{"error":"rate limited: %s"}`, result.Err.Error()), http.StatusTooManyRequests)
+			return
+		}
+	}
 
 	// Check budget before proxying
 	if agentName != "" {

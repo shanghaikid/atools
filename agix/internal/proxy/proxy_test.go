@@ -40,7 +40,7 @@ func newTestProxy(t *testing.T) (*Proxy, *store.Store) {
 		},
 	}
 
-	p := New(cfg, st, nil)
+	p := New(cfg, st)
 	return p, st
 }
 
@@ -203,7 +203,7 @@ func TestChatCompletionsMissingAPIKey(t *testing.T) {
 		Budgets: map[string]config.Budget{},
 	}
 
-	p := New(cfg, st, nil)
+	p := New(cfg, st)
 
 	body := `{"model":"gpt-4o","messages":[{"role":"user","content":"hello"}]}`
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(body))

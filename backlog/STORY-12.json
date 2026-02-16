@@ -1,0 +1,31 @@
+{
+  "id": "STORY-12",
+  "title": "Burn rate alert",
+  "description": "Compute burn rate after each budget check, project end-of-period spend. Alert via log, response headers (X-Budget-Daily-Percent), and optional webhook (async, deduplicated to 1 per 5 min per agent). Implements the existing unused alert_at_percent field.",
+  "priority": "medium",
+  "sprint": 1,
+  "status": "ready",
+  "branch": "feat/STORY-12-burn-rate-alert",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "New internal/alert package with burn rate calculation and webhook dispatch",
+    "Budget struct extended with alert_webhook URL field",
+    "After budget check, computes burn rate and projects end-of-period spend",
+    "Adds X-Budget-Daily-Percent response header when budget configured",
+    "Optional webhook fires async, deduplicated to max 1 per 5 min per agent",
+    "All tests pass, go vet clean"
+  ],
+  "tasks": [],
+  "design": {},
+  "implementation": {},
+  "review": {},
+  "testing": {},
+  "audit_log": [
+    {
+      "timestamp": "2026-02-16T00:00:00Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Created STORY-12: Burn rate alert (P1)"
+    }
+  ]
+}

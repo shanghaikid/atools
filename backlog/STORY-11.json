@@ -1,0 +1,32 @@
+{
+  "id": "STORY-11",
+  "title": "Smart routing",
+  "description": "Heuristic classifier that routes simple requests to cheaper models. Classifies by message length, count, and keyword absence. Same-provider routing only. Agent opt-out via X-Force-Model header. Add original_model column to store.",
+  "priority": "medium",
+  "sprint": 1,
+  "status": "ready",
+  "branch": "feat/STORY-11-smart-routing",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "New internal/router package with classifier and tier-based model mapping",
+    "Config supports routing.enabled, routing.tiers, routing.model_map",
+    "Classifies requests by message tokens, message count, keyword presence",
+    "Same-provider routing only (no cross-provider)",
+    "Agent opt-out via X-Force-Model: true header",
+    "original_model column added to requests table",
+    "All tests pass, go vet clean"
+  ],
+  "tasks": [],
+  "design": {},
+  "implementation": {},
+  "review": {},
+  "testing": {},
+  "audit_log": [
+    {
+      "timestamp": "2026-02-16T00:00:00Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Created STORY-11: Smart routing (P1)"
+    }
+  ]
+}

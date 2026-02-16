@@ -11,12 +11,19 @@ import (
 
 // Config holds the application configuration.
 type Config struct {
-	Port     int               `yaml:"port"`
-	Keys     map[string]string `yaml:"keys"`
-	Database string            `yaml:"database"`
-	LogLevel string            `yaml:"log_level"`
-	Budgets  map[string]Budget `yaml:"budgets"`
-	Tools    ToolsConfig       `yaml:"tools"`
+	Port       int                        `yaml:"port"`
+	Keys       map[string]string          `yaml:"keys"`
+	Database   string                     `yaml:"database"`
+	LogLevel   string                     `yaml:"log_level"`
+	Budgets    map[string]Budget          `yaml:"budgets"`
+	Tools      ToolsConfig                `yaml:"tools"`
+	RateLimits map[string]RateLimitConfig `yaml:"rate_limits"`
+}
+
+// RateLimitConfig defines per-agent rate limits.
+type RateLimitConfig struct {
+	RequestsPerMinute int `yaml:"requests_per_minute"`
+	RequestsPerHour   int `yaml:"requests_per_hour"`
 }
 
 // Budget represents a spending budget for an agent.

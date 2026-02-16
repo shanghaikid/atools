@@ -1,0 +1,53 @@
+{
+  "id": "STORY-9",
+  "title": "Per-agent rate limiter",
+  "description": "Add a sliding window rate limiter that enforces per-agent request limits (per minute and per hour). Check before budget check in handleChatCompletions. Return 429 with Retry-After header when exceeded. Also refactor proxy.New() to use functional options pattern to accommodate growing dependencies.",
+  "priority": "high",
+  "sprint": 1,
+  "status": "done",
+  "branch": "feat/STORY-9-rate-limiter",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "New internal/ratelimit package with sliding window counter algorithm",
+    "Config supports rate_limits with per-agent requests_per_minute and requests_per_hour",
+    "Rate limit check occurs before budget check in request flow",
+    "Returns HTTP 429 with Retry-After header when limit exceeded",
+    "Proxy.New() refactored to functional options pattern",
+    "All tests pass, go vet clean"
+  ],
+  "tasks": [],
+  "design": {},
+  "implementation": {
+    "changes": [
+      "internal/ratelimit/limiter.go — sliding window rate limiter",
+      "internal/ratelimit/limiter_test.go — comprehensive tests",
+      "internal/config/config.go — added RateLimitConfig struct and field",
+      "internal/proxy/proxy.go — refactored to functional options, added rate limit check",
+      "cmd/start.go — build rate limiter from config, pass via WithRateLimiter option"
+    ],
+    "build_status": "pass",
+    "deviations": []
+  },
+  "review": {},
+  "testing": {
+    "tests_added": ["TestNew_NilOnEmpty", "TestAllow_NoAgent", "TestAllow_NoLimitConfigured", "TestAllow_PerMinute", "TestAllow_PerHour", "TestAllow_IndependentAgents", "TestWindow_Evict"],
+    "tests_passed": true,
+    "tests_failed": 0,
+    "failures": [],
+    "verdict": "pass"
+  },
+  "audit_log": [
+    {
+      "timestamp": "2026-02-16T00:00:00Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Created STORY-9: Per-agent rate limiter (P0)"
+    },
+    {
+      "timestamp": "2026-02-16T00:01:00Z",
+      "agent": "coder",
+      "action": "status_change",
+      "detail": "ready → implementing → done"
+    }
+  ]
+}
