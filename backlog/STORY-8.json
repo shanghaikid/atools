@@ -6,7 +6,7 @@
   "sprint": 1,
   "status": "done",
   "branch": "feat/STORY-8-fix-safe-copy-scope-always-overwrite-tem",
-  "merge_commit": null,
+  "merge_commit": "8c524e8c66a002466ef1bfba9d13981bf6364e1e",
   "acceptance_criteria": [
     "Agent templates always overwritten on re-install",
     "backlog.mjs and workflow.md always overwritten",
