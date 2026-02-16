@@ -22,6 +22,7 @@ type Config struct {
 	Routing    RoutingConfig              `yaml:"routing"`
 	Dashboard  DashboardConfig            `yaml:"dashboard"`
 	Firewall   FirewallConfig             `yaml:"firewall"`
+	QualityGate QualityGateConfig         `yaml:"quality_gate"`
 }
 
 // FirewallConfig defines the prompt firewall settings.
@@ -36,6 +37,15 @@ type FirewallRule struct {
 	Category string `yaml:"category"`
 	Pattern  string `yaml:"pattern"`
 	Action   string `yaml:"action"`
+}
+
+// QualityGateConfig defines quality gate settings.
+type QualityGateConfig struct {
+	Enabled     bool   `yaml:"enabled"`
+	MaxRetries  int    `yaml:"max_retries"`
+	OnEmpty     string `yaml:"on_empty"`
+	OnTruncated string `yaml:"on_truncated"`
+	OnRefusal   string `yaml:"on_refusal"`
 }
 
 // DashboardConfig defines the web dashboard settings.

@@ -13,6 +13,7 @@ import (
 	"github.com/agent-platform/agix/internal/dashboard"
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/firewall"
+	"github.com/agent-platform/agix/internal/qualitygate"
 	"github.com/agent-platform/agix/internal/proxy"
 	"github.com/agent-platform/agix/internal/ratelimit"
 	"github.com/agent-platform/agix/internal/router"
@@ -108,6 +109,20 @@ Agents should point their API base URL to http://localhost:<port>.`,
 			}
 			if fw != nil {
 				proxyOpts = append(proxyOpts, proxy.WithFirewall(fw))
+			}
+		}
+
+		// Initialize quality gate
+		if cfg.QualityGate.Enabled {
+			qg := qualitygate.New(qualitygate.Config{
+				Enabled:     true,
+				MaxRetries:  cfg.QualityGate.MaxRetries,
+				OnEmpty:     qualitygate.ActionType(cfg.QualityGate.OnEmpty),
+				OnTruncated: qualitygate.ActionType(cfg.QualityGate.OnTruncated),
+				OnRefusal:   qualitygate.ActionType(cfg.QualityGate.OnRefusal),
+			})
+			if qg != nil {
+				proxyOpts = append(proxyOpts, proxy.WithQualityGate(qg))
 			}
 		}
 

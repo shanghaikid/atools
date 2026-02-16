@@ -18,6 +18,7 @@ import (
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/firewall"
 	"github.com/agent-platform/agix/internal/pricing"
+	"github.com/agent-platform/agix/internal/qualitygate"
 	"github.com/agent-platform/agix/internal/ratelimit"
 	"github.com/agent-platform/agix/internal/router"
 	"github.com/agent-platform/agix/internal/store"
@@ -34,6 +35,7 @@ type Proxy struct {
 	router      *router.Router
 	alerter     *alert.Alerter
 	firewall    *firewall.Firewall
+	qualityGate *qualitygate.Gate
 	client      *http.Client
 	mux         *http.ServeMux
 }
@@ -69,6 +71,11 @@ func WithAlerter(a *alert.Alerter) Option {
 // WithFirewall sets the prompt firewall.
 func WithFirewall(f *firewall.Firewall) Option {
 	return func(p *Proxy) { p.firewall = f }
+}
+
+// WithQualityGate sets the response quality gate.
+func WithQualityGate(g *qualitygate.Gate) Option {
+	return func(p *Proxy) { p.qualityGate = g }
 }
 
 // New creates a new Proxy with the given options.
@@ -245,7 +252,7 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	if req.Stream {
 		p.handleStreamingResponse(w, resp, actualModel, actualProvider, agentName, start, duration, failoverFrom, originalModel)
 	} else {
-		p.handleNonStreamingResponse(w, resp, actualModel, actualProvider, agentName, start, duration, failoverFrom, originalModel)
+		p.handleNonStreamingResponseWithGate(w, r, resp, body, actualModel, actualProvider, agentName, start, duration, failoverFrom, originalModel)
 	}
 }
 
@@ -426,6 +433,106 @@ func convertToAnthropicFormat(body []byte) ([]byte, error) {
 	}
 
 	return json.Marshal(anthReq)
+}
+
+// handleNonStreamingResponseWithGate wraps non-streaming responses with quality gate checks.
+func (p *Proxy) handleNonStreamingResponseWithGate(w http.ResponseWriter, r *http.Request, resp *http.Response, reqBody []byte, model, provider, agentName string, start time.Time, duration time.Duration, failoverFrom, originalModel string) {
+	if p.qualityGate == nil {
+		p.handleNonStreamingResponse(w, resp, model, provider, agentName, start, duration, failoverFrom, originalModel)
+		return
+	}
+
+	// Read the response body to check quality
+	respBody, err := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if err != nil {
+		http.Error(w, `{"error":"failed to read upstream response"}`, http.StatusBadGateway)
+		return
+	}
+
+	issue := p.qualityGate.Check(respBody)
+	if issue == nil {
+		// Quality OK — write response directly
+		p.writeNonStreamingResponse(w, resp, respBody, model, provider, agentName, start, duration, failoverFrom, originalModel)
+		return
+	}
+
+	switch issue.Action {
+	case qualitygate.ActionWarn:
+		w.Header().Set("X-Quality-Warning", issue.Message)
+		p.writeNonStreamingResponse(w, resp, respBody, model, provider, agentName, start, duration, failoverFrom, originalModel)
+		return
+
+	case qualitygate.ActionReject:
+		log.Printf("QUALITY: reject - %s", issue.Message)
+		http.Error(w, fmt.Sprintf(`{"error":"quality gate: %s"}`, issue.Message), http.StatusUnprocessableEntity)
+		return
+
+	case qualitygate.ActionRetry:
+		log.Printf("QUALITY: retry - %s (attempt 1/%d)", issue.Message, p.qualityGate.MaxRetries())
+		// Retry loop
+		for attempt := 1; attempt <= p.qualityGate.MaxRetries(); attempt++ {
+			retryStart := time.Now()
+			retryResp, retryModel, retryProvider, retryFO, err := p.doUpstreamRequest(r, reqBody, model, provider)
+			if err != nil {
+				http.Error(w, fmt.Sprintf(`{"error":"upstream request failed: %s"}`, err.Error()), http.StatusBadGateway)
+				return
+			}
+			retryBody, err := io.ReadAll(retryResp.Body)
+			retryResp.Body.Close()
+			if err != nil {
+				http.Error(w, `{"error":"failed to read upstream response"}`, http.StatusBadGateway)
+				return
+			}
+			retryDuration := time.Since(retryStart)
+
+			retryIssue := p.qualityGate.Check(retryBody)
+			if retryIssue == nil {
+				p.writeNonStreamingResponse(w, retryResp, retryBody, retryModel, retryProvider, agentName, retryStart, retryDuration, retryFO, originalModel)
+				return
+			}
+			log.Printf("QUALITY: retry - %s (attempt %d/%d)", retryIssue.Message, attempt+1, p.qualityGate.MaxRetries())
+		}
+		// All retries exhausted, return last response with warning
+		w.Header().Set("X-Quality-Warning", issue.Message)
+		p.writeNonStreamingResponse(w, resp, respBody, model, provider, agentName, start, duration, failoverFrom, originalModel)
+		return
+	}
+
+	// Fallback: return response as-is
+	p.writeNonStreamingResponse(w, resp, respBody, model, provider, agentName, start, duration, failoverFrom, originalModel)
+}
+
+// writeNonStreamingResponse writes a non-streaming response from an already-read body.
+func (p *Proxy) writeNonStreamingResponse(w http.ResponseWriter, resp *http.Response, respBody []byte, model, provider, agentName string, start time.Time, duration time.Duration, failoverFrom, originalModel string) {
+	inputTokens, outputTokens := extractUsage(provider, respBody)
+	cost := pricing.CalculateCost(model, inputTokens, outputTokens)
+
+	record := &store.Record{
+		Timestamp:     start,
+		AgentName:     agentName,
+		Model:         model,
+		Provider:      provider,
+		InputTokens:   inputTokens,
+		OutputTokens:  outputTokens,
+		CostUSD:       cost,
+		DurationMS:    duration.Milliseconds(),
+		StatusCode:    resp.StatusCode,
+		FailoverFrom:  failoverFrom,
+		OriginalModel: originalModel,
+	}
+	p.store.InsertAsync(record)
+
+	for k, vv := range resp.Header {
+		for _, v := range vv {
+			w.Header().Add(k, v)
+		}
+	}
+	w.Header().Set("X-Cost-USD", fmt.Sprintf("%.6f", cost))
+	w.Header().Set("X-Input-Tokens", fmt.Sprintf("%d", inputTokens))
+	w.Header().Set("X-Output-Tokens", fmt.Sprintf("%d", outputTokens))
+	w.WriteHeader(resp.StatusCode)
+	w.Write(respBody)
 }
 
 // handleNonStreamingResponse handles a non-streaming response.
