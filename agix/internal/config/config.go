@@ -19,6 +19,21 @@ type Config struct {
 	Tools      ToolsConfig                `yaml:"tools"`
 	RateLimits map[string]RateLimitConfig `yaml:"rate_limits"`
 	Failover   FailoverConfig             `yaml:"failover"`
+	Routing    RoutingConfig              `yaml:"routing"`
+}
+
+// RoutingConfig defines smart routing.
+type RoutingConfig struct {
+	Enabled  bool                          `yaml:"enabled"`
+	Tiers    map[string]RoutingTier        `yaml:"tiers"`
+	ModelMap map[string]map[string]string   `yaml:"model_map"`
+}
+
+// RoutingTier defines criteria for classifying a request.
+type RoutingTier struct {
+	MaxMessageTokens int      `yaml:"max_message_tokens"`
+	MaxMessages      int      `yaml:"max_messages"`
+	KeywordsAbsent   []string `yaml:"keywords_absent"`
 }
 
 // FailoverConfig defines multi-provider failover.

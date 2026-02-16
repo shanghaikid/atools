@@ -6,7 +6,7 @@
   "sprint": 1,
   "status": "done",
   "branch": "feat/STORY-10-multi-provider-failover",
-  "merge_commit": null,
+  "merge_commit": "7bdb000",
   "acceptance_criteria": [
     "New internal/failover package with chain lookup and IsRetryable(statusCode)",
     "Config supports failover.max_retries and failover.chains mapping",

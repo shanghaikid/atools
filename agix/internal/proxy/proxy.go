@@ -17,6 +17,7 @@ import (
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/pricing"
 	"github.com/agent-platform/agix/internal/ratelimit"
+	"github.com/agent-platform/agix/internal/router"
 	"github.com/agent-platform/agix/internal/store"
 	"github.com/agent-platform/agix/internal/toolmgr"
 )
@@ -28,6 +29,7 @@ type Proxy struct {
 	toolMgr     *toolmgr.Manager
 	rateLimiter *ratelimit.Limiter
 	failover    *failover.Failover
+	router      *router.Router
 	client      *http.Client
 	mux         *http.ServeMux
 }
@@ -48,6 +50,11 @@ func WithRateLimiter(l *ratelimit.Limiter) Option {
 // WithFailover sets the multi-provider failover handler.
 func WithFailover(f *failover.Failover) Option {
 	return func(p *Proxy) { p.failover = f }
+}
+
+// WithRouter sets the smart routing handler.
+func WithRouter(r *router.Router) Option {
+	return func(p *Proxy) { p.router = r }
 }
 
 // New creates a new Proxy with the given options.
@@ -167,6 +174,19 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Smart routing (opt-out via X-Force-Model header)
+	var originalModel string
+	if p.router != nil && r.Header.Get("X-Force-Model") == "" {
+		routedModel, _ := p.router.Route(req.Model, req.Messages)
+		if routedModel != req.Model {
+			originalModel = req.Model
+			req.Model = routedModel
+			provider = pricing.ProviderForModel(routedModel)
+			body = replaceModel(body, routedModel)
+			log.Printf("ROUTE: %s → %s (tier match)", originalModel, routedModel)
+		}
+	}
+
 	// Check if we have tools for this agent
 	var agentTools []toolmgr.ToolEntry
 	if p.toolMgr != nil {
@@ -190,9 +210,9 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	duration := time.Since(start)
 
 	if req.Stream {
-		p.handleStreamingResponse(w, resp, actualModel, actualProvider, agentName, start, duration, failoverFrom)
+		p.handleStreamingResponse(w, resp, actualModel, actualProvider, agentName, start, duration, failoverFrom, originalModel)
 	} else {
-		p.handleNonStreamingResponse(w, resp, actualModel, actualProvider, agentName, start, duration, failoverFrom)
+		p.handleNonStreamingResponse(w, resp, actualModel, actualProvider, agentName, start, duration, failoverFrom, originalModel)
 	}
 }
 
@@ -375,7 +395,9 @@ func convertToAnthropicFormat(body []byte) ([]byte, error) {
 	return json.Marshal(anthReq)
 }
 
-func (p *Proxy) handleNonStreamingResponse(w http.ResponseWriter, resp *http.Response, model, provider, agentName string, start time.Time, duration time.Duration, failoverFrom ...string) {
+// handleNonStreamingResponse handles a non-streaming response.
+// Optional extra args: [0] = failoverFrom, [1] = originalModel.
+func (p *Proxy) handleNonStreamingResponse(w http.ResponseWriter, resp *http.Response, model, provider, agentName string, start time.Time, duration time.Duration, extra ...string) {
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		http.Error(w, `{"error":"failed to read upstream response"}`, http.StatusBadGateway)
@@ -387,21 +409,25 @@ func (p *Proxy) handleNonStreamingResponse(w http.ResponseWriter, resp *http.Res
 	cost := pricing.CalculateCost(model, inputTokens, outputTokens)
 
 	// Record to store
-	var foFrom string
-	if len(failoverFrom) > 0 {
-		foFrom = failoverFrom[0]
+	var foFrom, origModel string
+	if len(extra) > 0 {
+		foFrom = extra[0]
+	}
+	if len(extra) > 1 {
+		origModel = extra[1]
 	}
 	record := &store.Record{
-		Timestamp:    start,
-		AgentName:    agentName,
-		Model:        model,
-		Provider:     provider,
-		InputTokens:  inputTokens,
-		OutputTokens: outputTokens,
-		CostUSD:      cost,
-		DurationMS:   duration.Milliseconds(),
-		StatusCode:   resp.StatusCode,
-		FailoverFrom: foFrom,
+		Timestamp:     start,
+		AgentName:     agentName,
+		Model:         model,
+		Provider:      provider,
+		InputTokens:   inputTokens,
+		OutputTokens:  outputTokens,
+		CostUSD:       cost,
+		DurationMS:    duration.Milliseconds(),
+		StatusCode:    resp.StatusCode,
+		FailoverFrom:  foFrom,
+		OriginalModel: origModel,
 	}
 	p.store.InsertAsync(record)
 
@@ -419,7 +445,9 @@ func (p *Proxy) handleNonStreamingResponse(w http.ResponseWriter, resp *http.Res
 	w.Write(respBody)
 }
 
-func (p *Proxy) handleStreamingResponse(w http.ResponseWriter, resp *http.Response, model, provider, agentName string, start time.Time, duration time.Duration, failoverFrom ...string) {
+// handleStreamingResponse handles a streaming SSE response.
+// Optional extra args: [0] = failoverFrom, [1] = originalModel.
+func (p *Proxy) handleStreamingResponse(w http.ResponseWriter, resp *http.Response, model, provider, agentName string, start time.Time, duration time.Duration, extra ...string) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, `{"error":"streaming not supported"}`, http.StatusInternalServerError)
@@ -466,21 +494,25 @@ func (p *Proxy) handleStreamingResponse(w http.ResponseWriter, resp *http.Respon
 	cost := pricing.CalculateCost(model, totalInput, totalOutput)
 
 	// Record to store
-	var foFrom string
-	if len(failoverFrom) > 0 {
-		foFrom = failoverFrom[0]
+	var foFrom, origModel string
+	if len(extra) > 0 {
+		foFrom = extra[0]
+	}
+	if len(extra) > 1 {
+		origModel = extra[1]
 	}
 	record := &store.Record{
-		Timestamp:    start,
-		AgentName:    agentName,
-		Model:        model,
-		Provider:     provider,
-		InputTokens:  totalInput,
-		OutputTokens: totalOutput,
-		CostUSD:      cost,
-		DurationMS:   elapsed.Milliseconds(),
-		StatusCode:   resp.StatusCode,
-		FailoverFrom: foFrom,
+		Timestamp:     start,
+		AgentName:     agentName,
+		Model:         model,
+		Provider:      provider,
+		InputTokens:   totalInput,
+		OutputTokens:  totalOutput,
+		CostUSD:       cost,
+		DurationMS:    elapsed.Milliseconds(),
+		StatusCode:    resp.StatusCode,
+		FailoverFrom:  foFrom,
+		OriginalModel: origModel,
 	}
 	p.store.InsertAsync(record)
 }

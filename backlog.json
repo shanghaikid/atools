@@ -69,9 +69,9 @@
     {
       "id": "STORY-10",
       "title": "Multi-provider failover",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-10-multi-provider-failover",
-      "merge_commit": null
+      "merge_commit": "7bdb000"
     },
     {
       "id": "STORY-11",

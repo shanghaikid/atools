@@ -12,6 +12,7 @@ import (
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/proxy"
 	"github.com/agent-platform/agix/internal/ratelimit"
+	"github.com/agent-platform/agix/internal/router"
 	"github.com/agent-platform/agix/internal/store"
 	"github.com/agent-platform/agix/internal/ui"
 	"github.com/spf13/cobra"
@@ -78,6 +79,26 @@ Agents should point their API base URL to http://localhost:<port>.`,
 			})
 			if f != nil {
 				proxyOpts = append(proxyOpts, proxy.WithFailover(f))
+			}
+		}
+
+		// Initialize smart router
+		if cfg.Routing.Enabled {
+			tiers := make(map[string]router.TierConfig, len(cfg.Routing.Tiers))
+			for name, t := range cfg.Routing.Tiers {
+				tiers[name] = router.TierConfig{
+					MaxMessageTokens: t.MaxMessageTokens,
+					MaxMessages:      t.MaxMessages,
+					KeywordsAbsent:   t.KeywordsAbsent,
+				}
+			}
+			rt := router.New(router.Config{
+				Enabled:  true,
+				Tiers:    tiers,
+				ModelMap: cfg.Routing.ModelMap,
+			})
+			if rt != nil {
+				proxyOpts = append(proxyOpts, proxy.WithRouter(rt))
 			}
 		}
 

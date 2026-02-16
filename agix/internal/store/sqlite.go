@@ -20,8 +20,9 @@ type Record struct {
 	OutputTokens int
 	CostUSD      float64
 	DurationMS   int64
-	StatusCode   int
-	FailoverFrom string
+	StatusCode    int
+	FailoverFrom  string
+	OriginalModel string
 }
 
 // Stats represents aggregated statistics.
@@ -168,8 +169,8 @@ func (s *Store) insertBatch(records []*Record) {
 	}
 
 	stmt, err := tx.Prepare(
-		`INSERT INTO requests (timestamp, agent_name, model, provider, input_tokens, output_tokens, cost_usd, duration_ms, status_code, failover_from)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO requests (timestamp, agent_name, model, provider, input_tokens, output_tokens, cost_usd, duration_ms, status_code, failover_from, original_model)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 	)
 	if err != nil {
 		log.Printf("ERROR: prepare batch stmt: %v", err)
@@ -180,7 +181,7 @@ func (s *Store) insertBatch(records []*Record) {
 
 	for _, r := range records {
 		ts := fmtTime(r.Timestamp)
-		if _, err := stmt.Exec(ts, r.AgentName, r.Model, r.Provider, r.InputTokens, r.OutputTokens, r.CostUSD, r.DurationMS, r.StatusCode, r.FailoverFrom); err != nil {
+		if _, err := stmt.Exec(ts, r.AgentName, r.Model, r.Provider, r.InputTokens, r.OutputTokens, r.CostUSD, r.DurationMS, r.StatusCode, r.FailoverFrom, r.OriginalModel); err != nil {
 			log.Printf("ERROR: batch insert record: %v", err)
 		}
 	}
@@ -195,9 +196,9 @@ func (s *Store) Insert(r *Record) error {
 	// Store timestamp as ISO 8601 string so SQLite date functions work correctly
 	ts := fmtTime(r.Timestamp)
 	_, err := s.db.Exec(
-		`INSERT INTO requests (timestamp, agent_name, model, provider, input_tokens, output_tokens, cost_usd, duration_ms, status_code, failover_from)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		ts, r.AgentName, r.Model, r.Provider, r.InputTokens, r.OutputTokens, r.CostUSD, r.DurationMS, r.StatusCode, r.FailoverFrom,
+		`INSERT INTO requests (timestamp, agent_name, model, provider, input_tokens, output_tokens, cost_usd, duration_ms, status_code, failover_from, original_model)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		ts, r.AgentName, r.Model, r.Provider, r.InputTokens, r.OutputTokens, r.CostUSD, r.DurationMS, r.StatusCode, r.FailoverFrom, r.OriginalModel,
 	)
 	if err != nil {
 		return fmt.Errorf("insert record: %w", err)
@@ -213,6 +214,7 @@ func migrateSchema(db *sql.DB) error {
 		definition string
 	}{
 		{"failover_from", "TEXT NOT NULL DEFAULT ''"},
+		{"original_model", "TEXT NOT NULL DEFAULT ''"},
 	}
 
 	for _, m := range migrations {
