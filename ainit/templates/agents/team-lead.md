@@ -75,9 +75,21 @@ node .claude/backlog.mjs log STORY-N --agent team-lead --action branch_created -
   node .claude/backlog.mjs status STORY-N implementing
   node .claude/backlog.mjs log STORY-N --agent team-lead --action rework_required --detail "reason"
   ```
-  then relaunch coder (or build-resolver (opus) if the issue is a build failure)
+  then dispatch rework (see **Rework Dispatch Strategy** below)
 - pass → proceed to phase 5
 - **Maximum 2 rework rounds**
+
+**Rework Dispatch Strategy**
+- Collect all critical/high findings from `review`, `security_review`, and `testing.failures`
+- Group findings by file path
+- If findings span **multiple independent files** (no shared dependency), launch **parallel coder agents**, each responsible for a subset of files:
+  ```
+  Task(name="coder-fix-auth", prompt="Fix findings in internal/auth/...: ...")
+  Task(name="coder-fix-api",  prompt="Fix findings in internal/api/...: ...")
+  ```
+- If findings are all in the **same file** or have cross-file dependencies, launch a **single coder** to fix them serially
+- Build-resolver is always launched as a single agent (build errors are usually cascading)
+- After all parallel coders complete, run a single build verification before proceeding to re-validation
 
 **Build Failure Recovery**
 - If the coder reports `build_status: fail`, launch build-resolver (opus) to fix build errors

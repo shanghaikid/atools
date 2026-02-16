@@ -1,0 +1,36 @@
+{
+  "id": "STORY-6",
+  "title": "Support parallel coder agents for rework phase",
+  "description": "When review/security_review findings involve multiple independent files, team-lead should launch multiple coder agents in parallel to fix them, reducing rework turnaround time",
+  "priority": "medium",
+  "sprint": 1,
+  "status": "done",
+  "branch": "feat/STORY-6-support-parallel-coder-agents-for-rework",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "team-lead rework phase supports parallel coder dispatch",
+    "findings grouped by file to avoid conflicts",
+    "single-file multi-finding stays serial",
+    "workflow.md documents the pattern"
+  ],
+  "tasks": [],
+  "design": null,
+  "implementation": null,
+  "review": null,
+  "security_review": null,
+  "testing": null,
+  "audit_log": [
+    {
+      "timestamp": "2026-02-16T00:02:52.066Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Support parallel coder agents for rework phase"
+    },
+    {
+      "timestamp": "2026-02-16T00:02:55.980Z",
+      "agent": "team-lead",
+      "action": "status_changed",
+      "detail": "Small scope change, skip design phase"
+    }
+  ]
+}

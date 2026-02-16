@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 5,
+  "last_story_id": 6,
   "stories": [
     {
       "id": "STORY-1",
@@ -37,6 +37,13 @@
       "status": "done",
       "branch": "feat/STORY-5-fix-all-14-issues-in-ainit-tool",
       "merge_commit": "37701379431042c8b64de64af572b3c1a39a5d35"
+    },
+    {
+      "id": "STORY-6",
+      "title": "Support parallel coder agents for rework phase",
+      "status": "done",
+      "branch": "feat/STORY-6-support-parallel-coder-agents-for-rework",
+      "merge_commit": null
     }
   ]
 }

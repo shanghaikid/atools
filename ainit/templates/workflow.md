@@ -149,6 +149,15 @@ backlog → ready → designing → implementing → reviewing/testing → done
 - **Only Warning/Suggestion** → record but do not rework
 - **Maximum 2 rework rounds**, escalate to user if exceeded
 
+### Parallel Rework
+
+When review findings span multiple independent files, team-lead may launch **parallel coder agents** to reduce rework time:
+
+1. Group findings by file path
+2. If files are independent (no shared dependency), assign each group to a separate coder agent
+3. If findings are in the same file or cross-dependent, use a single coder serially
+4. After all coders complete, run a single build verification before re-validation
+
 ## Copying to Another Project
 
 1. Copy the following files to the target project:
