@@ -1,0 +1,30 @@
+{
+  "id": "STORY-7",
+  "title": "Smart post-install customization for ainit",
+  "description": "After copying templates, the /ainit command should instruct Claude to analyze the project (CLAUDE.md, go.mod, package.json, etc.) and customize agent templates in-place: fill in concrete test commands, build commands, language-specific patterns, remove irrelevant language sections",
+  "priority": "high",
+  "sprint": 1,
+  "status": "done",
+  "branch": "feat/STORY-7-smart-post-install-customization-for-ain",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "ainit.md adds a customization step after copy",
+    "tester/coder/build-resolver get project-specific commands",
+    "irrelevant language sections removed from agents",
+    "workflow.md model tier updated if needed"
+  ],
+  "tasks": [],
+  "design": null,
+  "implementation": null,
+  "review": null,
+  "security_review": null,
+  "testing": null,
+  "audit_log": [
+    {
+      "timestamp": "2026-02-16T00:07:46.491Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Smart post-install customization for ainit"
+    }
+  ]
+}

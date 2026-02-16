@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 6,
+  "last_story_id": 7,
   "stories": [
     {
       "id": "STORY-1",
@@ -44,6 +44,13 @@
       "status": "done",
       "branch": "feat/STORY-6-support-parallel-coder-agents-for-rework",
       "merge_commit": "4545c8193afb388c3a04d1f64198d620a932bf15"
+    },
+    {
+      "id": "STORY-7",
+      "title": "Smart post-install customization for ainit",
+      "status": "done",
+      "branch": "feat/STORY-7-smart-post-install-customization-for-ain",
+      "merge_commit": null
     }
   ]
 }
