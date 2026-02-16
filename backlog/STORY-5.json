@@ -1,0 +1,41 @@
+{
+  "id": "STORY-5",
+  "title": "Fix all 14 issues in ainit tool",
+  "description": "Fix 14 identified issues across data integrity (concurrency race), installation safety (overwrite protection), file pollution (misplaced files), agent template errors, and CLAUDE.md template remnants",
+  "priority": "high",
+  "sprint": 1,
+  "status": "done",
+  "branch": "feat/STORY-5-fix-all-14-issues-in-ainit-tool",
+  "merge_commit": null,
+  "acceptance_criteria": [
+    "File lock for concurrent writes",
+    "set --merge support",
+    "security_review field",
+    "safe_copy with --force/--dry-run",
+    "Node.js check",
+    "Files moved to .claude/",
+    "Idempotent CLAUDE.md append",
+    "Agent tool corrections",
+    "Tester git commit step",
+    "CLAUDE.md template cleanup"
+  ],
+  "tasks": [],
+  "design": null,
+  "implementation": null,
+  "review": null,
+  "testing": null,
+  "audit_log": [
+    {
+      "timestamp": "2026-02-15T23:54:19.514Z",
+      "agent": "team-lead",
+      "action": "story_created",
+      "detail": "Fix all 14 issues in ainit tool"
+    },
+    {
+      "timestamp": "2026-02-15T23:54:27.311Z",
+      "agent": "team-lead",
+      "action": "status_changed",
+      "detail": "Skipping design phase - detailed plan already provided"
+    }
+  ]
+}

@@ -2,11 +2,11 @@ Initialize this project for multi-agent collaboration. Follow these steps exactl
 
 ## Step 1: Run the setup script
 
-Run `bash ~/.claude/ainit-templates/ainit-setup.sh` in the project root. This script automatically:
+Run `bash ~/.claude/ainit-templates/ainit-setup.sh` in the project root. Supports `--force` (backup & overwrite existing files) and `--dry-run` (preview without changes). This script automatically:
 - Copies agent templates to `.claude/agents/`
-- Installs `backlog.mjs` (zero-dependency backlog CLI)
+- Installs `.claude/backlog.mjs` (zero-dependency backlog CLI)
 - Creates `backlog.json` and `backlog/` directory
-- Copies `workflow.md`
+- Copies `.claude/workflow.md`
 - Appends backlog protocol to `CLAUDE.md` (if it exists)
 
 If the script reports that `CLAUDE.md` was not found, run `/init` first to generate it, then re-run the script.

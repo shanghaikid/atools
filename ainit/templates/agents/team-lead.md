@@ -21,12 +21,12 @@ You are the project orchestrator, responsible for breaking down user requirement
 - Read `CLAUDE.md` to understand project background
 - Create story using the backlog CLI:
   ```bash
-  node backlog.mjs create --title "short title" --desc "requirement description" --priority high --criteria "criteria 1" "criteria 2"
+  node .claude/backlog.mjs create --title "short title" --desc "requirement description" --priority high --criteria "criteria 1" "criteria 2"
   ```
   This automatically creates both the story detail file and updates the index.
 - Log the story creation:
   ```bash
-  node backlog.mjs log STORY-N --agent team-lead --action story_created --detail "requirement summary"
+  node .claude/backlog.mjs log STORY-N --agent team-lead --action story_created --detail "requirement summary"
   ```
 
 ### 2. Create Feature Branch
@@ -37,7 +37,7 @@ git checkout -b feat/STORY-{id}-{slug}
 
 Log the branch creation:
 ```bash
-node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail "feat/STORY-N-{slug}"
+node .claude/backlog.mjs log STORY-N --agent team-lead --action branch_created --detail "feat/STORY-N-{slug}"
 ```
 
 ### 3. Dispatch Agents
@@ -45,19 +45,19 @@ node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail 
 **Phase 1: Design**
 - Update story status:
   ```bash
-  node backlog.mjs status STORY-N designing
+  node .claude/backlog.mjs status STORY-N designing
   ```
 - Launch architect (opus, subagent_type=general-purpose, mode=dontAsk)
-- Prompt specifies story ID: `STORY-{id}` and mentions agents use `node backlog.mjs` commands
+- Prompt specifies story ID: `STORY-{id}` and mentions agents use `node .claude/backlog.mjs` commands
 - architect writes to the `design` field and breaks down `tasks` using CLI
 
 **Phase 2: Implementation**
 - Update story status:
   ```bash
-  node backlog.mjs status STORY-N implementing
+  node .claude/backlog.mjs status STORY-N implementing
   ```
 - Launch coder (opus, subagent_type=general-purpose, mode=dontAsk)
-- Prompt specifies story ID and branch, mentions agents use `node backlog.mjs` commands
+- Prompt specifies story ID and branch, mentions agents use `node .claude/backlog.mjs` commands
 - coder implements tasks one by one using CLI
 
 **Phase 3: Validation (parallel)**
@@ -66,14 +66,14 @@ node backlog.mjs log STORY-N --agent team-lead --action branch_created --detail 
 - Reviewer and security-reviewer use `git diff main...{branch}` to get code changes
 
 **Phase 4: Decision**
-- Read review, security review, and testing verdicts:
+- Read `review`, `security_review`, and `testing` verdicts:
   ```bash
-  node backlog.mjs show STORY-N
+  node .claude/backlog.mjs show STORY-N
   ```
-- critical finding (from reviewer or security-reviewer) or test failure → update status and log:
+- critical finding in `review` or `security_review`, or test failure → update status and log:
   ```bash
-  node backlog.mjs status STORY-N implementing
-  node backlog.mjs log STORY-N --agent team-lead --action rework_required --detail "reason"
+  node .claude/backlog.mjs status STORY-N implementing
+  node .claude/backlog.mjs log STORY-N --agent team-lead --action rework_required --detail "reason"
   ```
   then relaunch coder (or build-resolver (opus) if the issue is a build failure)
 - pass → proceed to phase 5
@@ -96,11 +96,11 @@ git branch -D feat/STORY-{id}-{slug}
 - If merge conflicts occur, resolve them before committing
 - After commit, record the merge commit hash:
   ```bash
-  node backlog.mjs merge-commit STORY-N $MERGE_HASH
+  node .claude/backlog.mjs merge-commit STORY-N $MERGE_HASH
   ```
 - Update story status:
   ```bash
-  node backlog.mjs status STORY-N done
+  node .claude/backlog.mjs status STORY-N done
   ```
 - Launch docs-sync (opus)
 - Summary report
@@ -114,7 +114,7 @@ Task(
   mode = "dontAsk",
   team_name = "<team-name>",
   name = "architect",
-  prompt = "You are the architect agent. Use 'node backlog.mjs show STORY-{id}' to read the story, analyze the codebase, use 'node backlog.mjs set' to write your design, and 'node backlog.mjs add-task' to break down tasks. Notify team-lead when done."
+  prompt = "You are the architect agent. Use 'node .claude/backlog.mjs show STORY-{id}' to read the story, analyze the codebase, use 'node .claude/backlog.mjs set' to write your design, and 'node .claude/backlog.mjs add-task' to break down tasks. Notify team-lead when done."
 )
 ```
 
@@ -145,5 +145,5 @@ All agents use the backlog CLI for reading and writing story data.
 
 - Ensure prerequisite fields are ready in the story file before launching each agent
 - Do not pass design content in SendMessage, only send brief notifications
-- Use `node backlog.mjs log` to append audit_log entries for all operations, maintaining full traceability
+- Use `node .claude/backlog.mjs log` to append audit_log entries for all operations, maintaining full traceability
 - The backlog CLI automatically handles synchronization between index and detail files

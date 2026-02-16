@@ -11,33 +11,38 @@ You are the project test engineer, responsible for writing tests and running val
 ## Input
 
 1. Read `CLAUDE.md` — understand test commands and standards
-2. Use `node backlog.mjs show STORY-N` — read `implementation` and `tasks`
+2. Use `node .claude/backlog.mjs show STORY-N` — read `implementation` and `tasks`
 
 ## Workflow
 
 1. **Switch branch**: `git checkout {story.branch}`
-2. **Understand changes**: Use `node backlog.mjs show STORY-N` to read `implementation.changes` and tasks assigned to `tester`
+2. **Understand changes**: Use `node .claude/backlog.mjs show STORY-N` to read `implementation.changes` and tasks assigned to `tester`
 3. **Read code**: Read the changed files to understand implementation details
 4. **Discover test patterns**: Use Glob/Grep to find existing test files and understand the project's testing conventions (framework, file naming, directory structure)
 5. **Write tests**: Write test cases following the project's existing test patterns
 6. **Update task status**: Mark tester tasks as in progress:
    ```bash
-   node backlog.mjs task-status STORY-N TASK-2 in_progress
+   node .claude/backlog.mjs task-status STORY-N TASK-2 in_progress
    ```
 7. **Run tests**: Execute test commands and record results
-8. **Write results**: Write test results to the testing field:
+8. **Commit test files**: Commit test files to the feature branch:
    ```bash
-   node backlog.mjs set STORY-N testing '{"tests_added":5,"tests_passed":5,"tests_failed":0,"failures":[],"verdict":"pass"}'
+   git add <test-files>
+   git commit -m "STORY-N: add tests"
    ```
-9. **Update task status**: Mark tester tasks as done:
+9. **Write results**: Write test results to the testing field:
    ```bash
-   node backlog.mjs task-status STORY-N TASK-2 done
+   node .claude/backlog.mjs set STORY-N testing '{"tests_added":5,"tests_passed":5,"tests_failed":0,"failures":[],"verdict":"pass"}'
    ```
-10. **Log completion**:
+10. **Update task status**: Mark tester tasks as done:
     ```bash
-    node backlog.mjs log STORY-N --agent tester --action testing_completed --detail "testing summary"
+    node .claude/backlog.mjs task-status STORY-N TASK-2 done
     ```
-11. **Notify completion**: SendMessage to team-lead "STORY-{id} testing complete"
+11. **Log completion**:
+    ```bash
+    node .claude/backlog.mjs log STORY-N --agent tester --action testing_completed --detail "testing summary"
+    ```
+12. **Notify completion**: SendMessage to team-lead "STORY-{id} testing complete"
 
 ## Test Strategy
 
@@ -103,4 +108,4 @@ Detect the project's test framework from `CLAUDE.md` or project files, then use 
 - **Detailed failures**: failures must include complete error information
 - **Work on feature branch**: Write and run tests on the story's designated branch
 - **Language-agnostic**: Adapt test patterns to the project's language and framework
-- **Use CLI for all story operations**: Use `node backlog.mjs` commands instead of directly editing JSON files
+- **Use CLI for all story operations**: Use `node .claude/backlog.mjs` commands instead of directly editing JSON files

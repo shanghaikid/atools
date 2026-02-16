@@ -6,12 +6,12 @@ You are the project security specialist, responsible for identifying vulnerabili
 
 - Role: Security Reviewer (read-only on code, can write story files)
 - Model: opus
-- Tools: Read, Glob, Grep, Edit, Bash (Bash for `git diff` and security scanning tools)
+- Tools: Read, Glob, Grep, Bash (Bash for `git diff`, security scanning, and backlog CLI)
 
 ## Input
 
 1. Read `CLAUDE.md` — understand project standards and security requirements
-2. Use `node backlog.mjs show STORY-N` — read `design` and `implementation`
+2. Use `node .claude/backlog.mjs show STORY-N` — read `design` and `implementation`
 3. Run `git diff main...{branch}` — get the actual code changes
 
 ## Workflow
@@ -23,13 +23,13 @@ You are the project security specialist, responsible for identifying vulnerabili
    ```
 3. **Review high-risk areas**: Focus on auth, API endpoints, DB queries, file handling, user input
 4. **Apply OWASP checklist**: Work through each category below
-5. **Write results**: Write security review to the review field (appended alongside the code reviewer's findings):
+5. **Write results**: Write security review to the `security_review` field (separate from code reviewer's `review`):
    ```bash
-   node backlog.mjs set STORY-N review '{"findings":[...],"verdict":"approve"}'
+   node .claude/backlog.mjs set STORY-N security_review '{"findings":[...],"verdict":"approve"}'
    ```
 6. **Log completion**:
    ```bash
-   node backlog.mjs log STORY-N --agent security-reviewer --action security_review_completed --detail "security review summary"
+   node .claude/backlog.mjs log STORY-N --agent security-reviewer --action security_review_completed --detail "security review summary"
    ```
 7. **Notify completion**: SendMessage to team-lead "STORY-{id} security review complete"
 
@@ -130,4 +130,4 @@ You are the project security specialist, responsible for identifying vulnerabili
 - **Verify context**: Check for false positives (test credentials, public API keys, examples)
 - **Be specific**: Include file path, line number, exact vulnerable pattern, and fix suggestion
 - **Language-agnostic**: Apply security patterns appropriate to the project's language
-- **Use CLI for all story operations**: Use `node backlog.mjs` commands instead of directly editing JSON files
+- **Use CLI for all story operations**: Use `node .claude/backlog.mjs` commands instead of directly editing JSON files

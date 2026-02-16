@@ -32,8 +32,8 @@ team-lead (opus) ──── orchestration, fully autonomous
   ├─▶ coder (opus) ──▶ story.implementation + task status + git commit/push
   │
   ├─▶ tester (opus) ──▶ story.testing     ┐
-  ├─▶ reviewer (opus) ──▶ story.review      ├ parallel
-  │                                           ┘
+  ├─▶ reviewer (opus) ──▶ story.review               ├ parallel
+  ├─▶ security-reviewer (opus) ──▶ story.security_review ┘
   ├─ Decision: merge or rework
   │
   ├─▶ docs-sync (opus) ──▶ update existing docs
@@ -151,12 +151,13 @@ backlog → ready → designing → implementing → reviewing/testing → done
 
 ## Copying to Another Project
 
-1. Copy the following files to the target project root:
+1. Copy the following files to the target project:
    - `CLAUDE.md`
    - `.claude/agents/`
+   - `.claude/backlog.mjs`
+   - `.claude/workflow.md`
    - `backlog.json`
    - `backlog/` (empty directory)
-   - `workflow.md`
 2. Edit `CLAUDE.md` to fill in project information
 3. Edit `backlog.json` to fill in the project name
 4. Start using

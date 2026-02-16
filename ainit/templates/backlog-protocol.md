@@ -1,3 +1,4 @@
+<!-- ainit:backlog-protocol -->
 ## Development Workflow (MANDATORY)
 
 When receiving a new feature request or change request, **DO NOT modify code directly**. You MUST follow this workflow:
@@ -70,6 +71,7 @@ backlog/
   "design": { "summary", "files_involved", "decisions", "steps" },
   "implementation": { "changes", "build_status", "deviations" },
   "review": { "findings", "verdict" },
+  "security_review": { "findings", "verdict" },
   "testing": { "tests_added", "tests_passed", "tests_failed", "failures", "verdict" },
   "audit_log": [{ "timestamp", "agent", "action", "detail" }]
 }
@@ -94,6 +96,7 @@ backlog/
 | coder | assigned story file | story.implementation, story.tasks status |
 | tester | assigned story file | story.testing |
 | reviewer | assigned story file + branch diff | story.review |
+| security-reviewer | assigned story file + branch diff | story.security_review |
 | docs-sync | story files with status=done | does not write backlog, only updates docs |
 
 ### Status Flow
