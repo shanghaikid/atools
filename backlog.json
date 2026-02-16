@@ -62,9 +62,9 @@
     {
       "id": "STORY-9",
       "title": "Per-agent rate limiter",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-9-rate-limiter",
-      "merge_commit": null
+      "merge_commit": "054a59e"
     },
     {
       "id": "STORY-10",

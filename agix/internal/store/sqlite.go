@@ -21,6 +21,7 @@ type Record struct {
 	CostUSD      float64
 	DurationMS   int64
 	StatusCode   int
+	FailoverFrom string
 }
 
 // Stats represents aggregated statistics.
@@ -89,6 +90,11 @@ func New(dbPath string) (*Store, error) {
 	if _, err := db.Exec(createTableSQL); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("create schema: %w", err)
+	}
+
+	if err := migrateSchema(db); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("migrate schema: %w", err)
 	}
 
 	s := &Store{
@@ -162,8 +168,8 @@ func (s *Store) insertBatch(records []*Record) {
 	}
 
 	stmt, err := tx.Prepare(
-		`INSERT INTO requests (timestamp, agent_name, model, provider, input_tokens, output_tokens, cost_usd, duration_ms, status_code)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO requests (timestamp, agent_name, model, provider, input_tokens, output_tokens, cost_usd, duration_ms, status_code, failover_from)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 	)
 	if err != nil {
 		log.Printf("ERROR: prepare batch stmt: %v", err)
@@ -174,7 +180,7 @@ func (s *Store) insertBatch(records []*Record) {
 
 	for _, r := range records {
 		ts := fmtTime(r.Timestamp)
-		if _, err := stmt.Exec(ts, r.AgentName, r.Model, r.Provider, r.InputTokens, r.OutputTokens, r.CostUSD, r.DurationMS, r.StatusCode); err != nil {
+		if _, err := stmt.Exec(ts, r.AgentName, r.Model, r.Provider, r.InputTokens, r.OutputTokens, r.CostUSD, r.DurationMS, r.StatusCode, r.FailoverFrom); err != nil {
 			log.Printf("ERROR: batch insert record: %v", err)
 		}
 	}
@@ -189,14 +195,58 @@ func (s *Store) Insert(r *Record) error {
 	// Store timestamp as ISO 8601 string so SQLite date functions work correctly
 	ts := fmtTime(r.Timestamp)
 	_, err := s.db.Exec(
-		`INSERT INTO requests (timestamp, agent_name, model, provider, input_tokens, output_tokens, cost_usd, duration_ms, status_code)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		ts, r.AgentName, r.Model, r.Provider, r.InputTokens, r.OutputTokens, r.CostUSD, r.DurationMS, r.StatusCode,
+		`INSERT INTO requests (timestamp, agent_name, model, provider, input_tokens, output_tokens, cost_usd, duration_ms, status_code, failover_from)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		ts, r.AgentName, r.Model, r.Provider, r.InputTokens, r.OutputTokens, r.CostUSD, r.DurationMS, r.StatusCode, r.FailoverFrom,
 	)
 	if err != nil {
 		return fmt.Errorf("insert record: %w", err)
 	}
 	return nil
+}
+
+// migrateSchema adds columns that may not exist in older databases.
+func migrateSchema(db *sql.DB) error {
+	// List of columns to add if missing: {name, type, default}
+	migrations := []struct {
+		column     string
+		definition string
+	}{
+		{"failover_from", "TEXT NOT NULL DEFAULT ''"},
+	}
+
+	for _, m := range migrations {
+		if !columnExists(db, "requests", m.column) {
+			stmt := fmt.Sprintf("ALTER TABLE requests ADD COLUMN %s %s", m.column, m.definition)
+			if _, err := db.Exec(stmt); err != nil {
+				return fmt.Errorf("add column %s: %w", m.column, err)
+			}
+		}
+	}
+	return nil
+}
+
+func columnExists(db *sql.DB, table, column string) bool {
+	rows, err := db.Query(fmt.Sprintf("PRAGMA table_info(%s)", table))
+	if err != nil {
+		return false
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notnull int
+		var dflt sql.NullString
+		var pk int
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dflt, &pk); err != nil {
+			continue
+		}
+		if name == column {
+			return true
+		}
+	}
+	return false
 }
 
 const timeFormat = "2006-01-02T15:04:05Z"

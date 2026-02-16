@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/agent-platform/agix/internal/config"
+	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/pricing"
 	"github.com/agent-platform/agix/internal/ratelimit"
 	"github.com/agent-platform/agix/internal/store"
@@ -26,6 +27,7 @@ type Proxy struct {
 	store       *store.Store
 	toolMgr     *toolmgr.Manager
 	rateLimiter *ratelimit.Limiter
+	failover    *failover.Failover
 	client      *http.Client
 	mux         *http.ServeMux
 }
@@ -41,6 +43,11 @@ func WithToolManager(m *toolmgr.Manager) Option {
 // WithRateLimiter sets the per-agent rate limiter.
 func WithRateLimiter(l *ratelimit.Limiter) Option {
 	return func(p *Proxy) { p.rateLimiter = l }
+}
+
+// WithFailover sets the multi-provider failover handler.
+func WithFailover(f *failover.Failover) Option {
+	return func(p *Proxy) { p.failover = f }
 }
 
 // New creates a new Proxy with the given options.
@@ -172,26 +179,8 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	upstreamURL, upstreamHeaders, upstreamBody, err := p.buildUpstreamRequest(provider, req.Model, body)
-	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusBadGateway)
-		return
-	}
-
-	// Create upstream request
-	upstreamReq, err := http.NewRequestWithContext(r.Context(), http.MethodPost, upstreamURL, bytes.NewReader(upstreamBody))
-	if err != nil {
-		http.Error(w, `{"error":"failed to create upstream request"}`, http.StatusInternalServerError)
-		return
-	}
-	for k, v := range upstreamHeaders {
-		upstreamReq.Header.Set(k, v)
-	}
-
 	start := time.Now()
-
-	// Send request to upstream
-	resp, err := p.client.Do(upstreamReq)
+	resp, actualModel, actualProvider, failoverFrom, err := p.doUpstreamRequest(r, body, req.Model, provider)
 	if err != nil {
 		http.Error(w, fmt.Sprintf(`{"error":"upstream request failed: %s"}`, err.Error()), http.StatusBadGateway)
 		return
@@ -201,10 +190,93 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	duration := time.Since(start)
 
 	if req.Stream {
-		p.handleStreamingResponse(w, resp, req.Model, provider, agentName, start, duration)
+		p.handleStreamingResponse(w, resp, actualModel, actualProvider, agentName, start, duration, failoverFrom)
 	} else {
-		p.handleNonStreamingResponse(w, resp, req.Model, provider, agentName, start, duration)
+		p.handleNonStreamingResponse(w, resp, actualModel, actualProvider, agentName, start, duration, failoverFrom)
 	}
+}
+
+// doUpstreamRequest sends the request to the upstream provider, with failover on 5xx.
+// Returns the response, actual model/provider used, and failover_from (empty if no failover).
+func (p *Proxy) doUpstreamRequest(r *http.Request, body []byte, model, provider string) (*http.Response, string, string, string, error) {
+	resp, err := p.sendToProvider(r, body, model, provider)
+	if err != nil {
+		return nil, model, provider, "", err
+	}
+
+	// Check if we should failover
+	if p.failover == nil || !failover.IsRetryable(resp.StatusCode) {
+		return resp, model, provider, "", nil
+	}
+
+	chain := p.failover.FallbackModels(model)
+	if len(chain) == 0 {
+		return resp, model, provider, "", nil
+	}
+
+	originalModel := model
+	maxRetries := p.failover.MaxRetries()
+	if maxRetries > len(chain) {
+		maxRetries = len(chain)
+	}
+
+	for i := 0; i < maxRetries; i++ {
+		resp.Body.Close()
+		fallbackModel := chain[i]
+		fallbackProvider := failover.ResolveProvider(fallbackModel)
+
+		// Re-encode body with new model
+		fallbackBody := replaceModel(body, fallbackModel)
+
+		log.Printf("FAILOVER: %s (%s) → %s (%s) [attempt %d/%d]",
+			model, provider, fallbackModel, fallbackProvider, i+1, maxRetries)
+
+		resp, err = p.sendToProvider(r, fallbackBody, fallbackModel, fallbackProvider)
+		if err != nil {
+			continue
+		}
+
+		if !failover.IsRetryable(resp.StatusCode) {
+			return resp, fallbackModel, fallbackProvider, originalModel, nil
+		}
+		model = fallbackModel
+		provider = fallbackProvider
+	}
+
+	// All retries exhausted, return last response
+	return resp, model, provider, originalModel, err
+}
+
+func (p *Proxy) sendToProvider(r *http.Request, body []byte, model, provider string) (*http.Response, error) {
+	upstreamURL, upstreamHeaders, upstreamBody, err := p.buildUpstreamRequest(provider, model, body)
+	if err != nil {
+		return nil, err
+	}
+
+	upstreamReq, err := http.NewRequestWithContext(r.Context(), http.MethodPost, upstreamURL, bytes.NewReader(upstreamBody))
+	if err != nil {
+		return nil, fmt.Errorf("create upstream request: %w", err)
+	}
+	for k, v := range upstreamHeaders {
+		upstreamReq.Header.Set(k, v)
+	}
+
+	return p.client.Do(upstreamReq)
+}
+
+// replaceModel replaces the model field in the request body.
+func replaceModel(body []byte, newModel string) []byte {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return body
+	}
+	modelJSON, _ := json.Marshal(newModel)
+	raw["model"] = modelJSON
+	out, err := json.Marshal(raw)
+	if err != nil {
+		return body
+	}
+	return out
 }
 
 func (p *Proxy) buildUpstreamRequest(provider, model string, originalBody []byte) (string, map[string]string, []byte, error) {
@@ -303,7 +375,7 @@ func convertToAnthropicFormat(body []byte) ([]byte, error) {
 	return json.Marshal(anthReq)
 }
 
-func (p *Proxy) handleNonStreamingResponse(w http.ResponseWriter, resp *http.Response, model, provider, agentName string, start time.Time, duration time.Duration) {
+func (p *Proxy) handleNonStreamingResponse(w http.ResponseWriter, resp *http.Response, model, provider, agentName string, start time.Time, duration time.Duration, failoverFrom ...string) {
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		http.Error(w, `{"error":"failed to read upstream response"}`, http.StatusBadGateway)
@@ -315,6 +387,10 @@ func (p *Proxy) handleNonStreamingResponse(w http.ResponseWriter, resp *http.Res
 	cost := pricing.CalculateCost(model, inputTokens, outputTokens)
 
 	// Record to store
+	var foFrom string
+	if len(failoverFrom) > 0 {
+		foFrom = failoverFrom[0]
+	}
 	record := &store.Record{
 		Timestamp:    start,
 		AgentName:    agentName,
@@ -325,6 +401,7 @@ func (p *Proxy) handleNonStreamingResponse(w http.ResponseWriter, resp *http.Res
 		CostUSD:      cost,
 		DurationMS:   duration.Milliseconds(),
 		StatusCode:   resp.StatusCode,
+		FailoverFrom: foFrom,
 	}
 	p.store.InsertAsync(record)
 
@@ -342,7 +419,7 @@ func (p *Proxy) handleNonStreamingResponse(w http.ResponseWriter, resp *http.Res
 	w.Write(respBody)
 }
 
-func (p *Proxy) handleStreamingResponse(w http.ResponseWriter, resp *http.Response, model, provider, agentName string, start time.Time, duration time.Duration) {
+func (p *Proxy) handleStreamingResponse(w http.ResponseWriter, resp *http.Response, model, provider, agentName string, start time.Time, duration time.Duration, failoverFrom ...string) {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		http.Error(w, `{"error":"streaming not supported"}`, http.StatusInternalServerError)
@@ -389,6 +466,10 @@ func (p *Proxy) handleStreamingResponse(w http.ResponseWriter, resp *http.Respon
 	cost := pricing.CalculateCost(model, totalInput, totalOutput)
 
 	// Record to store
+	var foFrom string
+	if len(failoverFrom) > 0 {
+		foFrom = failoverFrom[0]
+	}
 	record := &store.Record{
 		Timestamp:    start,
 		AgentName:    agentName,
@@ -399,6 +480,7 @@ func (p *Proxy) handleStreamingResponse(w http.ResponseWriter, resp *http.Respon
 		CostUSD:      cost,
 		DurationMS:   elapsed.Milliseconds(),
 		StatusCode:   resp.StatusCode,
+		FailoverFrom: foFrom,
 	}
 	p.store.InsertAsync(record)
 }

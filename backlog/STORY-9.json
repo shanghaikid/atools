@@ -6,7 +6,7 @@
   "sprint": 1,
   "status": "done",
   "branch": "feat/STORY-9-rate-limiter",
-  "merge_commit": null,
+  "merge_commit": "054a59e",
   "acceptance_criteria": [
     "New internal/ratelimit package with sliding window counter algorithm",
     "Config supports rate_limits with per-agent requests_per_minute and requests_per_hour",

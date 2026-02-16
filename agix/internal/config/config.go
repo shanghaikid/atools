@@ -18,6 +18,13 @@ type Config struct {
 	Budgets    map[string]Budget          `yaml:"budgets"`
 	Tools      ToolsConfig                `yaml:"tools"`
 	RateLimits map[string]RateLimitConfig `yaml:"rate_limits"`
+	Failover   FailoverConfig             `yaml:"failover"`
+}
+
+// FailoverConfig defines multi-provider failover.
+type FailoverConfig struct {
+	MaxRetries int                 `yaml:"max_retries"`
+	Chains     map[string][]string `yaml:"chains"`
 }
 
 // RateLimitConfig defines per-agent rate limits.

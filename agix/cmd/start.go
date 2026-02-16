@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/agent-platform/agix/internal/config"
+	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/proxy"
 	"github.com/agent-platform/agix/internal/ratelimit"
 	"github.com/agent-platform/agix/internal/store"
@@ -67,6 +68,17 @@ Agents should point their API base URL to http://localhost:<port>.`,
 				}
 			}
 			proxyOpts = append(proxyOpts, proxy.WithRateLimiter(ratelimit.New(limits)))
+		}
+
+		// Initialize failover
+		if len(cfg.Failover.Chains) > 0 {
+			f := failover.New(failover.Config{
+				MaxRetries: cfg.Failover.MaxRetries,
+				Chains:     cfg.Failover.Chains,
+			})
+			if f != nil {
+				proxyOpts = append(proxyOpts, proxy.WithFailover(f))
+			}
 		}
 
 		// Create proxy
