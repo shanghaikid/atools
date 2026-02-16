@@ -41,11 +41,12 @@ You are the project coder, strictly implementing code according to the design pr
 
 ## Build Verification
 
-Before committing, verify the build passes. This is a Go monorepo — run commands from the relevant tool directory (`agix/` or `ainit/`):
+Before committing, verify the build passes. Run from within the relevant tool directory (`agix/` or `ainit/`):
 
 ```bash
-cd <tool-dir> && make build && make vet
-# Equivalent to: go build ./... && go vet ./...
+make build    # go build -trimpath -ldflags '-s -w'
+make vet      # go vet ./...
+make test     # go test ./...
 ```
 
 If the build fails, fix the errors before committing. Do not commit broken code.

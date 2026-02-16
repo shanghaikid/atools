@@ -74,23 +74,23 @@ For each change in `implementation.changes`, ensure coverage of:
 
 ## Test Commands
 
-This is a Go monorepo with independent tools in subdirectories (`agix/`, `ainit/`). Each has its own `go.mod` and `Makefile`.
+This is a Go monorepo with two independent tools (`agix/` and `ainit/`), each with its own `go.mod`.
+
+Run tests from within the relevant tool directory:
 
 ```bash
-# Run all tests for a specific tool (from its directory)
-cd agix && make test    # or: cd agix && go test ./...
-cd ainit && make test   # or: cd ainit && go test ./...
+cd agix && go test ./...      # or: make test
+cd ainit && go test ./...     # or: make test
+```
 
-# Run a single test
+Run a single test:
+```bash
 go test -v -run TestName ./internal/store/
 ```
 
-### Test Conventions
-
-- **Test file naming**: `*_test.go` alongside the source file
 - **Framework**: Go standard `testing` package
-- **Pattern**: Table-driven tests using `[]struct{ name string; ... }`
-- **No CGO**: Pure Go only, no C dependencies in tests
+- **File convention**: `*_test.go` alongside source files
+- **Style**: Table-driven tests using `[]struct{ name string; ... }` pattern
 
 ## testing Field Format
 

@@ -134,6 +134,13 @@ backlog → ready → designing → implementing → reviewing/testing → done
 | reviewer | opus | Thorough code review benefits from strong reasoning |
 | docs-sync | opus | Consistent model across all agents |
 
+## Project-Specific Notes
+
+- **Monorepo structure**: Two independent tools (`agix/` and `ainit/`), each with its own `go.mod`, `Makefile`, and `CLAUDE.md`
+- **Work from tool directory**: Always `cd` into the relevant tool directory before running build/test commands
+- **Code conventions**: Error wrapping with `%w`, no globals, table-driven tests, no CGO
+- **Each tool has its own CLAUDE.md**: Read the tool-specific `CLAUDE.md` for detailed architecture docs
+
 ## Token Conservation Strategy
 
 1. **File splitting**: Agent only reads one story file (tens to hundreds of lines), not the entire backlog
@@ -157,15 +164,6 @@ When review findings span multiple independent files, team-lead may launch **par
 2. If files are independent (no shared dependency), assign each group to a separate coder agent
 3. If findings are in the same file or cross-dependent, use a single coder serially
 4. After all coders complete, run a single build verification before re-validation
-
-## Project-Specific Notes
-
-- **Go monorepo**: Two independent tools (`agix/`, `ainit/`), each with its own `go.mod` and `Makefile`
-- **Build/test**: Always `cd` into the relevant tool directory before running `make build`, `make test`, `make vet`
-- **Code layout**: `cmd/` for cobra CLI commands, `internal/` for private packages
-- **No CGO**: Pure Go only, for cross-compilation
-- **Error wrapping**: `fmt.Errorf("context: %w", err)`
-- **Table-driven tests**: `[]struct{ name string; ... }` pattern
 
 ## Copying to Another Project
 

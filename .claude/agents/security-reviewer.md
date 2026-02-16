@@ -90,10 +90,11 @@ You are the project security specialist, responsible for identifying vulnerabili
 - `InsecureSkipVerify: true` in TLS config
 - `unsafe` package usage without justification
 - Race conditions (shared state without mutex/channels)
-- `os/exec` with user input (especially relevant for agix reverse proxy)
-- Path traversal in file operations
-- Unvalidated HTTP headers/paths in proxy forwarding (agix)
-- Budget bypass via manipulated token counts (agix)
+- `os/exec` with user input (agix proxies commands to MCP servers)
+- API keys logged or exposed in responses (agix handles real API keys)
+- SQLite injection via string concatenation (agix uses SQLite for usage tracking)
+- HTTP request smuggling in reverse proxy (agix is an HTTP proxy)
+- Missing input validation on `X-Agent-Name` header
 
 ## review Field Format
 

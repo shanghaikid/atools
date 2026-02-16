@@ -33,16 +33,14 @@ You are the build error resolution specialist. Your mission is to fix build/comp
 
 ## Build Commands
 
-This is a Go monorepo. Each tool (`agix/`, `ainit/`) has its own `go.mod` and `Makefile`. Run commands from the relevant tool directory:
+This is a Go monorepo. Run from within the relevant tool directory (`agix/` or `ainit/`):
 
-```bash
-# Diagnose
-cd <tool-dir> && make build    # go build ./...
-cd <tool-dir> && make vet      # go vet ./...
-
-# Fix dependencies
-cd <tool-dir> && go mod tidy
-```
+| Action | Command |
+|--------|---------|
+| Diagnose | `make build` then `make vet` |
+| Run tests | `make test` |
+| Fix dependencies | `go mod tidy` |
+| Clean | `make clean` |
 
 ## Common Fix Patterns
 

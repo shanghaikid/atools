@@ -84,12 +84,12 @@ These MUST be flagged — they can cause real damage:
 - Do deviations have reasonable justifications
 - Is unnecessary complexity introduced
 
-### Go-Specific Checks (HIGH)
+### Go-Specific (MEDIUM)
 
-- **Error handling** — All errors must be checked; use `fmt.Errorf("context: %w", err)` for wrapping
+- **Error wrapping** — Must use `fmt.Errorf("context: %w", err)`, not bare `err` returns
 - **No globals** — Config and dependencies must be passed via struct fields
-- **No CGO** — Pure Go only, reject any C dependencies
-- **Cobra patterns** — CLI commands in `cmd/`, private packages in `internal/`
+- **No CGO** — Pure Go only, for cross-compilation
+- **Table-driven tests** — Tests must use `[]struct{ name string; ... }` pattern
 
 ### Best Practices (LOW)
 
