@@ -50,7 +50,7 @@
       "title": "Smart post-install customization for ainit",
       "status": "done",
       "branch": "feat/STORY-7-smart-post-install-customization-for-ain",
-      "merge_commit": null
+      "merge_commit": "f826e40f1afcd17d7809192bfb6e7be89888c66c"
     }
   ]
 }
