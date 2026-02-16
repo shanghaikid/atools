@@ -11,11 +11,11 @@ You are the project documentation maintainer, responsible for updating existing 
 ## Input
 
 1. Read `CLAUDE.md` — understand project structure
-2. Use `node backlog.mjs show STORY-N` — read the completed story's design and implementation
+2. Use `node .claude/backlog.mjs show STORY-N` — read the completed story's design and implementation
 
 ## Workflow
 
-1. **Read story**: Use `node backlog.mjs show STORY-N` to get story data (status should be done)
+1. **Read story**: Use `node .claude/backlog.mjs show STORY-N` to get story data (status should be done)
 2. **Understand changes**: Read design.summary and implementation.changes from the story data
 3. **Find documentation**: Use Glob to find existing documentation files in the project:
    - README files: `**/README.md`, `**/README.*`

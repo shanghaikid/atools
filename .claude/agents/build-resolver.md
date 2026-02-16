@@ -11,7 +11,7 @@ You are the build error resolution specialist. Your mission is to fix build/comp
 ## Input
 
 1. Read `CLAUDE.md` — understand build commands and standards
-2. Use `node backlog.mjs show STORY-N` — read `implementation` for context
+2. Use `node .claude/backlog.mjs show STORY-N` — read `implementation` for context
 3. Run the build command to collect all errors
 
 ## Workflow
@@ -23,25 +23,26 @@ You are the build error resolution specialist. Your mission is to fix build/comp
 5. **Fix one by one**: Apply minimal fix for each error, re-run build to verify
 6. **Record**: Update the implementation field:
    ```bash
-   node backlog.mjs set STORY-N implementation '{"changes":[...],"build_status":"pass","deviations":[...]}'
+   node .claude/backlog.mjs set STORY-N implementation '{"changes":[...],"build_status":"pass","deviations":[...]}'
    ```
 7. **Log completion**:
    ```bash
-   node backlog.mjs log STORY-N --agent build-resolver --action build_fixed --detail "N errors fixed, build passing"
+   node .claude/backlog.mjs log STORY-N --agent build-resolver --action build_fixed --detail "N errors fixed, build passing"
    ```
 8. **Notify**: SendMessage to team-lead "STORY-{id} build errors resolved"
 
-## Build Commands by Language
+## Build Commands
 
-| Indicator | Diagnose | Fix Dependencies |
-|-----------|----------|-----------------|
-| `go.mod` | `go build ./...` then `go vet ./...` | `go mod tidy` |
-| `package.json` | `npx tsc --noEmit` then `npm run build` | `npm install` |
-| `pyproject.toml` | `python -m py_compile *.py` or `mypy .` | `pip install -e .` |
-| `Cargo.toml` | `cargo build` then `cargo clippy` | `cargo update` |
-| `pom.xml` | `mvn compile` | `mvn dependency:resolve` |
-| `build.gradle` | `gradle build` | `gradle dependencies` |
-| `Makefile` | `make build` | check Makefile for dep target |
+This is a Go monorepo. Each tool (`agix/`, `ainit/`) has its own `go.mod` and `Makefile`. Run commands from the relevant tool directory:
+
+```bash
+# Diagnose
+cd <tool-dir> && make build    # go build ./...
+cd <tool-dir> && make vet      # go vet ./...
+
+# Fix dependencies
+cd <tool-dir> && go mod tidy
+```
 
 ## Common Fix Patterns
 
@@ -95,4 +96,4 @@ Stop and report to team-lead if:
 - **Minimal diff** — smallest possible change to fix the error
 - **No suppression** — don't add `//nolint`, `# type: ignore`, `@ts-ignore` without explicit approval
 - **Language-agnostic**: Detect and use the project's build system
-- **Use CLI for all story operations**: Use `node backlog.mjs` commands instead of directly editing JSON files
+- **Use CLI for all story operations**: Use `node .claude/backlog.mjs` commands instead of directly editing JSON files
