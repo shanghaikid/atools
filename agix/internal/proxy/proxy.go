@@ -16,6 +16,7 @@ import (
 	"github.com/agent-platform/agix/internal/alert"
 	"github.com/agent-platform/agix/internal/config"
 	"github.com/agent-platform/agix/internal/failover"
+	"github.com/agent-platform/agix/internal/firewall"
 	"github.com/agent-platform/agix/internal/pricing"
 	"github.com/agent-platform/agix/internal/ratelimit"
 	"github.com/agent-platform/agix/internal/router"
@@ -32,6 +33,7 @@ type Proxy struct {
 	failover    *failover.Failover
 	router      *router.Router
 	alerter     *alert.Alerter
+	firewall    *firewall.Firewall
 	client      *http.Client
 	mux         *http.ServeMux
 }
@@ -62,6 +64,11 @@ func WithRouter(r *router.Router) Option {
 // WithAlerter sets the budget alerter.
 func WithAlerter(a *alert.Alerter) Option {
 	return func(p *Proxy) { p.alerter = a }
+}
+
+// WithFirewall sets the prompt firewall.
+func WithFirewall(f *firewall.Firewall) Option {
+	return func(p *Proxy) { p.firewall = f }
 }
 
 // New creates a new Proxy with the given options.
@@ -181,6 +188,18 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		budgetHeaders = p.computeBudgetAlert(agentName)
+	}
+
+	// Firewall scan (after budget check, before routing)
+	if p.firewall != nil {
+		result := p.firewall.Scan(req.Messages)
+		if result.Blocked {
+			http.Error(w, fmt.Sprintf(`{"error":"firewall: %s"}`, result.Message), http.StatusForbidden)
+			return
+		}
+		for _, warning := range result.Warnings {
+			w.Header().Add("X-Firewall-Warning", warning)
+		}
 	}
 
 	// Smart routing (opt-out via X-Force-Model header)

@@ -21,6 +21,21 @@ type Config struct {
 	Failover   FailoverConfig             `yaml:"failover"`
 	Routing    RoutingConfig              `yaml:"routing"`
 	Dashboard  DashboardConfig            `yaml:"dashboard"`
+	Firewall   FirewallConfig             `yaml:"firewall"`
+}
+
+// FirewallConfig defines the prompt firewall settings.
+type FirewallConfig struct {
+	Enabled bool               `yaml:"enabled"`
+	Rules   []FirewallRule     `yaml:"rules"`
+}
+
+// FirewallRule defines a firewall rule in config.
+type FirewallRule struct {
+	Name     string `yaml:"name"`
+	Category string `yaml:"category"`
+	Pattern  string `yaml:"pattern"`
+	Action   string `yaml:"action"`
 }
 
 // DashboardConfig defines the web dashboard settings.

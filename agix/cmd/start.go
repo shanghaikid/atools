@@ -12,6 +12,7 @@ import (
 	"github.com/agent-platform/agix/internal/config"
 	"github.com/agent-platform/agix/internal/dashboard"
 	"github.com/agent-platform/agix/internal/failover"
+	"github.com/agent-platform/agix/internal/firewall"
 	"github.com/agent-platform/agix/internal/proxy"
 	"github.com/agent-platform/agix/internal/ratelimit"
 	"github.com/agent-platform/agix/internal/router"
@@ -86,6 +87,29 @@ Agents should point their API base URL to http://localhost:<port>.`,
 
 		// Initialize alerter for budget webhooks
 		proxyOpts = append(proxyOpts, proxy.WithAlerter(alert.NewAlerter(5*time.Minute)))
+
+		// Initialize firewall
+		if cfg.Firewall.Enabled {
+			var rules []firewall.RuleConfig
+			for _, r := range cfg.Firewall.Rules {
+				rules = append(rules, firewall.RuleConfig{
+					Name:     r.Name,
+					Category: r.Category,
+					Pattern:  r.Pattern,
+					Action:   firewall.Action(r.Action),
+				})
+			}
+			fw, err := firewall.New(firewall.Config{
+				Enabled: true,
+				Rules:   rules,
+			})
+			if err != nil {
+				return fmt.Errorf("initialize firewall: %w", err)
+			}
+			if fw != nil {
+				proxyOpts = append(proxyOpts, proxy.WithFirewall(fw))
+			}
+		}
 
 		// Initialize smart router
 		if cfg.Routing.Enabled {
