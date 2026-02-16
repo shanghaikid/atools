@@ -53,6 +53,7 @@ type Budget struct {
 	DailyLimitUSD   float64 `yaml:"daily_limit_usd"`
 	MonthlyLimitUSD float64 `yaml:"monthly_limit_usd"`
 	AlertAtPercent  float64 `yaml:"alert_at_percent"`
+	AlertWebhook    string  `yaml:"alert_webhook"`
 }
 
 // ToolsConfig holds shared MCP tool configuration.

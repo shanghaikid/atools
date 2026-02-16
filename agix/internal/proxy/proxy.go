@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/agent-platform/agix/internal/alert"
 	"github.com/agent-platform/agix/internal/config"
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/pricing"
@@ -30,6 +31,7 @@ type Proxy struct {
 	rateLimiter *ratelimit.Limiter
 	failover    *failover.Failover
 	router      *router.Router
+	alerter     *alert.Alerter
 	client      *http.Client
 	mux         *http.ServeMux
 }
@@ -55,6 +57,11 @@ func WithFailover(f *failover.Failover) Option {
 // WithRouter sets the smart routing handler.
 func WithRouter(r *router.Router) Option {
 	return func(p *Proxy) { p.router = r }
+}
+
+// WithAlerter sets the budget alerter.
+func WithAlerter(a *alert.Alerter) Option {
+	return func(p *Proxy) { p.alerter = a }
 }
 
 // New creates a new Proxy with the given options.
@@ -166,12 +173,14 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Check budget before proxying
+	// Check budget before proxying + compute alert status
+	var budgetHeaders map[string]string
 	if agentName != "" {
 		if err := p.checkBudget(agentName); err != nil {
 			http.Error(w, fmt.Sprintf(`{"error":"budget exceeded: %s"}`, err.Error()), http.StatusTooManyRequests)
 			return
 		}
+		budgetHeaders = p.computeBudgetAlert(agentName)
 	}
 
 	// Smart routing (opt-out via X-Force-Model header)
@@ -208,6 +217,11 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	defer resp.Body.Close()
 
 	duration := time.Since(start)
+
+	// Add budget alert headers before writing response
+	for k, v := range budgetHeaders {
+		w.Header().Set(k, v)
+	}
 
 	if req.Stream {
 		p.handleStreamingResponse(w, resp, actualModel, actualProvider, agentName, start, duration, failoverFrom, originalModel)
@@ -1109,4 +1123,50 @@ func (p *Proxy) checkBudget(agentName string) error {
 	}
 
 	return nil
+}
+
+// computeBudgetAlert computes budget status and fires webhook alerts if needed.
+// Returns headers to add to the response.
+func (p *Proxy) computeBudgetAlert(agentName string) map[string]string {
+	budget, ok := p.cfg.Budgets[agentName]
+	if !ok {
+		return nil
+	}
+
+	now := time.Now().UTC()
+	var dailySpend, monthlySpend float64
+
+	if budget.DailyLimitUSD > 0 {
+		spend, err := p.store.QueryAgentDailySpend(agentName, now)
+		if err == nil {
+			dailySpend = spend
+		}
+	}
+	if budget.MonthlyLimitUSD > 0 {
+		spend, err := p.store.QueryAgentMonthlySpend(agentName, now.Year(), now.Month())
+		if err == nil {
+			monthlySpend = spend
+		}
+	}
+
+	bs := alert.ComputeBudgetStatus(dailySpend, budget.DailyLimitUSD, monthlySpend, budget.MonthlyLimitUSD, budget.AlertAtPercent)
+	headers := alert.FormatHeaders(bs)
+
+	// Fire webhook if alert threshold reached
+	if bs.Alert && p.alerter != nil && budget.AlertWebhook != "" {
+		payload := alert.WebhookPayload{
+			Agent:          agentName,
+			DailySpend:     dailySpend,
+			DailyLimit:     budget.DailyLimitUSD,
+			DailyPercent:   bs.DailyPercent,
+			MonthlySpend:   monthlySpend,
+			MonthlyLimit:   budget.MonthlyLimitUSD,
+			MonthlyPercent: bs.MonthlyPercent,
+			Timestamp:      now.Format(time.RFC3339),
+		}
+		p.alerter.SendWebhook(budget.AlertWebhook, agentName, payload)
+		log.Printf("ALERT: budget alert for %s (daily: %.1f%%, monthly: %.1f%%)", agentName, bs.DailyPercent, bs.MonthlyPercent)
+	}
+
+	return headers
 }

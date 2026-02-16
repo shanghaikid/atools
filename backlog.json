@@ -76,9 +76,9 @@
     {
       "id": "STORY-11",
       "title": "Smart routing",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-11-smart-routing",
-      "merge_commit": null
+      "merge_commit": "80ae461"
     },
     {
       "id": "STORY-12",
