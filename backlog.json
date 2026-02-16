@@ -36,7 +36,7 @@
       "title": "Fix all 14 issues in ainit tool",
       "status": "done",
       "branch": "feat/STORY-5-fix-all-14-issues-in-ainit-tool",
-      "merge_commit": null
+      "merge_commit": "37701379431042c8b64de64af572b3c1a39a5d35"
     }
   ]
 }
