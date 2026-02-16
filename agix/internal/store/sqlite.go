@@ -27,22 +27,22 @@ type Record struct {
 
 // Stats represents aggregated statistics.
 type Stats struct {
-	TotalRequests  int
-	TotalInput     int
-	TotalOutput    int
-	TotalCostUSD   float64
-	AvgDurationMS  float64
-	UniqueModels   int
-	UniqueAgents   int
+	TotalRequests  int     `json:"total_requests"`
+	TotalInput     int     `json:"total_input"`
+	TotalOutput    int     `json:"total_output"`
+	TotalCostUSD   float64 `json:"total_cost_usd"`
+	AvgDurationMS  float64 `json:"avg_duration_ms"`
+	UniqueModels   int     `json:"unique_models"`
+	UniqueAgents   int     `json:"unique_agents"`
 }
 
 // AgentStats represents per-agent statistics.
 type AgentStats struct {
-	AgentName    string
-	Requests     int
-	InputTokens  int
-	OutputTokens int
-	CostUSD      float64
+	AgentName    string  `json:"agent_name"`
+	Requests     int     `json:"requests"`
+	InputTokens  int     `json:"input_tokens"`
+	OutputTokens int     `json:"output_tokens"`
+	CostUSD      float64 `json:"cost_usd"`
 }
 
 // ModelStats represents per-model statistics.
@@ -408,9 +408,9 @@ func (s *Store) QueryDailyCosts(since, until time.Time) ([]DailyCost, error) {
 
 // DailyCost represents aggregated costs for a single day.
 type DailyCost struct {
-	Date     string
-	Requests int
-	CostUSD  float64
+	Date     string  `json:"date"`
+	Requests int     `json:"requests"`
+	CostUSD  float64 `json:"cost_usd"`
 }
 
 // QueryAgentDailySpend returns the total spend for an agent on a given day.

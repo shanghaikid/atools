@@ -10,6 +10,7 @@ import (
 
 	"github.com/agent-platform/agix/internal/alert"
 	"github.com/agent-platform/agix/internal/config"
+	"github.com/agent-platform/agix/internal/dashboard"
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/proxy"
 	"github.com/agent-platform/agix/internal/ratelimit"
@@ -109,10 +110,21 @@ Agents should point their API base URL to http://localhost:<port>.`,
 		// Create proxy
 		p := proxy.New(cfg, st, proxyOpts...)
 
+		// Set up HTTP handler (proxy + optional dashboard)
+		var handler http.Handler = p
+		if cfg.Dashboard.Enabled {
+			mux := http.NewServeMux()
+			dash := dashboard.New(cfg, st)
+			dash.Register(mux)
+			// Proxy handles all non-dashboard routes
+			mux.Handle("/", p)
+			handler = mux
+		}
+
 		addr := fmt.Sprintf(":%d", cfg.Port)
 		srv := &http.Server{
 			Addr:              addr,
-			Handler:           p,
+			Handler:           handler,
 			ReadHeaderTimeout: 10 * time.Second,
 			IdleTimeout:       120 * time.Second,
 		}
@@ -171,6 +183,12 @@ Agents should point their API base URL to http://localhost:<port>.`,
 				ui.Dimf("Tools:  "), toolMgr.ToolCount(), toolMgr.ServerCount())
 			fmt.Printf("  %s %d\n",
 				ui.Dimf("Max iterations:"), cfg.Tools.MaxIterations)
+			fmt.Println()
+		}
+
+		// Show dashboard info
+		if cfg.Dashboard.Enabled {
+			fmt.Printf("  %s %s\n", ui.Dimf("Dashboard:"), ui.Cyanf("http://localhost%s/dashboard", addr))
 			fmt.Println()
 		}
 

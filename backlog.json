@@ -83,9 +83,9 @@
     {
       "id": "STORY-12",
       "title": "Burn rate alert",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-12-burn-rate-alert",
-      "merge_commit": null
+      "merge_commit": "322d1c8"
     },
     {
       "id": "STORY-13",

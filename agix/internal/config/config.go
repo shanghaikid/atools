@@ -20,6 +20,12 @@ type Config struct {
 	RateLimits map[string]RateLimitConfig `yaml:"rate_limits"`
 	Failover   FailoverConfig             `yaml:"failover"`
 	Routing    RoutingConfig              `yaml:"routing"`
+	Dashboard  DashboardConfig            `yaml:"dashboard"`
+}
+
+// DashboardConfig defines the web dashboard settings.
+type DashboardConfig struct {
+	Enabled bool `yaml:"enabled"`
 }
 
 // RoutingConfig defines smart routing.
