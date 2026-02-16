@@ -15,6 +15,7 @@ import (
 
 	"github.com/agent-platform/agix/internal/alert"
 	"github.com/agent-platform/agix/internal/cache"
+	"github.com/agent-platform/agix/internal/compressor"
 	"github.com/agent-platform/agix/internal/config"
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/firewall"
@@ -38,6 +39,7 @@ type Proxy struct {
 	firewall    *firewall.Firewall
 	qualityGate *qualitygate.Gate
 	cache       *cache.Cache
+	compressor  *compressor.Compressor
 	client      *http.Client
 	mux         *http.ServeMux
 }
@@ -83,6 +85,11 @@ func WithQualityGate(g *qualitygate.Gate) Option {
 // WithCache sets the semantic cache.
 func WithCache(c *cache.Cache) Option {
 	return func(p *Proxy) { p.cache = c }
+}
+
+// WithCompressor sets the context compressor.
+func WithCompressor(c *compressor.Compressor) Option {
+	return func(p *Proxy) { p.compressor = c }
 }
 
 // New creates a new Proxy with the given options.
@@ -243,6 +250,21 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 			provider = pricing.ProviderForModel(routedModel)
 			body = replaceModel(body, routedModel)
 			log.Printf("ROUTE: %s → %s (tier match)", originalModel, routedModel)
+		}
+	}
+
+	// Context compression (before upstream request)
+	if p.compressor != nil {
+		compressed := p.compressor.Compress(req.Messages)
+		if string(compressed) != string(req.Messages) {
+			// Replace messages in the body
+			var raw map[string]json.RawMessage
+			if err := json.Unmarshal(body, &raw); err == nil {
+				raw["messages"] = compressed
+				if newBody, err := json.Marshal(raw); err == nil {
+					body = newBody
+				}
+			}
 		}
 	}
 

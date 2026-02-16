@@ -10,6 +10,7 @@ import (
 
 	"github.com/agent-platform/agix/internal/alert"
 	"github.com/agent-platform/agix/internal/cache"
+	"github.com/agent-platform/agix/internal/compressor"
 	"github.com/agent-platform/agix/internal/config"
 	"github.com/agent-platform/agix/internal/dashboard"
 	"github.com/agent-platform/agix/internal/failover"
@@ -143,6 +144,19 @@ Agents should point their API base URL to http://localhost:<port>.`,
 			})
 			if qg != nil {
 				proxyOpts = append(proxyOpts, proxy.WithQualityGate(qg))
+			}
+		}
+
+		// Initialize context compressor
+		if cfg.Compression.Enabled {
+			comp := compressor.New(compressor.Config{
+				Enabled:         true,
+				ThresholdTokens: cfg.Compression.ThresholdTokens,
+				KeepRecent:      cfg.Compression.KeepRecent,
+				SummaryModel:    cfg.Compression.SummaryModel,
+			}, nil) // nil summarize func = fallback to extractive summary
+			if comp != nil {
+				proxyOpts = append(proxyOpts, proxy.WithCompressor(comp))
 			}
 		}
 

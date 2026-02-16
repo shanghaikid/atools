@@ -24,6 +24,7 @@ type Config struct {
 	Firewall   FirewallConfig             `yaml:"firewall"`
 	QualityGate QualityGateConfig         `yaml:"quality_gate"`
 	Cache       CacheConfig               `yaml:"cache"`
+	Compression CompressionConfig         `yaml:"compression"`
 }
 
 // FirewallConfig defines the prompt firewall settings.
@@ -38,6 +39,14 @@ type FirewallRule struct {
 	Category string `yaml:"category"`
 	Pattern  string `yaml:"pattern"`
 	Action   string `yaml:"action"`
+}
+
+// CompressionConfig defines context compressor settings.
+type CompressionConfig struct {
+	Enabled         bool   `yaml:"enabled"`
+	ThresholdTokens int    `yaml:"threshold_tokens"`
+	KeepRecent      int    `yaml:"keep_recent"`
+	SummaryModel    string `yaml:"summary_model"`
 }
 
 // CacheConfig defines semantic cache settings.
