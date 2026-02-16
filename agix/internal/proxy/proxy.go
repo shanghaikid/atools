@@ -17,6 +17,7 @@ import (
 	"github.com/agent-platform/agix/internal/cache"
 	"github.com/agent-platform/agix/internal/compressor"
 	"github.com/agent-platform/agix/internal/config"
+	"github.com/agent-platform/agix/internal/experiment"
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/firewall"
 	"github.com/agent-platform/agix/internal/pricing"
@@ -40,6 +41,7 @@ type Proxy struct {
 	qualityGate *qualitygate.Gate
 	cache       *cache.Cache
 	compressor  *compressor.Compressor
+	experiments *experiment.Manager
 	client      *http.Client
 	mux         *http.ServeMux
 }
@@ -90,6 +92,11 @@ func WithCache(c *cache.Cache) Option {
 // WithCompressor sets the context compressor.
 func WithCompressor(c *compressor.Compressor) Option {
 	return func(p *Proxy) { p.compressor = c }
+}
+
+// WithExperiments sets the A/B testing manager.
+func WithExperiments(m *experiment.Manager) Option {
+	return func(p *Proxy) { p.experiments = m }
 }
 
 // New creates a new Proxy with the given options.
@@ -250,6 +257,19 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 			provider = pricing.ProviderForModel(routedModel)
 			body = replaceModel(body, routedModel)
 			log.Printf("ROUTE: %s → %s (tier match)", originalModel, routedModel)
+		}
+	}
+
+	// Experiment routing (after smart routing, if no routing change occurred)
+	if p.experiments != nil && originalModel == "" && agentName != "" {
+		assignment := p.experiments.Assign(agentName, req.Model)
+		if assignment != nil && assignment.Model != req.Model {
+			originalModel = req.Model
+			req.Model = assignment.Model
+			provider = pricing.ProviderForModel(assignment.Model)
+			body = replaceModel(body, assignment.Model)
+			log.Printf("EXPERIMENT: %s → %s (experiment %q, variant %q)",
+				originalModel, assignment.Model, assignment.ExperimentName, assignment.Variant)
 		}
 	}
 

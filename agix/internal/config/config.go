@@ -25,6 +25,7 @@ type Config struct {
 	QualityGate QualityGateConfig         `yaml:"quality_gate"`
 	Cache       CacheConfig               `yaml:"cache"`
 	Compression CompressionConfig         `yaml:"compression"`
+	Experiments []ExperimentConfig        `yaml:"experiments"`
 }
 
 // FirewallConfig defines the prompt firewall settings.
@@ -39,6 +40,15 @@ type FirewallRule struct {
 	Category string `yaml:"category"`
 	Pattern  string `yaml:"pattern"`
 	Action   string `yaml:"action"`
+}
+
+// ExperimentConfig defines an A/B test experiment.
+type ExperimentConfig struct {
+	Name         string `yaml:"name"`
+	Enabled      bool   `yaml:"enabled"`
+	ControlModel string `yaml:"control_model"`
+	VariantModel string `yaml:"variant_model"`
+	TrafficPct   int    `yaml:"traffic_pct"`
 }
 
 // CompressionConfig defines context compressor settings.

@@ -12,6 +12,7 @@ import (
 	"github.com/agent-platform/agix/internal/cache"
 	"github.com/agent-platform/agix/internal/compressor"
 	"github.com/agent-platform/agix/internal/config"
+	"github.com/agent-platform/agix/internal/experiment"
 	"github.com/agent-platform/agix/internal/dashboard"
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/firewall"
@@ -177,6 +178,24 @@ Agents should point their API base URL to http://localhost:<port>.`,
 			})
 			if rt != nil {
 				proxyOpts = append(proxyOpts, proxy.WithRouter(rt))
+			}
+		}
+
+		// Initialize experiments
+		if len(cfg.Experiments) > 0 {
+			var exps []experiment.Config
+			for _, e := range cfg.Experiments {
+				exps = append(exps, experiment.Config{
+					Name:         e.Name,
+					Enabled:      e.Enabled,
+					ControlModel: e.ControlModel,
+					VariantModel: e.VariantModel,
+					TrafficPct:   e.TrafficPct,
+				})
+			}
+			em := experiment.New(exps)
+			if em != nil {
+				proxyOpts = append(proxyOpts, proxy.WithExperiments(em))
 			}
 		}
 
