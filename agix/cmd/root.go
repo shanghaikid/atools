@@ -13,18 +13,32 @@ var rootCmd = &cobra.Command{
 	Use:   "agix",
 	Short: "AI agent gateway — cost, tools & more",
 	Long: `agix is a local gateway between your AI agents and LLM providers
-(OpenAI, Anthropic). It tracks token usage and costs, enforces per-agent
-budgets, and provides shared MCP tools to all agents — no agent-side
-changes required.
+(OpenAI, Anthropic, DeepSeek). It tracks token usage and costs, enforces
+per-agent budgets, and provides shared MCP tools — no agent-side changes
+required.
 
-Usage:
-  agix init          Initialize configuration
-  agix start         Start the gateway
-  agix stats         View usage statistics
-  agix logs          View recent request logs
-  agix budget        Manage agent budgets
-  agix export        Export data to CSV/JSON
-  agix tools list    List shared MCP tools`,
+Commands:
+  agix init              Initialize configuration
+  agix start             Start the gateway
+  agix stats             View usage statistics
+  agix logs              View recent request logs
+  agix budget            Manage agent budgets
+  agix export            Export data to CSV/JSON
+  agix tools list        List shared MCP tools
+  agix experiment list   List A/B test experiments
+  agix experiment check  Check variant assignment for an agent
+
+Features (configured in ~/.agix/config.yaml):
+  rate_limits:    Per-agent request throttling (RPM/RPH)
+  failover:       Automatic model failover on 5xx errors
+  routing:        Smart model routing based on request complexity
+  budgets:        Per-agent daily/monthly spend limits with alerts
+  dashboard:      Web UI at http://localhost:<port>/dashboard
+  firewall:       Regex-based prompt scanning (block/warn/log)
+  quality_gate:   Post-response checks (empty/truncated/refusal)
+  cache:          Semantic response caching with embeddings
+  compression:    Auto-summarize long conversations
+  experiments:    A/B test model variants with consistent hashing`,
 }
 
 // Execute runs the root command.

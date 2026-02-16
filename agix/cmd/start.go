@@ -33,7 +33,19 @@ var startCmd = &cobra.Command{
 	Long: `Starts the gateway that sits between your agents and LLM providers.
 Tracks usage and costs, enforces budgets, and provides shared MCP tools.
 
-Agents should point their API base URL to http://localhost:<port>.`,
+Agents should point their API base URL to http://localhost:<port>.
+
+The gateway activates features based on your config (~/.agix/config.yaml):
+  rate_limits     Per-agent RPM/RPH throttling (429 + Retry-After)
+  failover        Auto-retry on 5xx with fallback model chain
+  routing         Route simple requests to cheaper models
+  budgets         Daily/monthly spend limits + webhook alerts
+  dashboard       Web dashboard at /dashboard (set dashboard.enabled: true)
+  firewall        Block or warn on prompt injection / PII patterns
+  quality_gate    Retry or reject empty/truncated/refusal responses
+  cache           SHA-256 exact + embedding semantic response cache
+  compression     Summarize old messages when context is too long
+  experiments     A/B test model variants per agent`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, _, err := loadConfig()
 		if err != nil {
