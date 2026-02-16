@@ -43,7 +43,7 @@
       "title": "Support parallel coder agents for rework phase",
       "status": "done",
       "branch": "feat/STORY-6-support-parallel-coder-agents-for-rework",
-      "merge_commit": null
+      "merge_commit": "4545c8193afb388c3a04d1f64198d620a932bf15"
     }
   ]
 }
