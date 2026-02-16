@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/agent-platform/agix/internal/alert"
+	"github.com/agent-platform/agix/internal/cache"
 	"github.com/agent-platform/agix/internal/config"
 	"github.com/agent-platform/agix/internal/dashboard"
 	"github.com/agent-platform/agix/internal/failover"
@@ -109,6 +110,25 @@ Agents should point their API base URL to http://localhost:<port>.`,
 			}
 			if fw != nil {
 				proxyOpts = append(proxyOpts, proxy.WithFirewall(fw))
+			}
+		}
+
+		// Initialize semantic cache
+		if cfg.Cache.Enabled {
+			var embedder *cache.EmbeddingClient
+			if apiKey, ok := cfg.Keys["openai"]; ok && apiKey != "" {
+				embedder = cache.NewEmbeddingClient(apiKey, "")
+			}
+			sc, err := cache.New(cache.Config{
+				Enabled:             true,
+				SimilarityThreshold: cfg.Cache.SimilarityThreshold,
+				TTLMinutes:          cfg.Cache.TTLMinutes,
+			}, st.DB(), embedder)
+			if err != nil {
+				return fmt.Errorf("initialize cache: %w", err)
+			}
+			if sc != nil {
+				proxyOpts = append(proxyOpts, proxy.WithCache(sc))
 			}
 		}
 

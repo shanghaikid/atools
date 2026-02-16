@@ -107,6 +107,11 @@ func New(dbPath string) (*Store, error) {
 	return s, nil
 }
 
+// DB returns the underlying *sql.DB for use by other packages (e.g., cache).
+func (s *Store) DB() *sql.DB {
+	return s.db
+}
+
 // Close flushes pending async writes and closes the database connection.
 func (s *Store) Close() error {
 	close(s.recordCh)

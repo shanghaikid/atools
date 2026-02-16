@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/agent-platform/agix/internal/alert"
+	"github.com/agent-platform/agix/internal/cache"
 	"github.com/agent-platform/agix/internal/config"
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/firewall"
@@ -36,6 +37,7 @@ type Proxy struct {
 	alerter     *alert.Alerter
 	firewall    *firewall.Firewall
 	qualityGate *qualitygate.Gate
+	cache       *cache.Cache
 	client      *http.Client
 	mux         *http.ServeMux
 }
@@ -76,6 +78,11 @@ func WithFirewall(f *firewall.Firewall) Option {
 // WithQualityGate sets the response quality gate.
 func WithQualityGate(g *qualitygate.Gate) Option {
 	return func(p *Proxy) { p.qualityGate = g }
+}
+
+// WithCache sets the semantic cache.
+func WithCache(c *cache.Cache) Option {
+	return func(p *Proxy) { p.cache = c }
 }
 
 // New creates a new Proxy with the given options.
@@ -207,6 +214,23 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 		for _, warning := range result.Warnings {
 			w.Header().Add("X-Firewall-Warning", warning)
 		}
+	}
+
+	// Cache lookup (non-streaming only, before routing)
+	if p.cache != nil && !req.Stream {
+		result := p.cache.Lookup(req.Model, req.Messages)
+		if result.Hit {
+			w.Header().Set("X-Cache", "HIT")
+			w.Header().Set("Content-Type", "application/json")
+			for k, v := range budgetHeaders {
+				w.Header().Set(k, v)
+			}
+			w.WriteHeader(http.StatusOK)
+			w.Write(result.Response)
+			log.Printf("CACHE: %s hit (%s)", result.Method, req.Model)
+			return
+		}
+		w.Header().Set("X-Cache", "MISS")
 	}
 
 	// Smart routing (opt-out via X-Force-Model header)
@@ -437,8 +461,26 @@ func convertToAnthropicFormat(body []byte) ([]byte, error) {
 
 // handleNonStreamingResponseWithGate wraps non-streaming responses with quality gate checks.
 func (p *Proxy) handleNonStreamingResponseWithGate(w http.ResponseWriter, r *http.Request, resp *http.Response, reqBody []byte, model, provider, agentName string, start time.Time, duration time.Duration, failoverFrom, originalModel string) {
+	// Extract messages for cache store
+	var reqMessages json.RawMessage
+	var reqParsed struct {
+		Messages json.RawMessage `json:"messages"`
+	}
+	if p.cache != nil {
+		if err := json.Unmarshal(reqBody, &reqParsed); err == nil {
+			reqMessages = reqParsed.Messages
+		}
+	}
+
 	if p.qualityGate == nil {
-		p.handleNonStreamingResponse(w, resp, model, provider, agentName, start, duration, failoverFrom, originalModel)
+		respBody, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			http.Error(w, `{"error":"failed to read upstream response"}`, http.StatusBadGateway)
+			return
+		}
+		p.writeNonStreamingResponse(w, resp, respBody, model, provider, agentName, start, duration, failoverFrom, originalModel)
+		p.cacheStore(model, reqMessages, respBody)
 		return
 	}
 
@@ -454,6 +496,7 @@ func (p *Proxy) handleNonStreamingResponseWithGate(w http.ResponseWriter, r *htt
 	if issue == nil {
 		// Quality OK — write response directly
 		p.writeNonStreamingResponse(w, resp, respBody, model, provider, agentName, start, duration, failoverFrom, originalModel)
+		p.cacheStore(model, reqMessages, respBody)
 		return
 	}
 
@@ -461,6 +504,7 @@ func (p *Proxy) handleNonStreamingResponseWithGate(w http.ResponseWriter, r *htt
 	case qualitygate.ActionWarn:
 		w.Header().Set("X-Quality-Warning", issue.Message)
 		p.writeNonStreamingResponse(w, resp, respBody, model, provider, agentName, start, duration, failoverFrom, originalModel)
+		p.cacheStore(model, reqMessages, respBody)
 		return
 
 	case qualitygate.ActionReject:
@@ -489,6 +533,7 @@ func (p *Proxy) handleNonStreamingResponseWithGate(w http.ResponseWriter, r *htt
 			retryIssue := p.qualityGate.Check(retryBody)
 			if retryIssue == nil {
 				p.writeNonStreamingResponse(w, retryResp, retryBody, retryModel, retryProvider, agentName, retryStart, retryDuration, retryFO, originalModel)
+				p.cacheStore(model, reqMessages, retryBody)
 				return
 			}
 			log.Printf("QUALITY: retry - %s (attempt %d/%d)", retryIssue.Message, attempt+1, p.qualityGate.MaxRetries())
@@ -501,6 +546,14 @@ func (p *Proxy) handleNonStreamingResponseWithGate(w http.ResponseWriter, r *htt
 
 	// Fallback: return response as-is
 	p.writeNonStreamingResponse(w, resp, respBody, model, provider, agentName, start, duration, failoverFrom, originalModel)
+}
+
+// cacheStore stores a response in the cache if enabled.
+func (p *Proxy) cacheStore(model string, messages json.RawMessage, respBody []byte) {
+	if p.cache == nil || messages == nil {
+		return
+	}
+	p.cache.Store(model, messages, respBody)
 }
 
 // writeNonStreamingResponse writes a non-streaming response from an already-read body.

@@ -23,6 +23,7 @@ type Config struct {
 	Dashboard  DashboardConfig            `yaml:"dashboard"`
 	Firewall   FirewallConfig             `yaml:"firewall"`
 	QualityGate QualityGateConfig         `yaml:"quality_gate"`
+	Cache       CacheConfig               `yaml:"cache"`
 }
 
 // FirewallConfig defines the prompt firewall settings.
@@ -37,6 +38,13 @@ type FirewallRule struct {
 	Category string `yaml:"category"`
 	Pattern  string `yaml:"pattern"`
 	Action   string `yaml:"action"`
+}
+
+// CacheConfig defines semantic cache settings.
+type CacheConfig struct {
+	Enabled             bool    `yaml:"enabled"`
+	SimilarityThreshold float64 `yaml:"similarity_threshold"`
+	TTLMinutes          int     `yaml:"ttl_minutes"`
 }
 
 // QualityGateConfig defines quality gate settings.
