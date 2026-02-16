@@ -90,44 +90,44 @@
     {
       "id": "STORY-13",
       "title": "Web dashboard",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-13-web-dashboard",
-      "merge_commit": null
+      "merge_commit": "c970893"
     },
     {
       "id": "STORY-14",
       "title": "Prompt firewall",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-14-prompt-firewall",
-      "merge_commit": null
+      "merge_commit": "bb18091"
     },
     {
       "id": "STORY-15",
       "title": "Quality gate",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-15-quality-gate",
-      "merge_commit": null
+      "merge_commit": "0b715f5"
     },
     {
       "id": "STORY-16",
       "title": "Semantic cache",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-16-semantic-cache",
-      "merge_commit": null
+      "merge_commit": "969651a"
     },
     {
       "id": "STORY-17",
       "title": "Context compressor",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-17-context-compressor",
-      "merge_commit": null
+      "merge_commit": "a41e7b0"
     },
     {
       "id": "STORY-18",
       "title": "A/B testing experiments",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-18-ab-testing",
-      "merge_commit": null
+      "merge_commit": "7d07579"
     }
   ]
 }

@@ -4,9 +4,9 @@
   "description": "Embedding-based response cache. SHA-256 fast path for exact match, cosine similarity for semantic match. Uses OpenAI text-embedding-3-small. New SQLite table cache_entries with BLOB embeddings. Returns X-Cache: HIT/MISS header. Non-streaming only.",
   "priority": "low",
   "sprint": 1,
-  "status": "ready",
+  "status": "done",
   "branch": "feat/STORY-16-semantic-cache",
-  "merge_commit": null,
+  "merge_commit": "969651a",
   "acceptance_criteria": [
     "New internal/cache package with exact and semantic matching",
     "Config supports cache.enabled, similarity_threshold, ttl_minutes",

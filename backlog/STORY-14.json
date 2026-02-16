@@ -4,9 +4,9 @@
   "description": "Scan user messages against compiled regex rules before forwarding to LLM. Support block (403), warn (X-Firewall-Warning header), and log actions. Include built-in default rules for common injection and PII patterns.",
   "priority": "low",
   "sprint": 1,
-  "status": "ready",
+  "status": "done",
   "branch": "feat/STORY-14-prompt-firewall",
-  "merge_commit": null,
+  "merge_commit": "bb18091",
   "acceptance_criteria": [
     "New internal/firewall package with compiled regex rule engine",
     "Config supports firewall.enabled and firewall.rules array",

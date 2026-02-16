@@ -4,9 +4,9 @@
   "description": "FNV-1a consistent hashing for sticky variant assignment. Hash agentName:experimentName mod 100, compare to traffic_pct. Add experiment_id and experiment_variant columns to store. New CLI subcommand: agix experiment list|stats <name>.",
   "priority": "low",
   "sprint": 1,
-  "status": "ready",
+  "status": "done",
   "branch": "feat/STORY-18-ab-testing",
-  "merge_commit": null,
+  "merge_commit": "7d07579",
   "acceptance_criteria": [
     "New internal/experiment package with FNV-1a consistent hashing",
     "Config supports experiments array with name, enabled, control_model, variant_model, traffic_pct",

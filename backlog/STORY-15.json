@@ -4,9 +4,9 @@
   "description": "Post-response quality checks for empty, truncated (finish_reason: length), and refusal responses. Configurable actions: retry, warn (header), reject (422). Non-streaming only.",
   "priority": "low",
   "sprint": 1,
-  "status": "ready",
+  "status": "done",
   "branch": "feat/STORY-15-quality-gate",
-  "merge_commit": null,
+  "merge_commit": "0b715f5",
   "acceptance_criteria": [
     "New internal/qualitygate package with response quality checks",
     "Config supports quality_gate.enabled, max_retries, on_empty, on_truncated, on_refusal",
