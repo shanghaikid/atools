@@ -290,11 +290,136 @@ func addConfigComments(data []byte) []byte {
 				line,
 			)
 
+		case trimmed == "rate_limits: {}":
+			result = append(result,
+				indent+"# Per-agent request throttling (returns 429 + Retry-After when exceeded):",
+				indent+"#   rate_limits:",
+				indent+"#     my-agent:",
+				indent+"#       requests_per_minute: 10",
+				indent+"#       requests_per_hour: 100",
+				line,
+			)
+
+		case trimmed == "chains: {}":
+			result = append(result,
+				indent+"# Model fallback chains (auto-retry on 5xx with next model in chain):",
+				indent+"#   chains:",
+				indent+"#     gpt-4o: [claude-sonnet-4-20250514, deepseek-chat]",
+				indent+"#     claude-opus-4-6: [gpt-5]",
+				line,
+			)
+
+		case trimmed == "tiers: {}":
+			result = append(result,
+				indent+"# Request complexity tiers (simple requests → cheaper models):",
+				indent+"#   tiers:",
+				indent+"#     simple:",
+				indent+"#       max_message_tokens: 500   # total user message tokens",
+				indent+"#       max_messages: 3            # max conversation messages",
+				indent+"#       keywords_absent: [analyze, refactor, explain]",
+				line,
+			)
+
+		case trimmed == "model_map: {}":
+			result = append(result,
+				indent+"# Model mapping per tier (which model to use for each tier):",
+				indent+"#   model_map:",
+				indent+"#     gpt-4o:           { simple: gpt-4o-mini }",
+				indent+"#     claude-opus-4-6: { simple: claude-haiku-4-5-20251001 }",
+				line,
+			)
+
+		case trimmed == "enabled: false" && isDashboardSection(result):
+			result = append(result,
+				indent+"# Web dashboard at http://localhost:<port>/dashboard",
+				line,
+			)
+
+		case trimmed == "rules: []":
+			result = append(result,
+				indent+"# Regex rules to scan user messages (block → 403, warn → header, log → stdout):",
+				indent+"#   rules:",
+				indent+"#     - { name: block_jailbreak, category: injection,",
+				indent+"#         pattern: \"(?i)ignore.*instructions\", action: block }",
+				indent+"#     - { name: ssn, category: pii,",
+				indent+"#         pattern: \"\\\\b\\\\d{3}-\\\\d{2}-\\\\d{4}\\\\b\", action: warn }",
+				indent+"# Built-in rules are always active: injection_ignore (block),",
+				indent+"# injection_pretend (warn), pii_ssn (warn), pii_credit_card (warn).",
+				line,
+			)
+
+		case trimmed == "on_empty: \"\"":
+			result = append(result,
+				indent+"# Actions: retry (re-send request), warn (add X-Quality-Warning header),",
+				indent+"#          reject (return 422). Defaults: on_empty=retry, on_truncated=warn,",
+				indent+"#          on_refusal=warn. max_retries defaults to 2. Non-streaming only.",
+				line,
+			)
+
+		case trimmed == "similarity_threshold: 0":
+			result = append(result,
+				indent+"# Cosine similarity threshold for semantic match (0-1, default 0.95).",
+				indent+"# Requires an OpenAI API key for embeddings (text-embedding-3-small).",
+				indent+"# Exact SHA-256 match is always tried first (no API call needed).",
+				line,
+			)
+
+		case trimmed == "ttl_minutes: 0":
+			result = append(result,
+				indent+"# Cache entry TTL in minutes (default 60). Non-streaming only.",
+				line,
+			)
+
+		case trimmed == "threshold_tokens: 0":
+			result = append(result,
+				indent+"# Token threshold before compressing (default 50000, estimated as words × 1.3).",
+				indent+"# When exceeded, older messages are summarized and replaced.",
+				line,
+			)
+
+		case trimmed == "keep_recent: 0":
+			result = append(result,
+				indent+"# Number of recent messages to keep uncompressed (default 10).",
+				line,
+			)
+
+		case trimmed == "summary_model: \"\"":
+			result = append(result,
+				indent+"# Model used for summarization (default gpt-4o-mini). Leave empty for",
+				indent+"# extractive fallback (no LLM call, just truncates old messages).",
+				line,
+			)
+
+		case trimmed == "experiments: []":
+			result = append(result,
+				indent+"# A/B test model variants. Traffic is split using consistent hashing",
+				indent+"# (same agent always gets same variant). Use 'agix experiment list' to view.",
+				indent+"#   experiments:",
+				indent+"#     - name: sonnet-vs-haiku",
+				indent+"#       enabled: true",
+				indent+"#       control_model: claude-sonnet-4-20250514",
+				indent+"#       variant_model: claude-haiku-4-5-20251001",
+				indent+"#       traffic_pct: 20  # 20% of agents get the variant",
+				line,
+			)
+
 		default:
 			result = append(result, line)
 		}
 	}
 	return []byte(strings.Join(result, "\n"))
+}
+
+// isDashboardSection checks if the previous non-empty line in result is "dashboard:".
+func isDashboardSection(result []string) bool {
+	for i := len(result) - 1; i >= 0; i-- {
+		trimmed := strings.TrimSpace(result[i])
+		if trimmed == "" {
+			continue
+		}
+		return trimmed == "dashboard:"
+	}
+	return false
 }
 
 // LoadOrCreate loads the config from the default path, or creates it with defaults.
