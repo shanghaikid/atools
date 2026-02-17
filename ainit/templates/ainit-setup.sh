@@ -115,10 +115,14 @@ else
   echo "  backlog/"
 fi
 
-# --- Step 5: Copy workflow.md (always overwrite) ---
+# --- Step 5: Copy workflow.md and backlog-schema.md (always overwrite) ---
 copy_template "$TEMPLATE_DIR/workflow.md" .claude/workflow.md
 if ! $DRY_RUN; then
   echo "  .claude/workflow.md"
+fi
+copy_template "$TEMPLATE_DIR/backlog-schema.md" .claude/backlog-schema.md
+if ! $DRY_RUN; then
+  echo "  .claude/backlog-schema.md"
 fi
 
 # --- Step 6: Update CLAUDE.md (idempotent append, protect user content) ---

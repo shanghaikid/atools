@@ -1,0 +1,31 @@
+{
+  "id": "STORY-19",
+  "title": "Slim down backlog-protocol injection in CLAUDE.md",
+  "description": "Move verbose JSON schemas and permissions table from backlog-protocol.md (injected into CLAUDE.md) into a separate .claude/backlog-schema.md reference file. Keeps CLAUDE.md lean (~40 lines instead of 107) while preserving full schema access for agents that need it.",
+  "priority": "medium",
+  "sprint": 1,
+  "status": "done",
+  "branch": "feat/STORY-19-slim-backlog-protocol",
+  "merge_commit": "aca8588",
+  "acceptance_criteria": [
+    "backlog-protocol.md is ~40 lines, no JSON schema blocks or permissions table",
+    "backlog-schema.md contains full index schema, story schema, and permissions table",
+    "ainit-setup.sh installs backlog-schema.md to .claude/backlog-schema.md",
+    "main.go embeds backlog-schema.md in the binary",
+    "Root CLAUDE.md and ainit/CLAUDE.md updated with slimmed protocol",
+    "make build succeeds, make test passes"
+  ],
+  "tasks": [
+    {"id": "TASK-1", "title": "Create backlog-schema.md template", "status": "done", "assignee": "coder", "description": "New file with Index Schema, Story Detail Schema, and Agent Permissions table"},
+    {"id": "TASK-2", "title": "Slim backlog-protocol.md template", "status": "done", "assignee": "coder", "description": "Remove JSON blocks and permissions table, add reference pointer"},
+    {"id": "TASK-3", "title": "Update ainit-setup.sh", "status": "done", "assignee": "coder", "description": "Add copy_template step for backlog-schema.md"},
+    {"id": "TASK-4", "title": "Update main.go embed list", "status": "done", "assignee": "coder", "description": "Add backlog-schema.md to template file list"},
+    {"id": "TASK-5", "title": "Update root CLAUDE.md", "status": "done", "assignee": "coder", "description": "Apply slimmed protocol to existing injected section"},
+    {"id": "TASK-6", "title": "Update ainit/CLAUDE.md", "status": "done", "assignee": "coder", "description": "Apply slimmed protocol to ainit's own CLAUDE.md"}
+  ],
+  "audit_log": [
+    {"timestamp": "2026-02-17T00:00:00Z", "agent": "team-lead", "action": "created", "detail": "Story created from plan"},
+    {"timestamp": "2026-02-17T00:00:01Z", "agent": "team-lead", "action": "status_change", "detail": "ready → implementing"},
+    {"timestamp": "2026-02-17T00:00:02Z", "agent": "coder", "action": "status_change", "detail": "implementing → done. All 6 tasks completed. backlog-protocol.md slimmed from 107→44 lines, schemas moved to backlog-schema.md (68 lines). Build passes."}
+  ]
+}

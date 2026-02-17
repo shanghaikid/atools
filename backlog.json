@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 18,
+  "last_story_id": 19,
   "stories": [
     {
       "id": "STORY-1",
@@ -128,6 +128,13 @@
       "status": "done",
       "branch": "feat/STORY-18-ab-testing",
       "merge_commit": "7d07579"
+    },
+    {
+      "id": "STORY-19",
+      "title": "Slim down backlog-protocol injection in CLAUDE.md",
+      "status": "done",
+      "branch": "feat/STORY-19-slim-backlog-protocol",
+      "merge_commit": "aca8588"
     }
   ]
 }

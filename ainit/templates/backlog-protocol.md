@@ -25,58 +25,6 @@ backlog/
 └── ...
 ```
 
-### Index Schema — `backlog.json`
-
-```json
-{
-  "project": "project name",
-  "current_sprint": 1,
-  "last_story_id": 0,
-  "stories": [
-    {
-      "id": "STORY-N",
-      "title": "short title",
-      "status": "backlog|ready|designing|implementing|reviewing|testing|done",
-      "branch": "feat/STORY-N-slug",
-      "merge_commit": null
-    }
-  ]
-}
-```
-
-### Story Detail Schema — `backlog/STORY-N.json`
-
-```json
-{
-  "id": "STORY-N",
-  "title": "short title",
-  "description": "requirement description",
-  "priority": "high|medium|low",
-  "sprint": 1,
-  "status": "backlog|ready|designing|implementing|reviewing|testing|done",
-  "branch": "feat/STORY-N-slug",
-  "merge_commit": null,
-  "acceptance_criteria": ["criteria 1", "criteria 2"],
-
-  "tasks": [
-    {
-      "id": "TASK-1",
-      "title": "task title",
-      "status": "pending|in_progress|done",
-      "assignee": "architect|coder|tester|reviewer",
-      "description": "what to do"
-    }
-  ],
-
-  "design": { "summary", "files_involved", "decisions", "steps" },
-  "implementation": { "changes", "build_status", "deviations" },
-  "review": { "findings", "verdict" },
-  "security_review": { "findings", "verdict" },
-  "testing": { "tests_added", "tests_passed", "tests_failed", "failures", "verdict" },
-  "audit_log": [{ "timestamp", "agent", "action", "detail" }]
-}
-```
-
 ### Rules
 
 1. **Lightweight index**: `backlog.json` only stores summary info (id/title/status/branch/merge_commit) for quick browsing
@@ -87,20 +35,10 @@ backlog/
 6. **Append-only audit_log**: Fully traceable, no deletion or modification of existing log entries
 7. **Independent branches**: Each story uses its own feature branch, merged directly after review
 
-### Agent Read/Write Permissions
-
-| Agent | Read | Write |
-|-------|------|-------|
-| team-lead | backlog.json + any story file | backlog.json index + story top-level fields, tasks, audit_log |
-| architect | assigned story file | story.design, story.tasks |
-| coder | assigned story file | story.implementation, story.tasks status |
-| tester | assigned story file | story.testing |
-| reviewer | assigned story file + branch diff | story.review |
-| security-reviewer | assigned story file + branch diff | story.security_review |
-| docs-sync | story files with status=done | does not write backlog, only updates docs |
-
 ### Status Flow
 
 ```
 backlog → ready → designing → implementing → reviewing/testing → done
 ```
+
+> Full JSON schemas and agent permissions: see `.claude/backlog-schema.md`
