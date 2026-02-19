@@ -13,6 +13,7 @@ import (
 	"github.com/agent-platform/agix/internal/compressor"
 	"github.com/agent-platform/agix/internal/config"
 	"github.com/agent-platform/agix/internal/experiment"
+	"github.com/agent-platform/agix/internal/promptinject"
 	"github.com/agent-platform/agix/internal/dashboard"
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/firewall"
@@ -45,7 +46,8 @@ The gateway activates features based on your config (~/.agix/config.yaml):
   quality_gate    Retry or reject empty/truncated/refusal responses
   cache           SHA-256 exact + embedding semantic response cache
   compression     Summarize old messages when context is too long
-  experiments     A/B test model variants per agent`,
+  experiments     A/B test model variants per agent
+  prompt_templates Inject system prompts for all agents (global + per-agent)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, _, err := loadConfig()
 		if err != nil {
@@ -208,6 +210,18 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 			em := experiment.New(exps)
 			if em != nil {
 				proxyOpts = append(proxyOpts, proxy.WithExperiments(em))
+			}
+		}
+
+		// Initialize prompt template injector
+		if cfg.PromptTemplates.Enabled {
+			inj := promptinject.New(promptinject.Config{
+				Global:   cfg.PromptTemplates.Global,
+				Agents:   cfg.PromptTemplates.Agents,
+				Position: cfg.PromptTemplates.Position,
+			})
+			if inj != nil {
+				proxyOpts = append(proxyOpts, proxy.WithPromptInjector(inj))
 			}
 		}
 

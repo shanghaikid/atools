@@ -19,6 +19,7 @@ import (
 	"github.com/agent-platform/agix/internal/config"
 	"github.com/agent-platform/agix/internal/experiment"
 	"github.com/agent-platform/agix/internal/failover"
+	"github.com/agent-platform/agix/internal/promptinject"
 	"github.com/agent-platform/agix/internal/firewall"
 	"github.com/agent-platform/agix/internal/pricing"
 	"github.com/agent-platform/agix/internal/qualitygate"
@@ -41,8 +42,9 @@ type Proxy struct {
 	qualityGate *qualitygate.Gate
 	cache       *cache.Cache
 	compressor  *compressor.Compressor
-	experiments *experiment.Manager
-	client      *http.Client
+	experiments    *experiment.Manager
+	promptInjector *promptinject.Injector
+	client         *http.Client
 	mux         *http.ServeMux
 }
 
@@ -97,6 +99,11 @@ func WithCompressor(c *compressor.Compressor) Option {
 // WithExperiments sets the A/B testing manager.
 func WithExperiments(m *experiment.Manager) Option {
 	return func(p *Proxy) { p.experiments = m }
+}
+
+// WithPromptInjector sets the prompt template injector.
+func WithPromptInjector(inj *promptinject.Injector) Option {
+	return func(p *Proxy) { p.promptInjector = inj }
 }
 
 // New creates a new Proxy with the given options.
@@ -227,6 +234,15 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 		}
 		for _, warning := range result.Warnings {
 			w.Header().Add("X-Firewall-Warning", warning)
+		}
+	}
+
+	// Prompt template injection (after firewall, before cache)
+	if p.promptInjector != nil {
+		body = p.promptInjector.Inject(body, agentName)
+		if err := json.Unmarshal(body, &req); err != nil {
+			http.Error(w, `{"error":"failed to re-parse request after prompt injection"}`, http.StatusInternalServerError)
+			return
 		}
 	}
 

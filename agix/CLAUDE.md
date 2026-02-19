@@ -125,6 +125,14 @@ CREATE TABLE IF NOT EXISTS requests (
 
 Indexes on `timestamp`, `agent_name`, `model`. Timestamps stored as ISO 8601 strings (`2006-01-02T15:04:05Z`) for SQLite date function compatibility.
 
+### Prompt Template Injection (`internal/promptinject/`)
+
+Injects system prompts into all requests at the proxy level. Supports global templates (applied to all agents) and per-agent overrides. Templates can be prepended or appended to existing system messages.
+
+- **Position**: After firewall scan, before cache lookup
+- **Format**: Operates on OpenAI-compatible format only (before Anthropic conversion)
+- **Config**: `prompt_templates.enabled`, `.global`, `.agents`, `.position` (prepend/append)
+
 ## Proxy behavior
 
 ### Request flow (without tools)

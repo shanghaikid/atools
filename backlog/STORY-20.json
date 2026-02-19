@@ -1,0 +1,32 @@
+{
+  "id": "STORY-20",
+  "title": "Prompt template injection",
+  "description": "Add ability to automatically inject system prompts into all requests at the proxy level, so every agent inherits company-wide policies, safety rules, or persona definitions without any code changes.",
+  "priority": "medium",
+  "sprint": 1,
+  "status": "done",
+  "branch": "feat/STORY-20-prompt-template-injection",
+  "acceptance_criteria": [
+    "New PromptTemplateConfig struct in config.go with enabled/global/agents/position fields",
+    "New internal/promptinject package with Injector struct and Inject method",
+    "Table-driven tests covering all injection scenarios",
+    "Proxy integration after firewall, before cache lookup",
+    "Initialization in cmd/start.go",
+    "Config comments for init-generated config",
+    "go build, go test, go vet all pass"
+  ],
+  "tasks": [
+    {"id": "TASK-1", "title": "Add PromptTemplateConfig to config.go", "status": "done", "assignee": "coder"},
+    {"id": "TASK-2", "title": "Create internal/promptinject/inject.go", "status": "done", "assignee": "coder"},
+    {"id": "TASK-3", "title": "Create internal/promptinject/inject_test.go", "status": "done", "assignee": "coder"},
+    {"id": "TASK-4", "title": "Add proxy integration in proxy.go", "status": "done", "assignee": "coder"},
+    {"id": "TASK-5", "title": "Add initialization in cmd/start.go", "status": "done", "assignee": "coder"},
+    {"id": "TASK-6", "title": "Add config comments", "status": "done", "assignee": "coder"},
+    {"id": "TASK-7", "title": "Update agix/CLAUDE.md", "status": "done", "assignee": "coder"}
+  ],
+  "audit_log": [
+    {"timestamp": "2026-02-19T00:00:00Z", "agent": "team-lead", "action": "created", "detail": "Story created from approved plan"},
+    {"timestamp": "2026-02-19T00:00:01Z", "agent": "team-lead", "action": "status_change", "detail": "ready → implementing"},
+    {"timestamp": "2026-02-19T00:00:02Z", "agent": "coder", "action": "status_change", "detail": "implementing → done. All tasks completed. New promptinject package with Injector, tests pass, build clean."}
+  ]
+}

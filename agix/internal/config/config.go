@@ -25,7 +25,16 @@ type Config struct {
 	QualityGate QualityGateConfig         `yaml:"quality_gate"`
 	Cache       CacheConfig               `yaml:"cache"`
 	Compression CompressionConfig         `yaml:"compression"`
-	Experiments []ExperimentConfig        `yaml:"experiments"`
+	Experiments     []ExperimentConfig        `yaml:"experiments"`
+	PromptTemplates PromptTemplateConfig      `yaml:"prompt_templates"`
+}
+
+// PromptTemplateConfig defines prompt template injection settings.
+type PromptTemplateConfig struct {
+	Enabled  bool              `yaml:"enabled"`
+	Global   string            `yaml:"global"`
+	Agents   map[string]string `yaml:"agents"`
+	Position string            `yaml:"position"` // "prepend" or "append", default "prepend"
 }
 
 // FirewallConfig defines the prompt firewall settings.
@@ -390,6 +399,20 @@ func addConfigComments(data []byte) []byte {
 				line,
 			)
 
+		case trimmed == "position: \"\"" && isPromptTemplatesSection(result):
+			result = append(result,
+				indent+"# Position: \"prepend\" (before existing system prompt) or \"append\" (after).",
+				indent+"# Global template is injected for all agents. Per-agent templates add to it.",
+				indent+"#   prompt_templates:",
+				indent+"#     enabled: true",
+				indent+"#     global: \"Always respond in valid JSON.\"",
+				indent+"#     agents:",
+				indent+"#       code-reviewer: \"You are a senior code reviewer. Be concise.\"",
+				indent+"#       docs-writer: \"You are a technical writer. Use simple language.\"",
+				indent+"#     position: prepend",
+				line,
+			)
+
 		case trimmed == "experiments: []":
 			result = append(result,
 				indent+"# A/B test model variants. Traffic is split using consistent hashing",
@@ -408,6 +431,18 @@ func addConfigComments(data []byte) []byte {
 		}
 	}
 	return []byte(strings.Join(result, "\n"))
+}
+
+// isPromptTemplatesSection checks if the previous non-empty line in result is "prompt_templates:" or a child of it.
+func isPromptTemplatesSection(result []string) bool {
+	for i := len(result) - 1; i >= 0; i-- {
+		trimmed := strings.TrimSpace(result[i])
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		return trimmed == "prompt_templates:" || trimmed == "enabled: false" || trimmed == "global: \"\"" || strings.HasPrefix(trimmed, "agents:")
+	}
+	return false
 }
 
 // isDashboardSection checks if the previous non-empty line in result is "dashboard:".

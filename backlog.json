@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 19,
+  "last_story_id": 20,
   "stories": [
     {
       "id": "STORY-1",
@@ -135,6 +135,12 @@
       "status": "done",
       "branch": "feat/STORY-19-slim-backlog-protocol",
       "merge_commit": "aca8588"
+    },
+    {
+      "id": "STORY-20",
+      "title": "Prompt template injection",
+      "status": "done",
+      "branch": "feat/STORY-20-prompt-template-injection"
     }
   ]
 }
