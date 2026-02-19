@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -79,6 +80,18 @@ CREATE TABLE IF NOT EXISTS requests (
 CREATE INDEX IF NOT EXISTS idx_requests_timestamp ON requests(timestamp);
 CREATE INDEX IF NOT EXISTS idx_requests_agent ON requests(agent_name);
 CREATE INDEX IF NOT EXISTS idx_requests_model ON requests(model);
+
+CREATE TABLE IF NOT EXISTS traces (
+	id         INTEGER PRIMARY KEY AUTOINCREMENT,
+	trace_id   TEXT NOT NULL UNIQUE,
+	agent_name TEXT NOT NULL DEFAULT '',
+	model      TEXT NOT NULL DEFAULT '',
+	timestamp  DATETIME NOT NULL,
+	spans      TEXT NOT NULL DEFAULT '[]'
+);
+
+CREATE INDEX IF NOT EXISTS idx_traces_trace_id ON traces(trace_id);
+CREATE INDEX IF NOT EXISTS idx_traces_timestamp ON traces(timestamp);
 `
 
 // New creates a new Store and initializes the schema.
@@ -447,6 +460,79 @@ func (s *Store) QueryAgentMonthlySpend(agent string, year int, month time.Month)
 		return 0, fmt.Errorf("query agent monthly spend: %w", err)
 	}
 	return cost, nil
+}
+
+// TraceRecord represents a stored request trace.
+type TraceRecord struct {
+	TraceID   string `json:"trace_id"`
+	AgentName string `json:"agent_name"`
+	Model     string `json:"model"`
+	Timestamp time.Time `json:"timestamp"`
+	Spans     json.RawMessage `json:"spans"`
+}
+
+// InsertTrace stores a trace record.
+func (s *Store) InsertTrace(traceID, agentName, model string, timestamp time.Time, spansJSON []byte) error {
+	_, err := s.db.Exec(
+		`INSERT INTO traces (trace_id, agent_name, model, timestamp, spans) VALUES (?, ?, ?, ?, ?)`,
+		traceID, agentName, model, fmtTime(timestamp), string(spansJSON),
+	)
+	if err != nil {
+		return fmt.Errorf("insert trace: %w", err)
+	}
+	return nil
+}
+
+// QueryTrace returns a single trace by its trace ID.
+func (s *Store) QueryTrace(traceID string) (*TraceRecord, error) {
+	row := s.db.QueryRow(
+		`SELECT trace_id, agent_name, model, timestamp, spans FROM traces WHERE trace_id = ?`,
+		traceID,
+	)
+	var tr TraceRecord
+	var ts, spans string
+	if err := row.Scan(&tr.TraceID, &tr.AgentName, &tr.Model, &ts, &spans); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("query trace: %w", err)
+	}
+	tr.Timestamp, _ = time.Parse(timeFormat, ts)
+	tr.Spans = json.RawMessage(spans)
+	return &tr, nil
+}
+
+// QueryRecentTraces returns the most recent N traces, optionally filtered by agent.
+func (s *Store) QueryRecentTraces(limit int, agentFilter string) ([]TraceRecord, error) {
+	query := `SELECT trace_id, agent_name, model, timestamp, spans FROM traces`
+	args := []any{}
+
+	if agentFilter != "" {
+		query += ` WHERE agent_name = ?`
+		args = append(args, agentFilter)
+	}
+
+	query += ` ORDER BY timestamp DESC LIMIT ?`
+	args = append(args, limit)
+
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query recent traces: %w", err)
+	}
+	defer rows.Close()
+
+	var results []TraceRecord
+	for rows.Next() {
+		var tr TraceRecord
+		var ts, spans string
+		if err := rows.Scan(&tr.TraceID, &tr.AgentName, &tr.Model, &ts, &spans); err != nil {
+			return nil, fmt.Errorf("scan trace: %w", err)
+		}
+		tr.Timestamp, _ = time.Parse(timeFormat, ts)
+		tr.Spans = json.RawMessage(spans)
+		results = append(results, tr)
+	}
+	return results, rows.Err()
 }
 
 // ExportCSV returns all records in the time range for CSV export.

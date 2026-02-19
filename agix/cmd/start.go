@@ -47,7 +47,8 @@ The gateway activates features based on your config (~/.agix/config.yaml):
   cache           SHA-256 exact + embedding semantic response cache
   compression     Summarize old messages when context is too long
   experiments     A/B test model variants per agent
-  prompt_templates Inject system prompts for all agents (global + per-agent)`,
+  prompt_templates Inject system prompts for all agents (global + per-agent)
+  tracing         Per-request pipeline tracing with span timing`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, _, err := loadConfig()
 		if err != nil {
@@ -225,6 +226,15 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 			}
 		}
 
+		// Initialize tracing
+		if cfg.Tracing.Enabled {
+			sampleRate := cfg.Tracing.SampleRate
+			if sampleRate <= 0 {
+				sampleRate = 1.0
+			}
+			proxyOpts = append(proxyOpts, proxy.WithTracing(true, sampleRate))
+		}
+
 		// Create proxy
 		p := proxy.New(cfg, st, proxyOpts...)
 
@@ -301,6 +311,16 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 				ui.Dimf("Tools:  "), toolMgr.ToolCount(), toolMgr.ServerCount())
 			fmt.Printf("  %s %d\n",
 				ui.Dimf("Max iterations:"), cfg.Tools.MaxIterations)
+			fmt.Println()
+		}
+
+		// Show tracing info
+		if cfg.Tracing.Enabled {
+			rate := cfg.Tracing.SampleRate
+			if rate <= 0 {
+				rate = 1.0
+			}
+			fmt.Printf("  %s enabled (sample rate: %.0f%%)\n", ui.Dimf("Tracing:"), rate*100)
 			fmt.Println()
 		}
 

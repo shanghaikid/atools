@@ -1,0 +1,20 @@
+{
+  "id": "STORY-22",
+  "title": "Request tracing",
+  "description": "Per-request pipeline tracing with span timing and metadata, stored in SQLite and viewable via CLI.",
+  "status": "done",
+  "priority": "high",
+  "branch": "feat/STORY-22-request-tracing",
+  "tasks": [
+    {"id": "T1", "title": "Create internal/trace package", "status": "done"},
+    {"id": "T2", "title": "Add TracingConfig to config", "status": "done"},
+    {"id": "T3", "title": "Add traces table + store methods", "status": "done"},
+    {"id": "T4", "title": "Create cmd/trace.go CLI", "status": "done"},
+    {"id": "T5", "title": "Instrument proxy with spans", "status": "done"},
+    {"id": "T6", "title": "Wire tracing in cmd/start.go", "status": "done"}
+  ],
+  "audit_log": [
+    {"timestamp": "2026-02-19T00:00:00Z", "from": "ready", "to": "implementing", "reason": "Plan approved, starting implementation"},
+    {"timestamp": "2026-02-19T00:01:00Z", "from": "implementing", "to": "done", "reason": "All tasks complete, tests pass"}
+  ]
+}

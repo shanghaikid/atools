@@ -13,6 +13,8 @@ import (
 	"sync"
 	"time"
 
+	"math/rand"
+
 	"github.com/agent-platform/agix/internal/alert"
 	"github.com/agent-platform/agix/internal/cache"
 	"github.com/agent-platform/agix/internal/compressor"
@@ -27,6 +29,7 @@ import (
 	"github.com/agent-platform/agix/internal/router"
 	"github.com/agent-platform/agix/internal/store"
 	"github.com/agent-platform/agix/internal/toolmgr"
+	"github.com/agent-platform/agix/internal/trace"
 )
 
 // Proxy is an HTTP reverse proxy that tracks API usage and costs.
@@ -44,6 +47,8 @@ type Proxy struct {
 	compressor  *compressor.Compressor
 	experiments    *experiment.Manager
 	promptInjector *promptinject.Injector
+	tracingEnabled bool
+	sampleRate     float64
 	client         *http.Client
 	mux         *http.ServeMux
 }
@@ -104,6 +109,14 @@ func WithExperiments(m *experiment.Manager) Option {
 // WithPromptInjector sets the prompt template injector.
 func WithPromptInjector(inj *promptinject.Injector) Option {
 	return func(p *Proxy) { p.promptInjector = inj }
+}
+
+// WithTracing enables per-request tracing with the given sample rate (0.0-1.0).
+func WithTracing(enabled bool, sampleRate float64) Option {
+	return func(p *Proxy) {
+		p.tracingEnabled = enabled
+		p.sampleRate = sampleRate
+	}
 }
 
 // New creates a new Proxy with the given options.
@@ -176,6 +189,35 @@ type chatRequest struct {
 	// Pass through all other fields
 }
 
+// newTrace creates a trace if tracing is enabled and the request is sampled.
+func (p *Proxy) newTrace() *trace.Trace {
+	if !p.tracingEnabled {
+		return nil
+	}
+	if p.sampleRate < 1.0 && rand.Float64() > p.sampleRate {
+		return nil
+	}
+	return trace.New()
+}
+
+// persistTrace stores a completed trace in the background.
+func (p *Proxy) persistTrace(t *trace.Trace) {
+	if t == nil {
+		return
+	}
+	spans := t.Spans()
+	spansJSON, err := json.Marshal(spans)
+	if err != nil {
+		log.Printf("ERROR: marshal trace spans: %v", err)
+		return
+	}
+	go func() {
+		if err := p.store.InsertTrace(t.ID, t.AgentName, t.Model, t.Timestamp, spansJSON); err != nil {
+			log.Printf("ERROR: persist trace %s: %v", t.ID, err)
+		}
+	}()
+}
+
 func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
@@ -205,9 +247,20 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	provider := pricing.ProviderForModel(req.Model)
 	agentName := r.Header.Get("X-Agent-Name")
 
+	// Create trace (nil if disabled or not sampled)
+	tr := p.newTrace()
+	if tr != nil {
+		tr.AgentName = agentName
+		tr.Model = req.Model
+		w.Header().Set("X-Trace-ID", tr.ID)
+		defer p.persistTrace(tr)
+	}
+
 	// Check rate limit before budget
 	if p.rateLimiter != nil && agentName != "" {
+		sp := tr.StartSpan("rate_limit")
 		result := p.rateLimiter.Allow(agentName)
+		sp.Set("allowed", result.Allowed).End()
 		if !result.Allowed {
 			w.Header().Set("Retry-After", fmt.Sprintf("%d", int(result.RetryAfter.Seconds())))
 			http.Error(w, fmt.Sprintf(`{"error":"rate limited: %s"}`, result.Err.Error()), http.StatusTooManyRequests)
@@ -218,16 +271,21 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	// Check budget before proxying + compute alert status
 	var budgetHeaders map[string]string
 	if agentName != "" {
+		sp := tr.StartSpan("budget_check")
 		if err := p.checkBudget(agentName); err != nil {
+			sp.Set("passed", false).End()
 			http.Error(w, fmt.Sprintf(`{"error":"budget exceeded: %s"}`, err.Error()), http.StatusTooManyRequests)
 			return
 		}
+		sp.Set("passed", true).End()
 		budgetHeaders = p.computeBudgetAlert(agentName)
 	}
 
 	// Firewall scan (after budget check, before routing)
 	if p.firewall != nil {
+		sp := tr.StartSpan("firewall")
 		result := p.firewall.Scan(req.Messages)
+		sp.Set("blocked", result.Blocked).Set("warnings", len(result.Warnings)).End()
 		if result.Blocked {
 			http.Error(w, fmt.Sprintf(`{"error":"firewall: %s"}`, result.Message), http.StatusForbidden)
 			return
@@ -239,7 +297,9 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 
 	// Prompt template injection (after firewall, before cache)
 	if p.promptInjector != nil {
+		sp := tr.StartSpan("prompt_inject")
 		body = p.promptInjector.Inject(body, agentName)
+		sp.Set("agent", agentName).End()
 		if err := json.Unmarshal(body, &req); err != nil {
 			http.Error(w, `{"error":"failed to re-parse request after prompt injection"}`, http.StatusInternalServerError)
 			return
@@ -248,7 +308,9 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 
 	// Cache lookup (non-streaming only, before routing)
 	if p.cache != nil && !req.Stream {
+		sp := tr.StartSpan("cache_lookup")
 		result := p.cache.Lookup(req.Model, req.Messages)
+		sp.Set("hit", result.Hit).Set("method", result.Method).End()
 		if result.Hit {
 			w.Header().Set("X-Cache", "HIT")
 			w.Header().Set("Content-Type", "application/json")
@@ -266,33 +328,42 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 	// Smart routing (opt-out via X-Force-Model header)
 	var originalModel string
 	if p.router != nil && r.Header.Get("X-Force-Model") == "" {
-		routedModel, _ := p.router.Route(req.Model, req.Messages)
+		sp := tr.StartSpan("routing")
+		routedModel, tier := p.router.Route(req.Model, req.Messages)
 		if routedModel != req.Model {
 			originalModel = req.Model
+			sp.Set("from", originalModel).Set("to", routedModel).Set("tier", tier)
 			req.Model = routedModel
 			provider = pricing.ProviderForModel(routedModel)
 			body = replaceModel(body, routedModel)
 			log.Printf("ROUTE: %s → %s (tier match)", originalModel, routedModel)
 		}
+		sp.End()
 	}
 
 	// Experiment routing (after smart routing, if no routing change occurred)
 	if p.experiments != nil && originalModel == "" && agentName != "" {
+		sp := tr.StartSpan("experiment")
 		assignment := p.experiments.Assign(agentName, req.Model)
 		if assignment != nil && assignment.Model != req.Model {
 			originalModel = req.Model
 			req.Model = assignment.Model
 			provider = pricing.ProviderForModel(assignment.Model)
 			body = replaceModel(body, assignment.Model)
+			sp.Set("name", assignment.ExperimentName).Set("variant", assignment.Variant)
 			log.Printf("EXPERIMENT: %s → %s (experiment %q, variant %q)",
 				originalModel, assignment.Model, assignment.ExperimentName, assignment.Variant)
 		}
+		sp.End()
 	}
 
 	// Context compression (before upstream request)
 	if p.compressor != nil {
+		sp := tr.StartSpan("compression")
 		compressed := p.compressor.Compress(req.Messages)
-		if string(compressed) != string(req.Messages) {
+		wasCompressed := string(compressed) != string(req.Messages)
+		sp.Set("compressed", wasCompressed).End()
+		if wasCompressed {
 			// Replace messages in the body
 			var raw map[string]json.RawMessage
 			if err := json.Unmarshal(body, &raw); err == nil {
@@ -312,19 +383,26 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 
 	if len(agentTools) > 0 {
 		// Tool-enhanced path: inject tools, force non-streaming, run tool loop
-		p.handleToolEnhancedRequest(w, r, body, req.Model, provider, agentName, agentTools)
+		p.handleToolEnhancedRequest(w, r, body, req.Model, provider, agentName, agentTools, tr)
 		return
 	}
 
+	sp := tr.StartSpan("upstream")
 	start := time.Now()
 	resp, actualModel, actualProvider, failoverFrom, err := p.doUpstreamRequest(r, body, req.Model, provider)
 	if err != nil {
+		sp.Set("provider", provider).End()
 		http.Error(w, fmt.Sprintf(`{"error":"upstream request failed: %s"}`, err.Error()), http.StatusBadGateway)
 		return
 	}
 	defer resp.Body.Close()
 
 	duration := time.Since(start)
+	sp.Set("provider", actualProvider).Set("status", resp.StatusCode)
+	if failoverFrom != "" {
+		sp.Set("failover_from", failoverFrom)
+	}
+	sp.End()
 
 	// Add budget alert headers before writing response
 	for k, v := range budgetHeaders {
@@ -835,7 +913,7 @@ func extractStreamUsage(provider string, data []byte) (inputTokens, outputTokens
 }
 
 // handleToolEnhancedRequest runs the tool execution loop: inject tools → send to LLM → execute tool calls → repeat.
-func (p *Proxy) handleToolEnhancedRequest(w http.ResponseWriter, r *http.Request, body []byte, model, provider, agentName string, tools []toolmgr.ToolEntry) {
+func (p *Proxy) handleToolEnhancedRequest(w http.ResponseWriter, r *http.Request, body []byte, model, provider, agentName string, tools []toolmgr.ToolEntry, tr *trace.Trace) {
 	start := time.Now()
 
 	// Force stream=false for tool-enhanced requests (agent is unaware of tools)
@@ -922,6 +1000,11 @@ func (p *Proxy) handleToolEnhancedRequest(w http.ResponseWriter, r *http.Request
 		}
 
 		// Execute tool calls via MCP
+		for _, tc := range toolCalls {
+			sp := tr.StartSpan("tool_call")
+			sp.Set("name", tc.Name).Set("iteration", i+1)
+			sp.End()
+		}
 		results := p.executeMCPTools(toolCalls)
 
 		// Append assistant message + tool results to the conversation

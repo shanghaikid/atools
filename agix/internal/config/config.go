@@ -27,6 +27,13 @@ type Config struct {
 	Compression CompressionConfig         `yaml:"compression"`
 	Experiments     []ExperimentConfig        `yaml:"experiments"`
 	PromptTemplates PromptTemplateConfig      `yaml:"prompt_templates"`
+	Tracing         TracingConfig             `yaml:"tracing"`
+}
+
+// TracingConfig defines request tracing settings.
+type TracingConfig struct {
+	Enabled    bool    `yaml:"enabled"`
+	SampleRate float64 `yaml:"sample_rate"`
 }
 
 // PromptTemplateConfig defines prompt template injection settings.

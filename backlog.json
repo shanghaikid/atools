@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 21,
+  "last_story_id": 22,
   "stories": [
     {
       "id": "STORY-1",
@@ -149,6 +149,12 @@
       "status": "done",
       "branch": "feat/STORY-21-doctor",
       "merge_commit": "20c3bf8"
+    },
+    {
+      "id": "STORY-22",
+      "title": "Request tracing",
+      "status": "done",
+      "branch": "feat/STORY-22-request-tracing"
     }
   ]
 }

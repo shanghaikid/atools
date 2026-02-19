@@ -28,6 +28,8 @@ Commands:
   agix tools list        List shared MCP tools
   agix experiment list   List A/B test experiments
   agix experiment check  Check variant assignment for an agent
+  agix trace list        List recent request traces
+  agix trace <id>        Show detailed trace timeline
 
 Features (configured in ~/.agix/config.yaml):
   rate_limits:    Per-agent request throttling (RPM/RPH)
@@ -39,7 +41,8 @@ Features (configured in ~/.agix/config.yaml):
   quality_gate:   Post-response checks (empty/truncated/refusal)
   cache:          Semantic response caching with embeddings
   compression:    Auto-summarize long conversations
-  experiments:    A/B test model variants with consistent hashing`,
+  experiments:    A/B test model variants with consistent hashing
+  tracing:        Per-request pipeline tracing with timing`,
 }
 
 // Execute runs the root command.

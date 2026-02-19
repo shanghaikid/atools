@@ -929,3 +929,49 @@ func TestAppendToolResultsAnthropic(t *testing.T) {
 		t.Errorf("messages[2].role = %v, want user", messages[2]["role"])
 	}
 }
+
+func TestTracingHeaderPresent(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "test.db")
+	st, err := store.New(dbPath)
+	if err != nil {
+		t.Fatalf("store.New() error: %v", err)
+	}
+	t.Cleanup(func() { st.Close() })
+
+	cfg := &config.Config{
+		Port:    8080,
+		Keys:    map[string]string{"openai": "sk-test"},
+		Budgets: map[string]config.Budget{},
+	}
+
+	p := New(cfg, st, WithTracing(true, 1.0))
+
+	body := `{"model":"gpt-4o","messages":[{"role":"user","content":"hello"}]}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(body))
+	w := httptest.NewRecorder()
+
+	p.ServeHTTP(w, req)
+
+	traceID := w.Header().Get("X-Trace-ID")
+	if traceID == "" {
+		t.Error("X-Trace-ID header missing when tracing enabled")
+	}
+	if len(traceID) != 12 {
+		t.Errorf("X-Trace-ID length = %d, want 12", len(traceID))
+	}
+}
+
+func TestTracingHeaderAbsentWhenDisabled(t *testing.T) {
+	p, _ := newTestProxy(t) // no tracing
+
+	body := `{"model":"gpt-4o","messages":[{"role":"user","content":"hello"}]}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", strings.NewReader(body))
+	w := httptest.NewRecorder()
+
+	p.ServeHTTP(w, req)
+
+	traceID := w.Header().Get("X-Trace-ID")
+	if traceID != "" {
+		t.Errorf("X-Trace-ID header should be absent when tracing disabled, got %q", traceID)
+	}
+}

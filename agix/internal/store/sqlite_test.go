@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"math"
 	"path/filepath"
 	"testing"
@@ -632,6 +633,104 @@ func BenchmarkInsertBatchThroughput(b *testing.B) {
 	// Flush ensures all writes complete — measures true end-to-end throughput.
 	s.Close()
 	b.StopTimer()
+}
+
+func TestInsertAndQueryTrace(t *testing.T) {
+	s := newTestStore(t)
+	now := time.Now().UTC()
+
+	spansJSON := []byte(`[{"name":"upstream","duration_ms":150,"metadata":{"status":200}}]`)
+	if err := s.InsertTrace("abc123def456", "agent-1", "gpt-4o", now, spansJSON); err != nil {
+		t.Fatalf("InsertTrace() error: %v", err)
+	}
+
+	tr, err := s.QueryTrace("abc123def456")
+	if err != nil {
+		t.Fatalf("QueryTrace() error: %v", err)
+	}
+	if tr == nil {
+		t.Fatal("QueryTrace() returned nil")
+	}
+	if tr.TraceID != "abc123def456" {
+		t.Errorf("trace_id = %q, want %q", tr.TraceID, "abc123def456")
+	}
+	if tr.AgentName != "agent-1" {
+		t.Errorf("agent_name = %q, want %q", tr.AgentName, "agent-1")
+	}
+	if tr.Model != "gpt-4o" {
+		t.Errorf("model = %q, want %q", tr.Model, "gpt-4o")
+	}
+}
+
+func TestQueryTraceNotFound(t *testing.T) {
+	s := newTestStore(t)
+
+	tr, err := s.QueryTrace("nonexistent")
+	if err != nil {
+		t.Fatalf("QueryTrace() error: %v", err)
+	}
+	if tr != nil {
+		t.Errorf("expected nil for nonexistent trace, got %v", tr)
+	}
+}
+
+func TestQueryRecentTraces(t *testing.T) {
+	s := newTestStore(t)
+	now := time.Now().UTC()
+
+	for i := 0; i < 5; i++ {
+		agent := "agent-1"
+		if i%2 == 0 {
+			agent = "agent-2"
+		}
+		err := s.InsertTrace(
+			fmt.Sprintf("trace%06d", i), agent, "gpt-4o",
+			now.Add(time.Duration(i)*time.Second), []byte("[]"),
+		)
+		if err != nil {
+			t.Fatalf("InsertTrace() error: %v", err)
+		}
+	}
+
+	// All traces
+	traces, err := s.QueryRecentTraces(10, "")
+	if err != nil {
+		t.Fatalf("QueryRecentTraces() error: %v", err)
+	}
+	if len(traces) != 5 {
+		t.Errorf("got %d traces, want 5", len(traces))
+	}
+
+	// Filtered by agent
+	traces, err = s.QueryRecentTraces(10, "agent-1")
+	if err != nil {
+		t.Fatalf("QueryRecentTraces() error: %v", err)
+	}
+	if len(traces) != 2 {
+		t.Errorf("got %d traces for agent-1, want 2", len(traces))
+	}
+
+	// Limited
+	traces, err = s.QueryRecentTraces(2, "")
+	if err != nil {
+		t.Fatalf("QueryRecentTraces() error: %v", err)
+	}
+	if len(traces) != 2 {
+		t.Errorf("got %d traces with limit=2, want 2", len(traces))
+	}
+}
+
+func TestInsertTraceDuplicate(t *testing.T) {
+	s := newTestStore(t)
+	now := time.Now().UTC()
+
+	if err := s.InsertTrace("dup123456789", "a1", "gpt-4o", now, []byte("[]")); err != nil {
+		t.Fatalf("first InsertTrace() error: %v", err)
+	}
+	err := s.InsertTrace("dup123456789", "a2", "gpt-4o", now, []byte("[]"))
+	if err == nil {
+		t.Error("expected error on duplicate trace_id, got nil")
+	}
 }
 
 func TestStoreClose(t *testing.T) {
