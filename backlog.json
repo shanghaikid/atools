@@ -148,7 +148,7 @@
       "title": "Doctor health check command",
       "status": "done",
       "branch": "feat/STORY-21-doctor",
-      "merge_commit": null
+      "merge_commit": "20c3bf8"
     }
   ]
 }
