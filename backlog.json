@@ -140,7 +140,8 @@
       "id": "STORY-20",
       "title": "Prompt template injection",
       "status": "done",
-      "branch": "feat/STORY-20-prompt-template-injection"
+      "branch": "feat/STORY-20-prompt-template-injection",
+      "merge_commit": "0219304"
     }
   ]
 }

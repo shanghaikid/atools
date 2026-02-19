@@ -6,6 +6,7 @@
   "sprint": 1,
   "status": "done",
   "branch": "feat/STORY-20-prompt-template-injection",
+  "merge_commit": "0219304",
   "acceptance_criteria": [
     "New PromptTemplateConfig struct in config.go with enabled/global/agents/position fields",
     "New internal/promptinject package with Injector struct and Inject method",
