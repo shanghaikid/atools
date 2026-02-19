@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 20,
+  "last_story_id": 21,
   "stories": [
     {
       "id": "STORY-1",
@@ -142,6 +142,13 @@
       "status": "done",
       "branch": "feat/STORY-20-prompt-template-injection",
       "merge_commit": "0219304"
+    },
+    {
+      "id": "STORY-21",
+      "title": "Doctor health check command",
+      "status": "done",
+      "branch": "feat/STORY-21-doctor",
+      "merge_commit": null
     }
   ]
 }

@@ -67,7 +67,8 @@ tools/agix/
 │   ├── logs.go                        # `agix logs` - request log
 │   ├── budget.go                      # `agix budget` - manage budgets
 │   ├── export.go                      # `agix export` - CSV/JSON
-│   └── tools.go                       # `agix tools list` - MCP tools
+│   ├── tools.go                       # `agix tools list` - MCP tools
+│   └── doctor.go                      # `agix doctor` - health check
 ├── internal/
 │   ├── config/
 │   │   ├── config.go                  # YAML config read/write
@@ -87,6 +88,9 @@ tools/agix/
 │   ├── toolmgr/
 │   │   ├── manager.go                 # Tool manager (aggregate + filter + route)
 │   │   └── manager_test.go
+│   ├── doctor/
+│   │   ├── doctor.go                  # Health check runner + checkers
+│   │   └── doctor_test.go
 │   └── ui/
 │       ├── color.go                   # Terminal color utilities
 │       └── color_test.go
@@ -244,6 +248,7 @@ The proxy communicates with MCP servers via stdio JSON-RPC 2.0:
 ```bash
 agix init                          # Create config with defaults
 agix start [--port 8080]           # Start proxy
+agix doctor                        # Check config and dependencies
 agix stats                         # Overall stats (today)
 agix stats --by agent              # Per-agent breakdown
 agix stats --by model              # Per-model breakdown

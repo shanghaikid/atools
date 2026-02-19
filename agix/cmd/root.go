@@ -20,6 +20,7 @@ required.
 Commands:
   agix init              Initialize configuration
   agix start             Start the gateway
+  agix doctor            Check configuration and dependencies
   agix stats             View usage statistics
   agix logs              View recent request logs
   agix budget            Manage agent budgets
