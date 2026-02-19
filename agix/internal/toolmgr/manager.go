@@ -78,6 +78,17 @@ func (m *Manager) ToolCount() int {
 	return len(m.tools)
 }
 
+// ServerForTool returns the name of the MCP server that provides the given tool.
+// Returns empty string if the tool is not found.
+func (m *Manager) ServerForTool(name string) string {
+	for _, t := range m.tools {
+		if t.Name == name {
+			return t.Server
+		}
+	}
+	return ""
+}
+
 // ToolsForAgent returns the filtered list of tools available to a given agent.
 // If the agent has no configuration, all tools are returned.
 func (m *Manager) ToolsForAgent(agentName string) []ToolEntry {

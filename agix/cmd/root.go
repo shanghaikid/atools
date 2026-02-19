@@ -30,6 +30,7 @@ Commands:
   agix experiment check  Check variant assignment for an agent
   agix trace list        List recent request traces
   agix trace <id>        Show detailed trace timeline
+  agix audit list        List recent audit events
 
 Features (configured in ~/.agix/config.yaml):
   rate_limits:    Per-agent request throttling (RPM/RPH)
@@ -42,7 +43,8 @@ Features (configured in ~/.agix/config.yaml):
   cache:          Semantic response caching with embeddings
   compression:    Auto-summarize long conversations
   experiments:    A/B test model variants with consistent hashing
-  tracing:        Per-request pipeline tracing with timing`,
+  tracing:        Per-request pipeline tracing with timing
+  audit:          Append-only security event log (firewall, tools)`,
 }
 
 // Execute runs the root command.

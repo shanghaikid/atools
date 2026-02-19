@@ -15,6 +15,7 @@ import (
 
 	"math/rand"
 
+	"github.com/agent-platform/agix/internal/audit"
 	"github.com/agent-platform/agix/internal/alert"
 	"github.com/agent-platform/agix/internal/cache"
 	"github.com/agent-platform/agix/internal/compressor"
@@ -47,6 +48,8 @@ type Proxy struct {
 	compressor  *compressor.Compressor
 	experiments    *experiment.Manager
 	promptInjector *promptinject.Injector
+	auditLogger    *audit.Logger
+	auditCfg       config.AuditConfig
 	tracingEnabled bool
 	sampleRate     float64
 	client         *http.Client
@@ -109,6 +112,14 @@ func WithExperiments(m *experiment.Manager) Option {
 // WithPromptInjector sets the prompt template injector.
 func WithPromptInjector(inj *promptinject.Injector) Option {
 	return func(p *Proxy) { p.promptInjector = inj }
+}
+
+// WithAuditLogger sets the audit logger and config.
+func WithAuditLogger(l *audit.Logger, cfg config.AuditConfig) Option {
+	return func(p *Proxy) {
+		p.auditLogger = l
+		p.auditCfg = cfg
+	}
 }
 
 // WithTracing enables per-request tracing with the given sample rate (0.0-1.0).
@@ -287,8 +298,12 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 		result := p.firewall.Scan(req.Messages)
 		sp.Set("blocked", result.Blocked).Set("warnings", len(result.Warnings)).End()
 		if result.Blocked {
+			p.auditFirewall(audit.EventFirewallBlock, agentName, result, string(req.Messages))
 			http.Error(w, fmt.Sprintf(`{"error":"firewall: %s"}`, result.Message), http.StatusForbidden)
 			return
+		}
+		if len(result.Warnings) > 0 {
+			p.auditFirewall(audit.EventFirewallWarn, agentName, result, string(req.Messages))
 		}
 		for _, warning := range result.Warnings {
 			w.Header().Add("X-Firewall-Warning", warning)
@@ -374,6 +389,9 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+
+	// Content audit: log request body (opt-in)
+	p.auditContent("request", req.Model, agentName, body)
 
 	// Check if we have tools for this agent
 	var agentTools []toolmgr.ToolEntry
@@ -694,6 +712,7 @@ func (p *Proxy) cacheStore(model string, messages json.RawMessage, respBody []by
 
 // writeNonStreamingResponse writes a non-streaming response from an already-read body.
 func (p *Proxy) writeNonStreamingResponse(w http.ResponseWriter, resp *http.Response, respBody []byte, model, provider, agentName string, start time.Time, duration time.Duration, failoverFrom, originalModel string) {
+	p.auditContent("response", model, agentName, respBody)
 	inputTokens, outputTokens := extractUsage(provider, respBody)
 	cost := pricing.CalculateCost(model, inputTokens, outputTokens)
 
@@ -818,6 +837,9 @@ func (p *Proxy) handleStreamingResponse(w http.ResponseWriter, resp *http.Respon
 			}
 		}
 	}
+
+	// Content audit: log response (streaming — no body captured, log summary)
+	p.auditContent("response", model, agentName, []byte(fmt.Sprintf(`{"streaming":true,"input_tokens":%d,"output_tokens":%d}`, totalInput, totalOutput)))
 
 	elapsed := time.Since(start)
 	cost := pricing.CalculateCost(model, totalInput, totalOutput)
@@ -1005,7 +1027,7 @@ func (p *Proxy) handleToolEnhancedRequest(w http.ResponseWriter, r *http.Request
 			sp.Set("name", tc.Name).Set("iteration", i+1)
 			sp.End()
 		}
-		results := p.executeMCPTools(toolCalls)
+		results := p.executeMCPTools(toolCalls, agentName)
 
 		// Append assistant message + tool results to the conversation
 		body = appendToolResults(body, provider, respBody, toolCalls, results)
@@ -1176,19 +1198,24 @@ func extractAnthropicToolCalls(body []byte) []toolCall {
 // executeMCPTools executes tool calls via the tool manager concurrently.
 // Different MCP servers are called in parallel; same-server calls are naturally
 // serialized by the per-client mutex in the MCP client.
-func (p *Proxy) executeMCPTools(calls []toolCall) []string {
+func (p *Proxy) executeMCPTools(calls []toolCall, agentName string) []string {
 	results := make([]string, len(calls))
 	var wg sync.WaitGroup
 	wg.Add(len(calls))
 	for i, tc := range calls {
 		go func(i int, tc toolCall) {
 			defer wg.Done()
+			start := time.Now()
 			text, err := p.toolMgr.CallTool(tc.Name, tc.Arguments)
+			duration := time.Since(start)
+			status := "ok"
 			if err != nil {
+				status = "error"
 				results[i] = fmt.Sprintf("Error executing tool %s: %s", tc.Name, err.Error())
 			} else {
 				results[i] = text
 			}
+			p.auditToolCall(tc, agentName, status, duration)
 		}(i, tc)
 	}
 	wg.Wait()
@@ -1489,4 +1516,65 @@ func (p *Proxy) computeBudgetAlert(agentName string) map[string]string {
 	}
 
 	return headers
+}
+
+// auditFirewall logs a firewall event.
+func (p *Proxy) auditFirewall(eventType, agentName string, result firewall.Result, rawMessages string) {
+	if p.auditLogger == nil {
+		return
+	}
+	for _, mr := range result.MatchedRules {
+		excerpt := rawMessages
+		if len(excerpt) > 200 {
+			excerpt = excerpt[:200]
+		}
+		p.auditLogger.Log(eventType, agentName, audit.FirewallDetails{
+			Rule:     mr.Name,
+			Category: mr.Category,
+			Excerpt:  excerpt,
+		})
+	}
+}
+
+// auditToolCall logs a tool execution event.
+func (p *Proxy) auditToolCall(tc toolCall, agentName, status string, duration time.Duration) {
+	if p.auditLogger == nil {
+		return
+	}
+	server := ""
+	if p.toolMgr != nil {
+		server = p.toolMgr.ServerForTool(tc.Name)
+	}
+	dangerous := false
+	for _, dt := range p.auditCfg.DangerousTools {
+		if dt == tc.Name {
+			dangerous = true
+			break
+		}
+	}
+	details := audit.ToolCallDetails{
+		Tool:       tc.Name,
+		Server:     server,
+		Status:     status,
+		DurationMS: duration.Milliseconds(),
+		Dangerous:  dangerous,
+	}
+	if p.auditCfg.ContentLog {
+		if argsJSON, err := json.Marshal(tc.Arguments); err == nil {
+			details.Args = string(argsJSON)
+		}
+	}
+	p.auditLogger.Log(audit.EventToolCall, agentName, details)
+}
+
+// auditContent logs request/response body if content_log is enabled.
+func (p *Proxy) auditContent(direction, model, agentName string, body []byte) {
+	if p.auditLogger == nil || !p.auditCfg.ContentLog {
+		return
+	}
+	p.auditLogger.Log(audit.EventContentLog, agentName, audit.ContentLogDetails{
+		Direction: direction,
+		Model:     model,
+		Body:      string(body),
+	})
 }

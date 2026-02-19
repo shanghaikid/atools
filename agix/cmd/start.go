@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/agent-platform/agix/internal/audit"
 	"github.com/agent-platform/agix/internal/alert"
 	"github.com/agent-platform/agix/internal/cache"
 	"github.com/agent-platform/agix/internal/compressor"
@@ -48,7 +49,8 @@ The gateway activates features based on your config (~/.agix/config.yaml):
   compression     Summarize old messages when context is too long
   experiments     A/B test model variants per agent
   prompt_templates Inject system prompts for all agents (global + per-agent)
-  tracing         Per-request pipeline tracing with span timing`,
+  tracing         Per-request pipeline tracing with span timing
+  audit           Append-only security event log (firewall, tools, content)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, _, err := loadConfig()
 		if err != nil {
@@ -75,8 +77,15 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 			defer toolMgr.Close()
 		}
 
+		// Initialize audit logger
+		auditLogger := audit.New(st.DB(), cfg.Audit.Enabled)
+		defer auditLogger.Close()
+
 		// Build proxy options
 		var proxyOpts []proxy.Option
+		if cfg.Audit.Enabled {
+			proxyOpts = append(proxyOpts, proxy.WithAuditLogger(auditLogger, cfg.Audit))
+		}
 		if toolMgr != nil {
 			proxyOpts = append(proxyOpts, proxy.WithToolManager(toolMgr))
 		}
@@ -321,6 +330,16 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 				rate = 1.0
 			}
 			fmt.Printf("  %s enabled (sample rate: %.0f%%)\n", ui.Dimf("Tracing:"), rate*100)
+			fmt.Println()
+		}
+
+		// Show audit info
+		if cfg.Audit.Enabled {
+			extra := ""
+			if cfg.Audit.ContentLog {
+				extra = " + content logging"
+			}
+			fmt.Printf("  %s enabled%s\n", ui.Dimf("Audit:  "), extra)
 			fmt.Println()
 		}
 

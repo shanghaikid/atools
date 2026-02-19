@@ -92,6 +92,18 @@ CREATE TABLE IF NOT EXISTS traces (
 
 CREATE INDEX IF NOT EXISTS idx_traces_trace_id ON traces(trace_id);
 CREATE INDEX IF NOT EXISTS idx_traces_timestamp ON traces(timestamp);
+
+CREATE TABLE IF NOT EXISTS audit_events (
+	id          INTEGER PRIMARY KEY AUTOINCREMENT,
+	timestamp   DATETIME NOT NULL,
+	event_type  TEXT NOT NULL,
+	agent_name  TEXT NOT NULL DEFAULT '',
+	details     TEXT NOT NULL DEFAULT '{}'
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_events_timestamp ON audit_events(timestamp);
+CREATE INDEX IF NOT EXISTS idx_audit_events_type ON audit_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_audit_events_agent ON audit_events(agent_name);
 `
 
 // New creates a new Store and initializes the schema.

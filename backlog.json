@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 22,
+  "last_story_id": 23,
   "stories": [
     {
       "id": "STORY-1",
@@ -156,6 +156,12 @@
       "status": "done",
       "branch": "feat/STORY-22-request-tracing",
       "merge_commit": "54a9b8e"
+    },
+    {
+      "id": "STORY-23",
+      "title": "Audit & security scanning",
+      "status": "done",
+      "branch": "feat/STORY-23-audit"
     }
   ]
 }

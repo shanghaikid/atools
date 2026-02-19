@@ -28,6 +28,14 @@ type Config struct {
 	Experiments     []ExperimentConfig        `yaml:"experiments"`
 	PromptTemplates PromptTemplateConfig      `yaml:"prompt_templates"`
 	Tracing         TracingConfig             `yaml:"tracing"`
+	Audit           AuditConfig               `yaml:"audit"`
+}
+
+// AuditConfig defines audit logging settings.
+type AuditConfig struct {
+	Enabled        bool     `yaml:"enabled"`
+	ContentLog     bool     `yaml:"content_log"`
+	DangerousTools []string `yaml:"dangerous_tools"`
 }
 
 // TracingConfig defines request tracing settings.

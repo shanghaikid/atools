@@ -33,11 +33,19 @@ type Rule struct {
 	Action   Action
 }
 
+// MatchedRule describes a rule that matched during scanning.
+type MatchedRule struct {
+	Name     string
+	Category string
+	Action   Action
+}
+
 // Result is returned when scanning messages.
 type Result struct {
-	Blocked  bool
-	Warnings []string
-	Message  string // block reason
+	Blocked      bool
+	Warnings     []string
+	Message      string // block reason
+	MatchedRules []MatchedRule
 }
 
 // Firewall scans messages against compiled rules.
@@ -115,6 +123,8 @@ func (f *Firewall) Scan(messages json.RawMessage) Result {
 	var result Result
 	for _, rule := range f.rules {
 		if rule.Pattern.MatchString(text) {
+			matched := MatchedRule{Name: rule.Name, Category: rule.Category, Action: rule.Action}
+			result.MatchedRules = append(result.MatchedRules, matched)
 			switch rule.Action {
 			case ActionBlock:
 				result.Blocked = true
