@@ -154,7 +154,8 @@
       "id": "STORY-22",
       "title": "Request tracing",
       "status": "done",
-      "branch": "feat/STORY-22-request-tracing"
+      "branch": "feat/STORY-22-request-tracing",
+      "merge_commit": "54a9b8e"
     }
   ]
 }

@@ -5,6 +5,7 @@
   "status": "done",
   "priority": "high",
   "branch": "feat/STORY-22-request-tracing",
+  "merge_commit": "54a9b8e",
   "tasks": [
     {"id": "T1", "title": "Create internal/trace package", "status": "done"},
     {"id": "T2", "title": "Add TracingConfig to config", "status": "done"},
