@@ -3,19 +3,21 @@
   "title": "Audit & security scanning",
   "status": "done",
   "branch": "feat/STORY-23-audit",
+  "merge_commit": "0b66b05",
   "description": "Add append-only audit_events table, tool danger classification, constant-time key comparison, and CLI to query events. Structured logging for firewall blocks/warns, tool calls, and optional request/response content.",
   "tasks": [
-    {"id": "T1", "title": "Add AuditConfig to config", "status": "pending"},
-    {"id": "T2", "title": "Add audit_events schema to store", "status": "pending"},
-    {"id": "T3", "title": "Create internal/audit package", "status": "pending"},
-    {"id": "T4", "title": "Extend firewall Result with MatchedRules", "status": "pending"},
-    {"id": "T5", "title": "Add ServerForTool to toolmgr", "status": "pending"},
-    {"id": "T6", "title": "Instrument proxy with audit logger", "status": "pending"},
-    {"id": "T7", "title": "Add audit CLI command", "status": "pending"},
-    {"id": "T8", "title": "Wire audit in start.go", "status": "pending"},
-    {"id": "T9", "title": "Update root.go help text", "status": "pending"}
+    {"id": "T1", "title": "Add AuditConfig to config", "status": "done"},
+    {"id": "T2", "title": "Add audit_events schema to store", "status": "done"},
+    {"id": "T3", "title": "Create internal/audit package", "status": "done"},
+    {"id": "T4", "title": "Extend firewall Result with MatchedRules", "status": "done"},
+    {"id": "T5", "title": "Add ServerForTool to toolmgr", "status": "done"},
+    {"id": "T6", "title": "Instrument proxy with audit logger", "status": "done"},
+    {"id": "T7", "title": "Add audit CLI command", "status": "done"},
+    {"id": "T8", "title": "Wire audit in start.go", "status": "done"},
+    {"id": "T9", "title": "Update root.go help text", "status": "done"}
   ],
   "audit_log": [
-    {"timestamp": "2026-02-20T00:00:00Z", "from": "ready", "to": "implementing", "reason": "Plan approved, starting implementation"}
+    {"timestamp": "2026-02-20T00:00:00Z", "from": "ready", "to": "implementing", "reason": "Plan approved, starting implementation"},
+    {"timestamp": "2026-02-20T00:00:01Z", "from": "implementing", "to": "done", "reason": "All tasks complete, tests pass, merged to main"}
   ]
 }

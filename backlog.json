@@ -161,7 +161,8 @@
       "id": "STORY-23",
       "title": "Audit & security scanning",
       "status": "done",
-      "branch": "feat/STORY-23-audit"
+      "branch": "feat/STORY-23-audit",
+      "merge_commit": "0b66b05"
     }
   ]
 }
