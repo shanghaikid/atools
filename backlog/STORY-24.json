@@ -4,6 +4,7 @@
   "description": "Allow different request chains for the same agent to use different model/temperature/max_tokens via X-Session-ID header. Config stored in SQLite with TTL auto-expiry. REST API for management, CLI for listing/cleaning.",
   "status": "done",
   "branch": "feat/STORY-24-session-override",
+  "merge_commit": "9a48786",
   "tasks": [
     {"id": "T1", "title": "Create internal/session/session.go — Manager, Override, Apply", "status": "done"},
     {"id": "T2", "title": "Create internal/session/session_test.go — table-driven tests", "status": "done"},

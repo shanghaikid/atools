@@ -167,8 +167,9 @@
     {
       "id": "STORY-24",
       "title": "Session-level config override",
-      "status": "implementing",
-      "branch": "feat/STORY-24-session-override"
+      "status": "done",
+      "branch": "feat/STORY-24-session-override",
+      "merge_commit": "9a48786"
     }
   ]
 }
