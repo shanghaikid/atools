@@ -32,6 +32,7 @@ import (
 	"github.com/agent-platform/agix/internal/store"
 	"github.com/agent-platform/agix/internal/toolmgr"
 	"github.com/agent-platform/agix/internal/trace"
+	"github.com/agent-platform/agix/internal/webhook"
 )
 
 // Proxy is an HTTP reverse proxy that tracks API usage and costs.
@@ -51,6 +52,7 @@ type Proxy struct {
 	promptInjector *promptinject.Injector
 	sessionMgr     *session.Manager
 	auditLogger    *audit.Logger
+	webhookHandler *webhook.Handler
 	auditCfg       config.AuditConfig
 	tracingEnabled bool
 	sampleRate     float64
@@ -129,6 +131,11 @@ func WithSessionManager(sm *session.Manager) Option {
 	return func(p *Proxy) { p.sessionMgr = sm }
 }
 
+// WithWebhookHandler sets the generic webhook handler.
+func WithWebhookHandler(h *webhook.Handler) Option {
+	return func(p *Proxy) { p.webhookHandler = h }
+}
+
 // WithTracing enables per-request tracing with the given sample rate (0.0-1.0).
 func WithTracing(enabled bool, sampleRate float64) Option {
 	return func(p *Proxy) {
@@ -162,6 +169,7 @@ func New(cfg *config.Config, st *store.Store, opts ...Option) *Proxy {
 	p.mux.HandleFunc("/v1/chat/completions", p.handleChatCompletions)
 	p.mux.HandleFunc("/v1/models", p.handleModels)
 	p.mux.HandleFunc("/v1/sessions/", p.handleSessions)
+	p.mux.HandleFunc("/v1/webhooks/", p.handleWebhooks)
 	p.mux.HandleFunc("/health", p.handleHealth)
 	return p
 }
@@ -1658,6 +1666,61 @@ func (p *Proxy) handleSessions(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
 	}
+}
+
+// handleWebhooks handles POST /v1/webhooks/{name} — verifies HMAC, inserts pending row, runs async.
+func (p *Proxy) handleWebhooks(w http.ResponseWriter, r *http.Request) {
+	if p.webhookHandler == nil {
+		http.Error(w, `{"error":"webhooks not enabled"}`, http.StatusNotFound)
+		return
+	}
+
+	if r.Method != http.MethodPost {
+		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract webhook name from path: /v1/webhooks/{name}
+	name := strings.TrimPrefix(r.URL.Path, "/v1/webhooks/")
+	if name == "" {
+		http.Error(w, `{"error":"webhook name required"}`, http.StatusBadRequest)
+		return
+	}
+
+	defs := p.webhookHandler.Definitions()
+	def, ok := defs[name]
+	if !ok {
+		http.Error(w, `{"error":"webhook not found"}`, http.StatusNotFound)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, `{"error":"failed to read request body"}`, http.StatusBadRequest)
+		return
+	}
+	defer r.Body.Close()
+
+	// Verify HMAC signature
+	sig := r.Header.Get("X-Webhook-Signature")
+	if !webhook.VerifySignature(def.Secret, body, sig) {
+		http.Error(w, `{"error":"invalid signature"}`, http.StatusUnauthorized)
+		return
+	}
+
+	// Insert pending execution
+	execID, err := p.store.InsertWebhookExecution(name, "pending", string(body))
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":"store: %s"}`, err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	// Execute asynchronously
+	go p.webhookHandler.Execute(execID, name, string(body))
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusAccepted)
+	fmt.Fprintf(w, `{"execution_id":%d,"status":"pending"}`, execID)
 }
 
 // auditContent logs request/response body if content_log is enabled.

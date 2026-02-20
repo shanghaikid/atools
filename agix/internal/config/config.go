@@ -30,6 +30,21 @@ type Config struct {
 	Tracing         TracingConfig             `yaml:"tracing"`
 	Audit            AuditConfig               `yaml:"audit"`
 	SessionOverrides SessionOverrideConfig     `yaml:"session_overrides"`
+	Webhooks         WebhookConfig             `yaml:"webhooks"`
+}
+
+// WebhookConfig defines generic webhook endpoint settings.
+type WebhookConfig struct {
+	Enabled     bool                          `yaml:"enabled"`
+	Definitions map[string]WebhookDefinition  `yaml:"definitions"`
+}
+
+// WebhookDefinition defines a single webhook endpoint.
+type WebhookDefinition struct {
+	Secret         string `yaml:"secret"`
+	Model          string `yaml:"model"`
+	PromptTemplate string `yaml:"prompt_template"`
+	CallbackURL    string `yaml:"callback_url"`
 }
 
 // SessionOverrideConfig defines session-level config override settings.

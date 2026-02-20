@@ -104,6 +104,21 @@ CREATE TABLE IF NOT EXISTS audit_events (
 CREATE INDEX IF NOT EXISTS idx_audit_events_timestamp ON audit_events(timestamp);
 CREATE INDEX IF NOT EXISTS idx_audit_events_type ON audit_events(event_type);
 CREATE INDEX IF NOT EXISTS idx_audit_events_agent ON audit_events(agent_name);
+
+CREATE TABLE IF NOT EXISTS webhook_executions (
+	id            INTEGER PRIMARY KEY AUTOINCREMENT,
+	timestamp     DATETIME NOT NULL DEFAULT (datetime('now')),
+	webhook_name  TEXT NOT NULL,
+	status        TEXT NOT NULL DEFAULT 'pending',
+	payload       TEXT NOT NULL DEFAULT '',
+	result        TEXT NOT NULL DEFAULT '',
+	error         TEXT NOT NULL DEFAULT '',
+	duration_ms   INTEGER NOT NULL DEFAULT 0,
+	callback_code INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_webhook_executions_name ON webhook_executions(webhook_name);
+CREATE INDEX IF NOT EXISTS idx_webhook_executions_timestamp ON webhook_executions(timestamp);
 `
 
 // New creates a new Store and initializes the schema.
@@ -543,6 +558,75 @@ func (s *Store) QueryRecentTraces(limit int, agentFilter string) ([]TraceRecord,
 		tr.Timestamp, _ = time.Parse(timeFormat, ts)
 		tr.Spans = json.RawMessage(spans)
 		results = append(results, tr)
+	}
+	return results, rows.Err()
+}
+
+// WebhookExecution represents a webhook execution record.
+type WebhookExecution struct {
+	ID           int64  `json:"id"`
+	Timestamp    time.Time `json:"timestamp"`
+	WebhookName  string `json:"webhook_name"`
+	Status       string `json:"status"`
+	Payload      string `json:"payload"`
+	Result       string `json:"result"`
+	Error        string `json:"error"`
+	DurationMS   int64  `json:"duration_ms"`
+	CallbackCode int    `json:"callback_code"`
+}
+
+// InsertWebhookExecution inserts a new webhook execution record and returns its ID.
+func (s *Store) InsertWebhookExecution(name, status, payload string) (int64, error) {
+	result, err := s.db.Exec(
+		`INSERT INTO webhook_executions (timestamp, webhook_name, status, payload) VALUES (?, ?, ?, ?)`,
+		fmtTime(time.Now().UTC()), name, status, payload,
+	)
+	if err != nil {
+		return 0, fmt.Errorf("insert webhook execution: %w", err)
+	}
+	return result.LastInsertId()
+}
+
+// UpdateWebhookExecution updates an existing webhook execution record.
+func (s *Store) UpdateWebhookExecution(id int64, status, resultText, errText string, durationMS int64, callbackCode int) error {
+	_, err := s.db.Exec(
+		`UPDATE webhook_executions SET status = ?, result = ?, error = ?, duration_ms = ?, callback_code = ? WHERE id = ?`,
+		status, resultText, errText, durationMS, callbackCode, id,
+	)
+	if err != nil {
+		return fmt.Errorf("update webhook execution: %w", err)
+	}
+	return nil
+}
+
+// QueryWebhookExecutions returns recent webhook executions, optionally filtered by name.
+func (s *Store) QueryWebhookExecutions(limit int, nameFilter string) ([]WebhookExecution, error) {
+	query := `SELECT id, timestamp, webhook_name, status, payload, result, error, duration_ms, callback_code FROM webhook_executions`
+	args := []any{}
+
+	if nameFilter != "" {
+		query += ` WHERE webhook_name = ?`
+		args = append(args, nameFilter)
+	}
+
+	query += ` ORDER BY timestamp DESC LIMIT ?`
+	args = append(args, limit)
+
+	rows, err := s.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("query webhook executions: %w", err)
+	}
+	defer rows.Close()
+
+	var results []WebhookExecution
+	for rows.Next() {
+		var we WebhookExecution
+		var ts string
+		if err := rows.Scan(&we.ID, &ts, &we.WebhookName, &we.Status, &we.Payload, &we.Result, &we.Error, &we.DurationMS, &we.CallbackCode); err != nil {
+			return nil, fmt.Errorf("scan webhook execution: %w", err)
+		}
+		we.Timestamp, _ = time.Parse(timeFormat, ts)
+		results = append(results, we)
 	}
 	return results, rows.Err()
 }

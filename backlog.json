@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 24,
+  "last_story_id": 25,
   "stories": [
     {
       "id": "STORY-1",
@@ -170,6 +170,12 @@
       "status": "done",
       "branch": "feat/STORY-24-session-override",
       "merge_commit": "9a48786"
+    },
+    {
+      "id": "STORY-25",
+      "title": "Generic webhook endpoint",
+      "status": "done",
+      "branch": "feat/STORY-25-webhook-endpoint"
     }
   ]
 }

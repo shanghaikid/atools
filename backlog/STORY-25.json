@@ -1,0 +1,20 @@
+{
+  "id": "STORY-25",
+  "title": "Generic webhook endpoint",
+  "description": "Generalize existing budget alert webhook into a generic endpoint where external systems can trigger pre-configured agent tasks via POST /v1/webhooks/:name, with HMAC verification, prompt template rendering, async LLM execution, and optional result callback.",
+  "status": "done",
+  "branch": "feat/STORY-25-webhook-endpoint",
+  "tasks": [
+    {"id": "T1", "title": "Add WebhookConfig structs to config", "status": "pending"},
+    {"id": "T2", "title": "Add webhook_executions table and store methods", "status": "pending"},
+    {"id": "T3", "title": "Create internal/webhook package", "status": "pending"},
+    {"id": "T4", "title": "Integrate webhook handler into proxy", "status": "pending"},
+    {"id": "T5", "title": "Wire up in cmd/start.go", "status": "pending"},
+    {"id": "T6", "title": "Add CLI commands (webhook list, webhook history)", "status": "pending"},
+    {"id": "T7", "title": "Tests", "status": "pending"}
+  ],
+  "audit_log": [
+    {"timestamp": "2026-02-20T00:00:00Z", "from": "backlog", "to": "implementing", "reason": "Plan approved, starting implementation"},
+    {"timestamp": "2026-02-20T00:01:00Z", "from": "implementing", "to": "done", "reason": "All code implemented, tests passing, go vet clean"}
+  ]
+}

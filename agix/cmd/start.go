@@ -10,6 +10,7 @@ import (
 
 	"github.com/agent-platform/agix/internal/audit"
 	"github.com/agent-platform/agix/internal/alert"
+	"github.com/agent-platform/agix/internal/webhook"
 	"github.com/agent-platform/agix/internal/cache"
 	"github.com/agent-platform/agix/internal/compressor"
 	"github.com/agent-platform/agix/internal/config"
@@ -245,6 +246,12 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 			proxyOpts = append(proxyOpts, proxy.WithTracing(true, sampleRate))
 		}
 
+		// Initialize webhooks
+		if cfg.Webhooks.Enabled && len(cfg.Webhooks.Definitions) > 0 {
+			wh := webhook.New(cfg.Webhooks, cfg, st)
+			proxyOpts = append(proxyOpts, proxy.WithWebhookHandler(wh))
+		}
+
 		// Initialize session overrides
 		if cfg.SessionOverrides.Enabled {
 			ttl := time.Hour
@@ -367,6 +374,12 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 				ttlStr = "1h"
 			}
 			fmt.Printf("  %s enabled (default TTL: %s)\n", ui.Dimf("Sessions:"), ttlStr)
+			fmt.Println()
+		}
+
+		// Show webhooks info
+		if cfg.Webhooks.Enabled && len(cfg.Webhooks.Definitions) > 0 {
+			fmt.Printf("  %s %d webhook(s) configured\n", ui.Dimf("Webhooks:"), len(cfg.Webhooks.Definitions))
 			fmt.Println()
 		}
 
