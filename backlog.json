@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 23,
+  "last_story_id": 24,
   "stories": [
     {
       "id": "STORY-1",
@@ -163,6 +163,12 @@
       "status": "done",
       "branch": "feat/STORY-23-audit",
       "merge_commit": "0b66b05"
+    },
+    {
+      "id": "STORY-24",
+      "title": "Session-level config override",
+      "status": "implementing",
+      "branch": "feat/STORY-24-session-override"
     }
   ]
 }

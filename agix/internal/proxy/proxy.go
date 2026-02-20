@@ -28,6 +28,7 @@ import (
 	"github.com/agent-platform/agix/internal/qualitygate"
 	"github.com/agent-platform/agix/internal/ratelimit"
 	"github.com/agent-platform/agix/internal/router"
+	"github.com/agent-platform/agix/internal/session"
 	"github.com/agent-platform/agix/internal/store"
 	"github.com/agent-platform/agix/internal/toolmgr"
 	"github.com/agent-platform/agix/internal/trace"
@@ -48,6 +49,7 @@ type Proxy struct {
 	compressor  *compressor.Compressor
 	experiments    *experiment.Manager
 	promptInjector *promptinject.Injector
+	sessionMgr     *session.Manager
 	auditLogger    *audit.Logger
 	auditCfg       config.AuditConfig
 	tracingEnabled bool
@@ -122,6 +124,11 @@ func WithAuditLogger(l *audit.Logger, cfg config.AuditConfig) Option {
 	}
 }
 
+// WithSessionManager sets the session override manager.
+func WithSessionManager(sm *session.Manager) Option {
+	return func(p *Proxy) { p.sessionMgr = sm }
+}
+
 // WithTracing enables per-request tracing with the given sample rate (0.0-1.0).
 func WithTracing(enabled bool, sampleRate float64) Option {
 	return func(p *Proxy) {
@@ -154,6 +161,7 @@ func New(cfg *config.Config, st *store.Store, opts ...Option) *Proxy {
 	}
 	p.mux.HandleFunc("/v1/chat/completions", p.handleChatCompletions)
 	p.mux.HandleFunc("/v1/models", p.handleModels)
+	p.mux.HandleFunc("/v1/sessions/", p.handleSessions)
 	p.mux.HandleFunc("/health", p.handleHealth)
 	return p
 }
@@ -290,6 +298,28 @@ func (p *Proxy) handleChatCompletions(w http.ResponseWriter, r *http.Request) {
 		}
 		sp.Set("passed", true).End()
 		budgetHeaders = p.computeBudgetAlert(agentName)
+	}
+
+	// Session override (after budget check, before firewall)
+	sessionID := r.Header.Get("X-Session-ID")
+	if p.sessionMgr != nil && sessionID != "" {
+		sp := tr.StartSpan("session_override")
+		so, err := p.sessionMgr.Get(sessionID)
+		if err != nil {
+			log.Printf("WARN: session override lookup failed: %v", err)
+		}
+		if so != nil {
+			body = session.Apply(body, so)
+			if err := json.Unmarshal(body, &req); err != nil {
+				http.Error(w, `{"error":"failed to re-parse request after session override"}`, http.StatusInternalServerError)
+				sp.End()
+				return
+			}
+			provider = pricing.ProviderForModel(req.Model)
+			sp.Set("session_id", sessionID).Set("model", so.Model)
+			log.Printf("SESSION: override applied for session %s", sessionID)
+		}
+		sp.End()
 	}
 
 	// Firewall scan (after budget check, before routing)
@@ -1565,6 +1595,69 @@ func (p *Proxy) auditToolCall(tc toolCall, agentName, status string, duration ti
 		}
 	}
 	p.auditLogger.Log(audit.EventToolCall, agentName, details)
+}
+
+// handleSessions handles REST API for session overrides: GET/PUT/DELETE /v1/sessions/{id}
+func (p *Proxy) handleSessions(w http.ResponseWriter, r *http.Request) {
+	if p.sessionMgr == nil {
+		http.Error(w, `{"error":"session overrides not enabled"}`, http.StatusNotFound)
+		return
+	}
+
+	// Extract session ID from path: /v1/sessions/{id}
+	id := strings.TrimPrefix(r.URL.Path, "/v1/sessions/")
+	if id == "" {
+		http.Error(w, `{"error":"session id required"}`, http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		o, err := p.sessionMgr.Get(id)
+		if err != nil {
+			http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusInternalServerError)
+			return
+		}
+		if o == nil {
+			http.Error(w, `{"error":"session not found"}`, http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(o)
+
+	case http.MethodPut:
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, `{"error":"failed to read body"}`, http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close()
+
+		var o session.Override
+		if err := json.Unmarshal(body, &o); err != nil {
+			http.Error(w, `{"error":"invalid JSON"}`, http.StatusBadRequest)
+			return
+		}
+		o.SessionID = id
+		if err := p.sessionMgr.Set(&o); err != nil {
+			http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, `{"status":"ok","session_id":"%s"}`, id)
+
+	case http.MethodDelete:
+		if err := p.sessionMgr.Delete(id); err != nil {
+			http.Error(w, fmt.Sprintf(`{"error":"%s"}`, err.Error()), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"status":"deleted","session_id":"%s"}`, id)
+
+	default:
+		http.Error(w, `{"error":"method not allowed"}`, http.StatusMethodNotAllowed)
+	}
 }
 
 // auditContent logs request/response body if content_log is enabled.

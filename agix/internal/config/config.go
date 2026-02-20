@@ -28,7 +28,14 @@ type Config struct {
 	Experiments     []ExperimentConfig        `yaml:"experiments"`
 	PromptTemplates PromptTemplateConfig      `yaml:"prompt_templates"`
 	Tracing         TracingConfig             `yaml:"tracing"`
-	Audit           AuditConfig               `yaml:"audit"`
+	Audit            AuditConfig               `yaml:"audit"`
+	SessionOverrides SessionOverrideConfig     `yaml:"session_overrides"`
+}
+
+// SessionOverrideConfig defines session-level config override settings.
+type SessionOverrideConfig struct {
+	Enabled    bool   `yaml:"enabled"`
+	DefaultTTL string `yaml:"default_ttl"` // e.g. "1h", "24h"
 }
 
 // AuditConfig defines audit logging settings.

@@ -22,6 +22,7 @@ import (
 	"github.com/agent-platform/agix/internal/proxy"
 	"github.com/agent-platform/agix/internal/ratelimit"
 	"github.com/agent-platform/agix/internal/router"
+	"github.com/agent-platform/agix/internal/session"
 	"github.com/agent-platform/agix/internal/store"
 	"github.com/agent-platform/agix/internal/ui"
 	"github.com/spf13/cobra"
@@ -244,6 +245,22 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 			proxyOpts = append(proxyOpts, proxy.WithTracing(true, sampleRate))
 		}
 
+		// Initialize session overrides
+		if cfg.SessionOverrides.Enabled {
+			ttl := time.Hour
+			if cfg.SessionOverrides.DefaultTTL != "" {
+				if d, err := time.ParseDuration(cfg.SessionOverrides.DefaultTTL); err == nil {
+					ttl = d
+				}
+			}
+			sm, err := session.New(st.DB(), ttl)
+			if err != nil {
+				return fmt.Errorf("initialize session manager: %w", err)
+			}
+			defer sm.Close()
+			proxyOpts = append(proxyOpts, proxy.WithSessionManager(sm))
+		}
+
 		// Create proxy
 		p := proxy.New(cfg, st, proxyOpts...)
 
@@ -340,6 +357,16 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 				extra = " + content logging"
 			}
 			fmt.Printf("  %s enabled%s\n", ui.Dimf("Audit:  "), extra)
+			fmt.Println()
+		}
+
+		// Show session override info
+		if cfg.SessionOverrides.Enabled {
+			ttlStr := cfg.SessionOverrides.DefaultTTL
+			if ttlStr == "" {
+				ttlStr = "1h"
+			}
+			fmt.Printf("  %s enabled (default TTL: %s)\n", ui.Dimf("Sessions:"), ttlStr)
 			fmt.Println()
 		}
 

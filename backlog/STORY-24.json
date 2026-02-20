@@ -1,0 +1,20 @@
+{
+  "id": "STORY-24",
+  "title": "Session-level config override",
+  "description": "Allow different request chains for the same agent to use different model/temperature/max_tokens via X-Session-ID header. Config stored in SQLite with TTL auto-expiry. REST API for management, CLI for listing/cleaning.",
+  "status": "done",
+  "branch": "feat/STORY-24-session-override",
+  "tasks": [
+    {"id": "T1", "title": "Create internal/session/session.go — Manager, Override, Apply", "status": "done"},
+    {"id": "T2", "title": "Create internal/session/session_test.go — table-driven tests", "status": "done"},
+    {"id": "T3", "title": "Add SessionOverrideConfig to config.go", "status": "done"},
+    {"id": "T4", "title": "Wire session manager into proxy.go (option, override logic, REST endpoints)", "status": "done"},
+    {"id": "T5", "title": "Create cmd/session.go — CLI subcommands list/clean", "status": "done"},
+    {"id": "T6", "title": "Wire session manager init in cmd/start.go", "status": "done"},
+    {"id": "T7", "title": "Verify: make test && make vet", "status": "done"}
+  ],
+  "audit_log": [
+    {"timestamp": "2026-02-20T00:00:00Z", "from": "backlog", "to": "implementing", "reason": "Plan approved, starting implementation"},
+    {"timestamp": "2026-02-20T00:01:00Z", "from": "implementing", "to": "done", "reason": "All tasks completed, tests pass, vet clean"}
+  ]
+}
