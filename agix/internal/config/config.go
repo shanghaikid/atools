@@ -32,6 +32,30 @@ type Config struct {
 	SessionOverrides SessionOverrideConfig     `yaml:"session_overrides"`
 	Webhooks         WebhookConfig             `yaml:"webhooks"`
 	Bundles          []string                  `yaml:"bundles"`
+	ResponsePolicy   ResponsePolicyConfig      `yaml:"response_policy"`
+}
+
+// ResponsePolicyConfig defines response post-processing policy settings.
+type ResponsePolicyConfig struct {
+	Enabled        bool                                `yaml:"enabled"`
+	RedactPatterns []RedactRuleConfig                  `yaml:"redact_patterns"`
+	MaxOutputChars int                                 `yaml:"max_output_chars"`
+	ForceFormat    string                              `yaml:"force_format"`
+	Agents         map[string]AgentResponsePolicyConfig `yaml:"agents"`
+}
+
+// RedactRuleConfig defines a redaction rule in config.
+type RedactRuleConfig struct {
+	Name        string `yaml:"name"`
+	Pattern     string `yaml:"pattern"`
+	Replacement string `yaml:"replacement"`
+}
+
+// AgentResponsePolicyConfig defines per-agent response policy overrides.
+type AgentResponsePolicyConfig struct {
+	RedactPatterns []RedactRuleConfig `yaml:"redact_patterns"`
+	MaxOutputChars int                `yaml:"max_output_chars"`
+	ForceFormat    string             `yaml:"force_format"`
 }
 
 // WebhookConfig defines generic webhook endpoint settings.

@@ -1,0 +1,18 @@
+{
+  "id": "STORY-28",
+  "title": "Response Policy Layer",
+  "description": "Add a post-processing layer for LLM responses before returning to agents. Symmetric counterpart to promptinject (pre-processing). Enables content redaction, format validation, max-length enforcement, and per-agent policies.",
+  "status": "done",
+  "branch": "feat/STORY-28-response-policy",
+  "tasks": [
+    {"id": "T1", "title": "Create responsepolicy package (policy.go + policy_test.go)", "status": "done"},
+    {"id": "T2", "title": "Add ResponsePolicy config types to config.go", "status": "done"},
+    {"id": "T3", "title": "Integrate into proxy.go (option + writeNonStreamingResponse hook)", "status": "done"},
+    {"id": "T4", "title": "Initialize in start.go with banner line", "status": "done"},
+    {"id": "T5", "title": "Run tests and build", "status": "done"}
+  ],
+  "audit_log": [
+    {"timestamp": "2026-02-21T00:00:00Z", "from": "backlog", "to": "implementing", "reason": "Plan approved, starting implementation"},
+    {"timestamp": "2026-02-21T00:00:01Z", "from": "implementing", "to": "done", "reason": "All tasks complete, 13 tests pass, build succeeds"}
+  ]
+}

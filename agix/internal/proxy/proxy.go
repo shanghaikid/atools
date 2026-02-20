@@ -23,6 +23,7 @@ import (
 	"github.com/agent-platform/agix/internal/experiment"
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/promptinject"
+	"github.com/agent-platform/agix/internal/responsepolicy"
 	"github.com/agent-platform/agix/internal/firewall"
 	"github.com/agent-platform/agix/internal/pricing"
 	"github.com/agent-platform/agix/internal/qualitygate"
@@ -52,6 +53,7 @@ type Proxy struct {
 	promptInjector *promptinject.Injector
 	sessionMgr     *session.Manager
 	auditLogger    *audit.Logger
+	responsePolicy *responsepolicy.Policy
 	webhookHandler *webhook.Handler
 	auditCfg       config.AuditConfig
 	tracingEnabled bool
@@ -129,6 +131,11 @@ func WithAuditLogger(l *audit.Logger, cfg config.AuditConfig) Option {
 // WithSessionManager sets the session override manager.
 func WithSessionManager(sm *session.Manager) Option {
 	return func(p *Proxy) { p.sessionMgr = sm }
+}
+
+// WithResponsePolicy sets the response policy layer.
+func WithResponsePolicy(pol *responsepolicy.Policy) Option {
+	return func(p *Proxy) { p.responsePolicy = pol }
 }
 
 // WithWebhookHandler sets the generic webhook handler.
@@ -768,6 +775,15 @@ func (p *Proxy) writeNonStreamingResponse(w http.ResponseWriter, resp *http.Resp
 		OriginalModel: originalModel,
 	}
 	p.store.InsertAsync(record)
+
+	// Apply response policy (redaction, truncation, format validation)
+	if p.responsePolicy != nil {
+		var applied []string
+		respBody, applied = p.responsePolicy.Apply(respBody, agentName)
+		if len(applied) > 0 {
+			w.Header().Set("X-Response-Policy", strings.Join(applied, ", "))
+		}
+	}
 
 	for k, vv := range resp.Header {
 		for _, v := range vv {

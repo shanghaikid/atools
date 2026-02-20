@@ -16,6 +16,7 @@ import (
 	"github.com/agent-platform/agix/internal/config"
 	"github.com/agent-platform/agix/internal/experiment"
 	"github.com/agent-platform/agix/internal/promptinject"
+	"github.com/agent-platform/agix/internal/responsepolicy"
 	"github.com/agent-platform/agix/internal/dashboard"
 	"github.com/agent-platform/agix/internal/failover"
 	"github.com/agent-platform/agix/internal/firewall"
@@ -237,6 +238,46 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 			}
 		}
 
+		// Initialize response policy
+		if cfg.ResponsePolicy.Enabled {
+			rpCfg := responsepolicy.Config{
+				Enabled:        true,
+				MaxOutputChars: cfg.ResponsePolicy.MaxOutputChars,
+				ForceFormat:    cfg.ResponsePolicy.ForceFormat,
+			}
+			for _, rp := range cfg.ResponsePolicy.RedactPatterns {
+				rpCfg.RedactPatterns = append(rpCfg.RedactPatterns, responsepolicy.RedactRuleConfig{
+					Name:        rp.Name,
+					Pattern:     rp.Pattern,
+					Replacement: rp.Replacement,
+				})
+			}
+			if len(cfg.ResponsePolicy.Agents) > 0 {
+				rpCfg.Agents = make(map[string]responsepolicy.AgentPolicy, len(cfg.ResponsePolicy.Agents))
+				for name, ap := range cfg.ResponsePolicy.Agents {
+					agentPol := responsepolicy.AgentPolicy{
+						MaxOutputChars: ap.MaxOutputChars,
+						ForceFormat:    ap.ForceFormat,
+					}
+					for _, rp := range ap.RedactPatterns {
+						agentPol.RedactPatterns = append(agentPol.RedactPatterns, responsepolicy.RedactRuleConfig{
+							Name:        rp.Name,
+							Pattern:     rp.Pattern,
+							Replacement: rp.Replacement,
+						})
+					}
+					rpCfg.Agents[name] = agentPol
+				}
+			}
+			pol, err := responsepolicy.New(rpCfg)
+			if err != nil {
+				return fmt.Errorf("initialize response policy: %w", err)
+			}
+			if pol != nil {
+				proxyOpts = append(proxyOpts, proxy.WithResponsePolicy(pol))
+			}
+		}
+
 		// Initialize tracing
 		if cfg.Tracing.Enabled {
 			sampleRate := cfg.Tracing.SampleRate
@@ -380,6 +421,17 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 		// Show webhooks info
 		if cfg.Webhooks.Enabled && len(cfg.Webhooks.Definitions) > 0 {
 			fmt.Printf("  %s %d webhook(s) configured\n", ui.Dimf("Webhooks:"), len(cfg.Webhooks.Definitions))
+			fmt.Println()
+		}
+
+		// Show response policy info
+		if cfg.ResponsePolicy.Enabled {
+			ruleCount := len(cfg.ResponsePolicy.RedactPatterns)
+			for _, ap := range cfg.ResponsePolicy.Agents {
+				ruleCount += len(ap.RedactPatterns)
+			}
+			fmt.Printf("  %s enabled (%d redact rule(s), %d agent override(s))\n",
+				ui.Dimf("Response policy:"), ruleCount, len(cfg.ResponsePolicy.Agents))
 			fmt.Println()
 		}
 
