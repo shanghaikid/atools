@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 25,
+  "last_story_id": 26,
   "stories": [
     {
       "id": "STORY-1",
@@ -177,6 +177,12 @@
       "status": "done",
       "branch": "feat/STORY-25-webhook-endpoint",
       "merge_commit": "37b76dc"
+    },
+    {
+      "id": "STORY-26",
+      "title": "MCP Tool Bundle",
+      "status": "done",
+      "branch": "feat/STORY-26-mcp-bundle"
     }
   ]
 }

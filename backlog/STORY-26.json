@@ -1,0 +1,21 @@
+{
+  "id": "STORY-26",
+  "title": "MCP Tool Bundle",
+  "description": "Pre-packaged MCP server bundles that can be installed with one command. Bundles live in ~/.agix/bundles/ as JSON files. Built-in bundles (code-review, devops, docs-writer) embedded in binary via embed. CLI: bundle list/show/install/remove.",
+  "status": "done",
+  "branch": "feat/STORY-26-mcp-bundle",
+  "created": "2026-02-20",
+  "tasks": [
+    {"id": "T1", "title": "Create built-in bundle JSON files", "status": "done"},
+    {"id": "T2", "title": "Create internal/bundle/bundle.go with core logic", "status": "done"},
+    {"id": "T3", "title": "Add Bundles field to Config struct", "status": "done"},
+    {"id": "T4", "title": "Create cmd/bundle.go CLI commands", "status": "done"},
+    {"id": "T5", "title": "Create bundle_test.go", "status": "done"},
+    {"id": "T6", "title": "Run make test && make vet", "status": "done"}
+  ],
+  "audit_log": [
+    {"timestamp": "2026-02-20", "action": "created", "reason": "New feature: MCP tool bundles for pre-packaged server sets"},
+    {"timestamp": "2026-02-20", "action": "status_change", "from": "ready", "to": "implementing", "reason": "Starting implementation"},
+    {"timestamp": "2026-02-20", "action": "status_change", "from": "implementing", "to": "done", "reason": "All tasks complete, tests pass, vet clean"}
+  ]
+}

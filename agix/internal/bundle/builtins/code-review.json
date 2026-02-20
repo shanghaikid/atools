@@ -1,0 +1,20 @@
+{
+  "name": "code-review",
+  "description": "File reading and GitHub integration for code review",
+  "servers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": ["GITHUB_TOKEN=${GITHUB_TOKEN}"]
+    }
+  },
+  "agent_defaults": {
+    "code-reviewer": {
+      "allow": ["read_file", "list_directory", "search_files", "get_pull_request", "list_pull_request_files"]
+    }
+  }
+}

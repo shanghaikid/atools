@@ -31,6 +31,7 @@ type Config struct {
 	Audit            AuditConfig               `yaml:"audit"`
 	SessionOverrides SessionOverrideConfig     `yaml:"session_overrides"`
 	Webhooks         WebhookConfig             `yaml:"webhooks"`
+	Bundles          []string                  `yaml:"bundles"`
 }
 
 // WebhookConfig defines generic webhook endpoint settings.

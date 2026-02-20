@@ -1,0 +1,20 @@
+{
+  "name": "devops",
+  "description": "File access and Docker management for DevOps workflows",
+  "servers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
+    },
+    "docker": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-docker"],
+      "env": ["DOCKER_HOST=${DOCKER_HOST}"]
+    }
+  },
+  "agent_defaults": {
+    "devops-agent": {
+      "allow": ["read_file", "list_directory", "list_containers", "inspect_container", "container_logs"]
+    }
+  }
+}
