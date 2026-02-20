@@ -4,6 +4,7 @@
   "description": "Generalize existing budget alert webhook into a generic endpoint where external systems can trigger pre-configured agent tasks via POST /v1/webhooks/:name, with HMAC verification, prompt template rendering, async LLM execution, and optional result callback.",
   "status": "done",
   "branch": "feat/STORY-25-webhook-endpoint",
+  "merge_commit": "37b76dc",
   "tasks": [
     {"id": "T1", "title": "Add WebhookConfig structs to config", "status": "pending"},
     {"id": "T2", "title": "Add webhook_executions table and store methods", "status": "pending"},

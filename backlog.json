@@ -175,7 +175,8 @@
       "id": "STORY-25",
       "title": "Generic webhook endpoint",
       "status": "done",
-      "branch": "feat/STORY-25-webhook-endpoint"
+      "branch": "feat/STORY-25-webhook-endpoint",
+      "merge_commit": "37b76dc"
     }
   ]
 }
