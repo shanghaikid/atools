@@ -2,23 +2,36 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
-	"strings"
+
+	"github.com/agent-platform/tools/ainit/internal/installer"
 )
 
 //go:embed templates/*
 var templateFS embed.FS
 
+var version = "dev"
+
 func main() {
+	showVersion := flag.Bool("version", false, "print version and exit")
+	dryRun := flag.Bool("dry-run", false, "show what would be installed without writing files")
+	flag.Parse()
+
+	if *showVersion {
+		fmt.Println("ainit " + version)
+		return
+	}
+
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: cannot find home directory: %v\n", err)
 		os.Exit(1)
 	}
 
+	inst := &installer.Installer{FS: templateFS, DryRun: *dryRun}
 	claudeDir := filepath.Join(homeDir, ".claude")
 
 	// 1. Install slash command
@@ -27,7 +40,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
-	if err := installFile("templates/commands/ainit.md", filepath.Join(cmdDir, "ainit.md")); err != nil {
+	if err := inst.InstallFile("templates/commands/ainit.md", filepath.Join(cmdDir, "ainit.md")); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
@@ -35,56 +48,33 @@ func main() {
 
 	// 2. Install template files
 	templateDir := filepath.Join(claudeDir, "ainit-templates")
-	if err := installDir("templates/agents", filepath.Join(templateDir, "agents")); err != nil {
+	if err := inst.InstallDir("templates/agents", filepath.Join(templateDir, "agents")); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
-	if err := installDir("templates/skills", filepath.Join(templateDir, "skills")); err != nil {
+	if err := inst.InstallDir("templates/skills", filepath.Join(templateDir, "skills")); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 	for _, name := range []string{"workflow.md", "backlog-protocol.md", "backlog-schema.md", "backlog.mjs", "ainit-setup.sh"} {
-		if err := installFile("templates/"+name, filepath.Join(templateDir, name)); err != nil {
+		if err := inst.InstallFile("templates/"+name, filepath.Join(templateDir, name)); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
 	}
 	// Make setup script executable
-	if err := os.Chmod(filepath.Join(templateDir, "ainit-setup.sh"), 0755); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+	if !*dryRun {
+		if err := os.Chmod(filepath.Join(templateDir, "ainit-setup.sh"), 0755); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
 	}
 	fmt.Println("  ~/.claude/ainit-templates/")
 
 	fmt.Println()
-	fmt.Println("Installed. Run /ainit in any project to set up multi-agent collaboration.")
-}
-
-func installFile(embedPath, destPath string) error {
-	data, err := fs.ReadFile(templateFS, embedPath)
-	if err != nil {
-		return fmt.Errorf("read embedded %s: %w", embedPath, err)
+	if *dryRun {
+		fmt.Println("Dry run complete. No files were written.")
+	} else {
+		fmt.Println("Installed. Run /ainit in any project to set up multi-agent collaboration.")
 	}
-	if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
-		return err
-	}
-	return os.WriteFile(destPath, data, 0644)
-}
-
-func installDir(embedDir, destDir string) error {
-	entries, err := fs.ReadDir(templateFS, embedDir)
-	if err != nil {
-		return fmt.Errorf("read embedded dir %s: %w", embedDir, err)
-	}
-	for _, entry := range entries {
-		if entry.IsDir() || strings.HasPrefix(entry.Name(), ".") {
-			continue
-		}
-		src := embedDir + "/" + entry.Name()
-		dst := filepath.Join(destDir, entry.Name())
-		if err := installFile(src, dst); err != nil {
-			return err
-		}
-	}
-	return nil
 }

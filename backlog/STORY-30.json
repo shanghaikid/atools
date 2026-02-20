@@ -1,8 +1,8 @@
 {
   "id": "STORY-30",
   "title": "ainit Go binary improvements",
-  "status": "ready",
-  "branch": null,
+  "status": "implementing",
+  "branch": "feat/STORY-30-ainit-go-binary-improvements",
   "merge_commit": null,
   "description": "Improve the ainit Go binary with tests, CLI framework, error handling, and overwrite protection",
   "acceptance_criteria": [

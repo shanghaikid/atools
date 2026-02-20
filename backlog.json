@@ -209,8 +209,8 @@
     {
       "id": "STORY-30",
       "title": "ainit Go binary improvements",
-      "status": "ready",
-      "branch": null,
+      "status": "implementing",
+      "branch": "feat/STORY-30-ainit-go-binary-improvements",
       "merge_commit": null
     },
     {
