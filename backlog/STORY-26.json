@@ -4,6 +4,7 @@
   "description": "Pre-packaged MCP server bundles that can be installed with one command. Bundles live in ~/.agix/bundles/ as JSON files. Built-in bundles (code-review, devops, docs-writer) embedded in binary via embed. CLI: bundle list/show/install/remove.",
   "status": "done",
   "branch": "feat/STORY-26-mcp-bundle",
+  "merge_commit": "ad2d010",
   "created": "2026-02-20",
   "tasks": [
     {"id": "T1", "title": "Create built-in bundle JSON files", "status": "done"},

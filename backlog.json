@@ -182,7 +182,8 @@
       "id": "STORY-26",
       "title": "MCP Tool Bundle",
       "status": "done",
-      "branch": "feat/STORY-26-mcp-bundle"
+      "branch": "feat/STORY-26-mcp-bundle",
+      "merge_commit": "ad2d010"
     }
   ]
 }
