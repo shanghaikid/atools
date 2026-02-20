@@ -1,9 +1,9 @@
 {
   "id": "STORY-31",
   "title": "backlog.mjs modernization",
-  "status": "ready",
-  "branch": null,
-  "merge_commit": null,
+  "status": "done",
+  "branch": "feat/STORY-31-backlog-mjs-modernization",
+  "merge_commit": "b17b338",
   "description": "Modernize backlog.mjs: fix Node.js compatibility issues, improve lock mechanism, add missing commands",
   "acceptance_criteria": [
     "rmdirSync replaced with rmSync for Node 16+ compatibility",
