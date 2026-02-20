@@ -196,7 +196,8 @@
       "id": "STORY-28",
       "title": "Response Policy Layer",
       "status": "done",
-      "branch": "feat/STORY-28-response-policy"
+      "branch": "feat/STORY-28-response-policy",
+      "merge_commit": "848f8e6"
     }
   ]
 }

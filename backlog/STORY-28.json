@@ -4,6 +4,7 @@
   "description": "Add a post-processing layer for LLM responses before returning to agents. Symmetric counterpart to promptinject (pre-processing). Enables content redaction, format validation, max-length enforcement, and per-agent policies.",
   "status": "done",
   "branch": "feat/STORY-28-response-policy",
+  "merge_commit": "848f8e6",
   "tasks": [
     {"id": "T1", "title": "Create responsepolicy package (policy.go + policy_test.go)", "status": "done"},
     {"id": "T2", "title": "Add ResponsePolicy config types to config.go", "status": "done"},
