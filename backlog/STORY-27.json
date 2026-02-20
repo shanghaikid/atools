@@ -4,6 +4,8 @@
   "description": "Add optional PostgreSQL support alongside the default SQLite backend. Detection is automatic based on the database connection string (postgres:// prefix). Introduces a Dialect type and helper functions for SQL differences between the two databases.",
   "status": "done",
   "branch": "feat/STORY-27-postgres-backend",
+  "merge_commit": "bd84876",
+  "merge_commit": "bd84876",
   "tasks": [
     {"id": "T1", "title": "Create dialect.go with types and helpers", "status": "done"},
     {"id": "T2", "title": "Refactor sqlite.go → store.go with dialect support", "status": "done"},

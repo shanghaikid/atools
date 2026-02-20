@@ -189,7 +189,8 @@
       "id": "STORY-27",
       "title": "Optional PostgreSQL backend for agix",
       "status": "done",
-      "branch": "feat/STORY-27-postgres-backend"
+      "branch": "feat/STORY-27-postgres-backend",
+      "merge_commit": "bd84876"
     }
   ]
 }
