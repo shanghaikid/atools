@@ -204,7 +204,7 @@
       "title": "Fix critical ainit template bugs",
       "status": "done",
       "branch": "feat/STORY-29-fix-critical-ainit-template-bugs",
-      "merge_commit": null
+      "merge_commit": "b3eff7f"
     },
     {
       "id": "STORY-30",

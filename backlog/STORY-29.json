@@ -3,7 +3,7 @@
   "title": "Fix critical ainit template bugs",
   "status": "done",
   "branch": "feat/STORY-29-fix-critical-ainit-template-bugs",
-  "merge_commit": null,
+  "merge_commit": "b3eff7f",
   "description": "Fix three critical bugs in ainit templates that cause runtime failures or data corruption",
   "acceptance_criteria": [
     "Agent templates use correct backlog CLI path (node .claude/backlog.mjs)",
