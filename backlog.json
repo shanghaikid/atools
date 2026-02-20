@@ -223,9 +223,9 @@
     {
       "id": "STORY-32",
       "title": "Template and script cleanup",
-      "status": "implementing",
+      "status": "done",
       "branch": "feat/STORY-32-template-script-cleanup",
-      "merge_commit": null
+      "merge_commit": "1ed8754"
     },
     {
       "id": "STORY-33",

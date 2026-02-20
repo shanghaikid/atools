@@ -1,9 +1,9 @@
 {
   "id": "STORY-32",
   "title": "Template and script cleanup",
-  "status": "ready",
-  "branch": null,
-  "merge_commit": null,
+  "status": "done",
+  "branch": "feat/STORY-32-template-script-cleanup",
+  "merge_commit": "1ed8754",
   "description": "Clean up stale files, fix shell script portability, and resolve doc drift",
   "acceptance_criteria": [
     "Root workflow.md removed or synced with templates/workflow.md",
