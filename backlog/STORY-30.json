@@ -1,9 +1,9 @@
 {
   "id": "STORY-30",
   "title": "ainit Go binary improvements",
-  "status": "implementing",
+  "status": "done",
   "branch": "feat/STORY-30-ainit-go-binary-improvements",
-  "merge_commit": null,
+  "merge_commit": "c7ab0d4",
   "description": "Improve the ainit Go binary with tests, CLI framework, error handling, and overwrite protection",
   "acceptance_criteria": [
     "installFile and installDir have unit tests",
