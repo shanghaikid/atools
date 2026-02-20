@@ -1,0 +1,50 @@
+{
+  "id": "STORY-29",
+  "title": "Fix critical ainit template bugs",
+  "status": "done",
+  "branch": "feat/STORY-29-fix-critical-ainit-template-bugs",
+  "merge_commit": null,
+  "description": "Fix three critical bugs in ainit templates that cause runtime failures or data corruption",
+  "acceptance_criteria": [
+    "Agent templates use correct backlog CLI path (node .claude/backlog.mjs)",
+    "Status values are consistent between backlog.mjs CLI validation and workflow docs",
+    "deepMerge for arrays replaces instead of appending to prevent duplicate findings"
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Fix backlog CLI path in all agent templates",
+      "status": "done",
+      "description": "Verified: all templates already use correct 'node .claude/backlog.mjs' path. No changes needed."
+    },
+    {
+      "id": "TASK-2",
+      "title": "Reconcile reviewing/testing status values",
+      "status": "done",
+      "description": "Updated workflow.md and backlog-protocol.md to show reviewing and testing as separate CLI status values running in parallel."
+    },
+    {
+      "id": "TASK-3",
+      "title": "Fix deepMerge array behavior",
+      "status": "done",
+      "description": "Changed deepMerge from array concatenation to replacement to prevent duplicate findings on re-run."
+    }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-21T10:00:00Z",
+      "action": "story_created",
+      "reason": "Critical template bugs identified during ainit code review"
+    },
+    {
+      "timestamp": "2026-02-21T10:05:00Z",
+      "action": "status_changed",
+      "detail": "ready → implementing"
+    },
+    {
+      "timestamp": "2026-02-21T10:10:00Z",
+      "action": "status_changed",
+      "detail": "implementing → done. TASK-1: already fixed. TASK-2: updated workflow.md and backlog-protocol.md. TASK-3: fixed deepMerge to replace arrays."
+    }
+  ]
+}

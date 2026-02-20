@@ -1,0 +1,47 @@
+{
+  "id": "STORY-32",
+  "title": "Template and script cleanup",
+  "status": "ready",
+  "branch": null,
+  "merge_commit": null,
+  "description": "Clean up stale files, fix shell script portability, and resolve doc drift",
+  "acceptance_criteria": [
+    "Root workflow.md removed or synced with templates/workflow.md",
+    "ainit-setup.sh works on macOS default bash (3.x)",
+    "No ls-parsing antipattern in setup script",
+    "STORY-1 in ainit backlog resolved (close or abandon)"
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Remove or symlink root workflow.md",
+      "status": "pending",
+      "description": "Root workflow.md diverges from templates/workflow.md (missing security-reviewer, wrong git branch flag, outdated Copying section). Remove the root copy to eliminate drift."
+    },
+    {
+      "id": "TASK-2",
+      "title": "Fix bash 3.x compatibility in ainit-setup.sh",
+      "status": "pending",
+      "description": "POSITIONAL[0] with :- default may behave unexpectedly on bash 3.x (macOS default). Use ${1:-.} directly or add explicit array bounds check."
+    },
+    {
+      "id": "TASK-3",
+      "title": "Replace ls | wc -l with glob-based counting",
+      "status": "pending",
+      "description": "Line 79 uses 'ls ... | wc -l' to count files. Replace with bash glob or find-based counting for robustness."
+    },
+    {
+      "id": "TASK-4",
+      "title": "Resolve stale STORY-1 in ainit backlog",
+      "status": "pending",
+      "description": "STORY-1 is 'implementing' with all tasks pending and no active branch. Either complete it or mark as abandoned with audit_log entry."
+    }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-21T10:00:00Z",
+      "action": "story_created",
+      "reason": "Template/script cleanup issues identified during ainit code review"
+    }
+  ]
+}

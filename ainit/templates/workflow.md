@@ -98,10 +98,13 @@ Story (user requirement)
 ### Status Flow
 
 ```
-backlog → ready → designing → implementing → reviewing/testing → done
-                                    ↑                │
-                                    └── rework ──────┘
+backlog → ready → designing → implementing → reviewing → done
+                                    ↑            │       ↑
+                                    │            ↓       │
+                                    └── rework ──┘  testing
 ```
+
+> Note: `reviewing` and `testing` run in parallel as separate CLI status values.
 
 ### Phase Descriptions
 
@@ -111,7 +114,8 @@ backlog → ready → designing → implementing → reviewing/testing → done
 | ready | Broken down, awaiting design | team-lead confirms |
 | designing | Architect designing | architect |
 | implementing | Coding in progress | coder |
-| reviewing/testing | Review + testing in progress | reviewer + tester |
+| reviewing | Code review in progress | reviewer |
+| testing | Testing in progress | tester |
 | done | Completed and merged | team-lead merges branch |
 
 ## Branch & Merge Workflow

@@ -1,0 +1,53 @@
+{
+  "id": "STORY-30",
+  "title": "ainit Go binary improvements",
+  "status": "ready",
+  "branch": null,
+  "merge_commit": null,
+  "description": "Improve the ainit Go binary with tests, CLI framework, error handling, and overwrite protection",
+  "acceptance_criteria": [
+    "installFile and installDir have unit tests",
+    "Binary supports --help, --version, --dry-run flags",
+    "MkdirAll error includes path context",
+    "installFile detects user-modified files and prompts or skips"
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Refactor main.go for testability",
+      "status": "pending",
+      "description": "Extract installFile and installDir into a separate internal package so they can be unit tested independently."
+    },
+    {
+      "id": "TASK-2",
+      "title": "Add unit tests",
+      "status": "pending",
+      "description": "Write table-driven tests for installFile (happy path, dir creation, overwrite) and installDir (skip dotfiles, skip subdirs)."
+    },
+    {
+      "id": "TASK-3",
+      "title": "Add CLI flags with cobra or flag package",
+      "status": "pending",
+      "description": "Add --help, --version, --dry-run flags. Cobra preferred for consistency with agix, but stdlib flag is acceptable."
+    },
+    {
+      "id": "TASK-4",
+      "title": "Wrap MkdirAll error with path context",
+      "status": "pending",
+      "description": "Change bare return err to fmt.Errorf(\"create dir for %s: %w\", destPath, err)."
+    },
+    {
+      "id": "TASK-5",
+      "title": "Add overwrite protection for user-modified files",
+      "status": "pending",
+      "description": "Before overwriting, compare content hash. If file was modified by user, print warning and skip (or add --force flag)."
+    }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-21T10:00:00Z",
+      "action": "story_created",
+      "reason": "Go binary quality improvements identified during ainit code review"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 28,
+  "last_story_id": 33,
   "stories": [
     {
       "id": "STORY-1",
@@ -198,6 +198,41 @@
       "status": "done",
       "branch": "feat/STORY-28-response-policy",
       "merge_commit": "848f8e6"
+    },
+    {
+      "id": "STORY-29",
+      "title": "Fix critical ainit template bugs",
+      "status": "done",
+      "branch": "feat/STORY-29-fix-critical-ainit-template-bugs",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-30",
+      "title": "ainit Go binary improvements",
+      "status": "ready",
+      "branch": null,
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-31",
+      "title": "backlog.mjs modernization",
+      "status": "ready",
+      "branch": null,
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-32",
+      "title": "Template and script cleanup",
+      "status": "ready",
+      "branch": null,
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-33",
+      "title": "Comprehensive agix documentation update",
+      "status": "implementing",
+      "branch": "feat/STORY-33-agix-docs-update",
+      "merge_commit": null
     }
   ]
 }

@@ -1,0 +1,53 @@
+{
+  "id": "STORY-31",
+  "title": "backlog.mjs modernization",
+  "status": "ready",
+  "branch": null,
+  "merge_commit": null,
+  "description": "Modernize backlog.mjs: fix Node.js compatibility issues, improve lock mechanism, add missing commands",
+  "acceptance_criteria": [
+    "rmdirSync replaced with rmSync for Node 16+ compatibility",
+    "Lock retry uses non-busy-wait mechanism",
+    "New delete/archive command available for cleaning up mistaken stories",
+    "Error output includes human-readable stderr alongside JSON stdout"
+  ],
+  "tasks": [
+    {
+      "id": "TASK-1",
+      "title": "Replace rmdirSync with rmSync",
+      "status": "pending",
+      "description": "rmdirSync is deprecated in Node 16+. Replace with fs.rmSync(path, { recursive: true })."
+    },
+    {
+      "id": "TASK-2",
+      "title": "Replace busy-wait with non-blocking sleep",
+      "status": "pending",
+      "description": "Current lock retry uses CPU-burning while loop. Replace with Atomics.wait() or convert to async with setTimeout."
+    },
+    {
+      "id": "TASK-3",
+      "title": "Add delete/archive command",
+      "status": "pending",
+      "description": "Add a command to remove or archive mistakenly created stories. Should update both index and story file."
+    },
+    {
+      "id": "TASK-4",
+      "title": "Dual-format error output",
+      "status": "pending",
+      "description": "Write human-readable error to stderr while keeping JSON on stdout for agent consumption."
+    },
+    {
+      "id": "TASK-5",
+      "title": "Validate empty string values for required flags",
+      "status": "pending",
+      "description": "cmdCreate accepts --desc '' and --title '' as valid. Add check that required string flags are non-empty after trim."
+    }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-21T10:00:00Z",
+      "action": "story_created",
+      "reason": "backlog.mjs improvements identified during ainit code review"
+    }
+  ]
+}

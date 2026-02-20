@@ -41,7 +41,7 @@ function deepMerge(target, source) {
     return source;
   }
   if (Array.isArray(target) && Array.isArray(source)) {
-    return target.concat(source);
+    return source; // replace, not concatenate — avoids duplicate findings on re-run
   }
   const result = { ...target };
   for (const key of Object.keys(source)) {
