@@ -44,10 +44,10 @@ Your Agent → agix proxy (localhost) → OpenAI / Anthropic API
 ├─────────────────────────────────────────┤
 │  Intercept: extract usage from response  │
 │  Calculate cost via pricing table        │
-│  Write record to SQLite                  │
+│  Write record to database                │
 ├─────────────────────────────────────────┤
-│  SQLite (WAL mode, single file)          │
-│  ~/.agix/agix.db             │
+│  SQLite (default) or PostgreSQL          │
+│  ~/.agix/agix.db  or  postgres://...     │
 └─────────────────────────────────────────┘
 ```
 
@@ -77,8 +77,9 @@ tools/agix/
 │   │   ├── proxy.go                   # HTTP reverse proxy + tool loop
 │   │   └── proxy_test.go
 │   ├── store/
-│   │   ├── sqlite.go                  # SQLite storage layer
-│   │   └── sqlite_test.go
+│   │   ├── dialect.go                 # Dialect detection + SQL rebind helpers
+│   │   ├── store.go                   # Storage layer (SQLite + PostgreSQL)
+│   │   └── store_test.go
 │   ├── pricing/
 │   │   ├── models.go                  # Model pricing table
 │   │   └── models_test.go
@@ -102,7 +103,7 @@ tools/agix/
 |-----------|--------|--------|
 | Language | Go 1.26 | Single binary, cross-compile, great for network I/O |
 | CLI | github.com/spf13/cobra | Industry standard (Docker, K8s, gh CLI) |
-| Database | modernc.org/sqlite | Pure Go, zero CGO, zero external deps |
+| Database | modernc.org/sqlite (default) + github.com/lib/pq (optional) | SQLite for single-machine, PostgreSQL for scalable deployments |
 | Tables | github.com/olekukonko/tablewriter | Terminal table formatting |
 | Config | gopkg.in/yaml.v3 | YAML config parsing |
 
@@ -128,6 +129,13 @@ CREATE TABLE IF NOT EXISTS requests (
 ```
 
 Indexes on `timestamp`, `agent_name`, `model`. Timestamps stored as ISO 8601 strings (`2006-01-02T15:04:05Z`) for SQLite date function compatibility.
+
+### Database backends
+
+- **SQLite (default)**: `database: "~/.agix/agix.db"` — single file, zero setup
+- **PostgreSQL (optional)**: `database: "postgres://user:pass@localhost:5432/agix?sslmode=disable"` — scalable, multi-machine
+
+Detection is automatic: if the `database` value starts with `postgres://` or `postgresql://`, the PostgreSQL driver is used. The `Dialect` type in `internal/store/dialect.go` provides helpers for SQL differences (`Rebind` for placeholder rewriting, dialect-specific DDL).
 
 ### Prompt Template Injection (`internal/promptinject/`)
 
@@ -204,7 +212,7 @@ port: 8080
 keys:
   openai: "sk-..."
   anthropic: "sk-ant-..."
-database: "/Users/you/.agix/agix.db"
+database: "/Users/you/.agix/agix.db"  # or "postgres://user:pass@localhost:5432/agix?sslmode=disable"
 log_level: info
 budgets:
   code-reviewer:

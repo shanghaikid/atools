@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/agent-platform/agix/internal/store"
 	_ "modernc.org/sqlite"
 )
 
@@ -39,7 +40,7 @@ func newTestDB(t *testing.T) *sql.DB {
 
 func TestLogger_Disabled(t *testing.T) {
 	db := newTestDB(t)
-	l := New(db, false)
+	l := New(db, false, store.DialectSQLite)
 	defer l.Close()
 
 	l.Log(EventToolCall, "agent-1", ToolCallDetails{Tool: "read_file"})
@@ -56,7 +57,7 @@ func TestLogger_Disabled(t *testing.T) {
 
 func TestLogger_LogAndQuery(t *testing.T) {
 	db := newTestDB(t)
-	l := New(db, true)
+	l := New(db, true, store.DialectSQLite)
 
 	l.Log(EventToolCall, "agent-1", ToolCallDetails{
 		Tool:       "read_file",
@@ -95,7 +96,7 @@ func TestLogger_LogAndQuery(t *testing.T) {
 
 func TestLogger_FilterByType(t *testing.T) {
 	db := newTestDB(t)
-	l := New(db, true)
+	l := New(db, true, store.DialectSQLite)
 
 	l.Log(EventToolCall, "agent-1", ToolCallDetails{Tool: "t1"})
 	l.Log(EventFirewallBlock, "agent-2", FirewallDetails{Rule: "r1"})
@@ -119,7 +120,7 @@ func TestLogger_FilterByType(t *testing.T) {
 
 func TestLogger_FilterByAgent(t *testing.T) {
 	db := newTestDB(t)
-	l := New(db, true)
+	l := New(db, true, store.DialectSQLite)
 
 	l.Log(EventToolCall, "agent-1", ToolCallDetails{Tool: "t1"})
 	l.Log(EventToolCall, "agent-2", ToolCallDetails{Tool: "t2"})
@@ -143,7 +144,7 @@ func TestLogger_FilterByAgent(t *testing.T) {
 
 func TestLogger_FilterByTypeAndAgent(t *testing.T) {
 	db := newTestDB(t)
-	l := New(db, true)
+	l := New(db, true, store.DialectSQLite)
 
 	l.Log(EventToolCall, "agent-1", ToolCallDetails{Tool: "t1"})
 	l.Log(EventFirewallWarn, "agent-1", FirewallDetails{Rule: "r1"})
@@ -165,7 +166,7 @@ func TestLogger_FilterByTypeAndAgent(t *testing.T) {
 
 func TestLogger_Limit(t *testing.T) {
 	db := newTestDB(t)
-	l := New(db, true)
+	l := New(db, true, store.DialectSQLite)
 
 	for i := 0; i < 10; i++ {
 		l.Log(EventToolCall, "agent", ToolCallDetails{Tool: "t"})
@@ -184,7 +185,7 @@ func TestLogger_Limit(t *testing.T) {
 
 func TestLogger_DetailsUnmarshal(t *testing.T) {
 	db := newTestDB(t)
-	l := New(db, true)
+	l := New(db, true, store.DialectSQLite)
 
 	l.Log(EventToolCall, "agent-1", ToolCallDetails{
 		Tool:       "write_file",
@@ -222,7 +223,7 @@ func TestLogger_DetailsUnmarshal(t *testing.T) {
 
 func TestLogger_ContentLog(t *testing.T) {
 	db := newTestDB(t)
-	l := New(db, true)
+	l := New(db, true, store.DialectSQLite)
 
 	l.Log(EventContentLog, "agent-1", ContentLogDetails{
 		Direction: "request",
@@ -251,7 +252,7 @@ func TestLogger_ContentLog(t *testing.T) {
 
 func TestLogger_BatchFlush(t *testing.T) {
 	db := newTestDB(t)
-	l := New(db, true)
+	l := New(db, true, store.DialectSQLite)
 
 	const n = 75 // > maxBatch (50) to test batch boundary
 	for i := 0; i < n; i++ {
@@ -271,7 +272,7 @@ func TestLogger_BatchFlush(t *testing.T) {
 
 func TestLogger_TimestampPreserved(t *testing.T) {
 	db := newTestDB(t)
-	l := New(db, true)
+	l := New(db, true, store.DialectSQLite)
 
 	before := time.Now().UTC()
 	l.Log(EventToolCall, "agent", ToolCallDetails{Tool: "t"})

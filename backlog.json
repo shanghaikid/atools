@@ -1,7 +1,7 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 26,
+  "last_story_id": 27,
   "stories": [
     {
       "id": "STORY-1",
@@ -184,6 +184,12 @@
       "status": "done",
       "branch": "feat/STORY-26-mcp-bundle",
       "merge_commit": "ad2d010"
+    },
+    {
+      "id": "STORY-27",
+      "title": "Optional PostgreSQL backend for agix",
+      "status": "done",
+      "branch": "feat/STORY-27-postgres-backend"
     }
   ]
 }

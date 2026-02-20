@@ -37,7 +37,7 @@ var auditListCmd = &cobra.Command{
 		}
 		defer st.Close()
 
-		logger := audit.New(st.DB(), true)
+		logger := audit.New(st.DB(), true, st.Dialect())
 		defer logger.Close()
 
 		events, err := logger.QueryRecent(auditListN, auditListType, auditListAgent)

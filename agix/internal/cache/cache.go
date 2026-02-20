@@ -11,6 +11,8 @@ import (
 	"math"
 	"strings"
 	"time"
+
+	"github.com/agent-platform/agix/internal/store"
 )
 
 // Config defines cache settings.
@@ -39,12 +41,13 @@ type LookupResult struct {
 // Cache provides exact and semantic response caching.
 type Cache struct {
 	db        *sql.DB
+	dialect   store.Dialect
 	embedder  *EmbeddingClient
 	threshold float64
 	ttl       time.Duration
 }
 
-const createCacheTableSQL = `
+const createCacheTableSQLite = `
 CREATE TABLE IF NOT EXISTS cache_entries (
 	hash       TEXT NOT NULL,
 	model      TEXT NOT NULL,
@@ -58,8 +61,21 @@ CREATE INDEX IF NOT EXISTS idx_cache_model ON cache_entries(model);
 CREATE INDEX IF NOT EXISTS idx_cache_created ON cache_entries(created_at);
 `
 
+var createCacheTablePostgres = []string{
+	`CREATE TABLE IF NOT EXISTS cache_entries (
+		hash       TEXT NOT NULL,
+		model      TEXT NOT NULL,
+		response   BYTEA NOT NULL,
+		embedding  BYTEA,
+		created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+		PRIMARY KEY (hash, model)
+	)`,
+	`CREATE INDEX IF NOT EXISTS idx_cache_model ON cache_entries(model)`,
+	`CREATE INDEX IF NOT EXISTS idx_cache_created ON cache_entries(created_at)`,
+}
+
 // New creates a new Cache. Returns nil if not enabled.
-func New(cfg Config, db *sql.DB, embedder *EmbeddingClient) (*Cache, error) {
+func New(cfg Config, db *sql.DB, embedder *EmbeddingClient, dialect store.Dialect) (*Cache, error) {
 	if !cfg.Enabled {
 		return nil, nil
 	}
@@ -71,12 +87,21 @@ func New(cfg Config, db *sql.DB, embedder *EmbeddingClient) (*Cache, error) {
 		cfg.TTLMinutes = 60
 	}
 
-	if _, err := db.Exec(createCacheTableSQL); err != nil {
-		return nil, fmt.Errorf("create cache table: %w", err)
+	if dialect == store.DialectPostgres {
+		for _, stmt := range createCacheTablePostgres {
+			if _, err := db.Exec(stmt); err != nil {
+				return nil, fmt.Errorf("create cache table: %w", err)
+			}
+		}
+	} else {
+		if _, err := db.Exec(createCacheTableSQLite); err != nil {
+			return nil, fmt.Errorf("create cache table: %w", err)
+		}
 	}
 
 	return &Cache{
 		db:        db,
+		dialect:   dialect,
 		embedder:  embedder,
 		threshold: cfg.SimilarityThreshold,
 		ttl:       time.Duration(cfg.TTLMinutes) * time.Minute,
@@ -136,8 +161,15 @@ func (c *Cache) Store(model string, messages json.RawMessage, response []byte) {
 		}
 	}
 
+	var query string
+	if c.dialect == store.DialectPostgres {
+		query = `INSERT INTO cache_entries (hash, model, response, embedding, created_at) VALUES ($1, $2, $3, $4, $5)
+			ON CONFLICT (hash, model) DO UPDATE SET response = EXCLUDED.response, embedding = EXCLUDED.embedding, created_at = EXCLUDED.created_at`
+	} else {
+		query = `INSERT OR REPLACE INTO cache_entries (hash, model, response, embedding, created_at) VALUES (?, ?, ?, ?, ?)`
+	}
 	_, err := c.db.Exec(
-		`INSERT OR REPLACE INTO cache_entries (hash, model, response, embedding, created_at) VALUES (?, ?, ?, ?, ?)`,
+		store.Rebind(c.dialect, query),
 		hash, model, response, embeddingBlob, time.Now().UTC().Format("2006-01-02T15:04:05Z"),
 	)
 	if err != nil {
@@ -148,7 +180,7 @@ func (c *Cache) Store(model string, messages json.RawMessage, response []byte) {
 // Cleanup removes expired cache entries.
 func (c *Cache) Cleanup() {
 	cutoff := time.Now().UTC().Add(-c.ttl).Format("2006-01-02T15:04:05Z")
-	_, err := c.db.Exec(`DELETE FROM cache_entries WHERE created_at < ?`, cutoff)
+	_, err := c.db.Exec(store.Rebind(c.dialect, `DELETE FROM cache_entries WHERE created_at < ?`), cutoff)
 	if err != nil {
 		log.Printf("CACHE: cleanup error: %v", err)
 	}
@@ -156,7 +188,7 @@ func (c *Cache) Cleanup() {
 
 func (c *Cache) getExact(hash, model string) (*Entry, error) {
 	row := c.db.QueryRow(
-		`SELECT hash, model, response, embedding, created_at FROM cache_entries WHERE hash = ? AND model = ?`,
+		store.Rebind(c.dialect, `SELECT hash, model, response, embedding, created_at FROM cache_entries WHERE hash = ? AND model = ?`),
 		hash, model,
 	)
 	var e Entry
@@ -177,7 +209,7 @@ func (c *Cache) getExact(hash, model string) (*Entry, error) {
 
 func (c *Cache) findSemantic(model string, queryEmb []float32) (*Entry, float64) {
 	rows, err := c.db.Query(
-		`SELECT hash, model, response, embedding, created_at FROM cache_entries WHERE model = ? AND embedding IS NOT NULL`,
+		store.Rebind(c.dialect, `SELECT hash, model, response, embedding, created_at FROM cache_entries WHERE model = ? AND embedding IS NOT NULL`),
 		model,
 	)
 	if err != nil {
@@ -213,7 +245,7 @@ func (c *Cache) findSemantic(model string, queryEmb []float32) (*Entry, float64)
 }
 
 func (c *Cache) deleteEntry(hash, model string) {
-	c.db.Exec(`DELETE FROM cache_entries WHERE hash = ? AND model = ?`, hash, model)
+	c.db.Exec(store.Rebind(c.dialect, `DELETE FROM cache_entries WHERE hash = ? AND model = ?`), hash, model)
 }
 
 // extractContentKey builds a cache key from user message content.

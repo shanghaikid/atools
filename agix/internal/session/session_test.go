@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/agent-platform/agix/internal/store"
 	_ "modernc.org/sqlite"
 )
 
@@ -24,7 +25,7 @@ func intPtr(v int) *int             { return &v }
 
 func TestSetAndGet(t *testing.T) {
 	db := testDB(t)
-	mgr, err := New(db, time.Hour)
+	mgr, err := New(db, time.Hour, store.DialectSQLite)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -100,7 +101,7 @@ func TestSetAndGet(t *testing.T) {
 
 func TestGetNotFound(t *testing.T) {
 	db := testDB(t)
-	mgr, err := New(db, time.Hour)
+	mgr, err := New(db, time.Hour, store.DialectSQLite)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -117,7 +118,7 @@ func TestGetNotFound(t *testing.T) {
 
 func TestExpiry(t *testing.T) {
 	db := testDB(t)
-	mgr, err := New(db, time.Hour)
+	mgr, err := New(db, time.Hour, store.DialectSQLite)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -145,7 +146,7 @@ func TestExpiry(t *testing.T) {
 
 func TestCleanExpired(t *testing.T) {
 	db := testDB(t)
-	mgr, err := New(db, time.Hour)
+	mgr, err := New(db, time.Hour, store.DialectSQLite)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -191,7 +192,7 @@ func TestCleanExpired(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	db := testDB(t)
-	mgr, err := New(db, time.Hour)
+	mgr, err := New(db, time.Hour, store.DialectSQLite)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
@@ -295,7 +296,7 @@ func TestApplyOverrides(t *testing.T) {
 
 func TestListActive(t *testing.T) {
 	db := testDB(t)
-	mgr, err := New(db, time.Hour)
+	mgr, err := New(db, time.Hour, store.DialectSQLite)
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}

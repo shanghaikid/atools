@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/agent-platform/agix/internal/config"
+	"github.com/agent-platform/agix/internal/store"
 	"github.com/agent-platform/agix/internal/ui"
 )
 
@@ -238,22 +239,57 @@ func CheckFirewallRules(cfg *config.Config, _ string) Result {
 		Message: fmt.Sprintf("Firewall: %d rule(s) valid", len(cfg.Firewall.Rules))}
 }
 
-// CheckDatabase verifies SQLite database integrity.
+// CheckDatabase verifies database connectivity and integrity.
 func CheckDatabase(cfg *config.Config, _ string) Result {
 	if cfg.Database == "" {
 		return Result{Name: "database", Status: StatusFail,
 			Message: "Database: path not configured"}
 	}
 
-	if _, err := os.Stat(cfg.Database); os.IsNotExist(err) {
-		return Result{Name: "database", Status: StatusWarn,
-			Message: fmt.Sprintf("Database: %s does not exist (will be created on first start)", cfg.Database)}
-	}
+	dialect := store.DetectDialect(cfg.Database)
 
-	db, err := sql.Open("sqlite", cfg.Database)
+	if dialect == store.DialectPostgres {
+		return checkPostgres(cfg.Database)
+	}
+	return checkSQLite(cfg.Database)
+}
+
+func checkPostgres(dsn string) Result {
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return Result{Name: "database", Status: StatusFail,
-			Message: fmt.Sprintf("Database: cannot open %s: %v", cfg.Database, err)}
+			Message: fmt.Sprintf("Database: cannot open postgres: %v", err)}
+	}
+	defer db.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := db.PingContext(ctx); err != nil {
+		return Result{Name: "database", Status: StatusFail,
+			Message: fmt.Sprintf("Database: postgres ping failed: %v", err)}
+	}
+
+	var version string
+	if err := db.QueryRow("SELECT version()").Scan(&version); err != nil {
+		return Result{Name: "database", Status: StatusWarn,
+			Message: "Database: postgres connected but version query failed"}
+	}
+
+	return Result{Name: "database", Status: StatusPass,
+		Message: fmt.Sprintf("Database: postgres OK (%s)", version)}
+}
+
+func checkSQLite(dbPath string) Result {
+	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
+		return Result{Name: "database", Status: StatusWarn,
+			Message: fmt.Sprintf("Database: %s does not exist (will be created on first start)", dbPath)}
+	}
+
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		return Result{Name: "database", Status: StatusFail,
+			Message: fmt.Sprintf("Database: cannot open %s: %v", dbPath, err)}
 	}
 	defer db.Close()
 
@@ -268,5 +304,5 @@ func CheckDatabase(cfg *config.Config, _ string) Result {
 	}
 
 	return Result{Name: "database", Status: StatusPass,
-		Message: fmt.Sprintf("Database: %s integrity OK", cfg.Database)}
+		Message: fmt.Sprintf("Database: %s integrity OK", dbPath)}
 }

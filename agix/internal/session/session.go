@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/agent-platform/agix/internal/store"
 )
 
 // Override holds per-session configuration overrides.
@@ -18,20 +20,22 @@ type Override struct {
 	ExpiresAt   time.Time `json:"expires_at"`
 }
 
-// Manager manages session-level config overrides stored in SQLite.
+// Manager manages session-level config overrides.
 type Manager struct {
 	db         *sql.DB
+	dialect    store.Dialect
 	defaultTTL time.Duration
 	done       chan struct{}
 }
 
 // New creates a Manager, initializes the table, and starts a background cleanup goroutine.
-func New(db *sql.DB, defaultTTL time.Duration) (*Manager, error) {
-	if err := createTable(db); err != nil {
+func New(db *sql.DB, defaultTTL time.Duration, dialect store.Dialect) (*Manager, error) {
+	if err := createTable(db, dialect); err != nil {
 		return nil, fmt.Errorf("create session_overrides table: %w", err)
 	}
 	m := &Manager{
 		db:         db,
+		dialect:    dialect,
 		defaultTTL: defaultTTL,
 		done:       make(chan struct{}),
 	}
@@ -44,7 +48,26 @@ func (m *Manager) Close() {
 	close(m.done)
 }
 
-func createTable(db *sql.DB) error {
+func createTable(db *sql.DB, dialect store.Dialect) error {
+	if dialect == store.DialectPostgres {
+		for _, stmt := range []string{
+			`CREATE TABLE IF NOT EXISTS session_overrides (
+				session_id  TEXT PRIMARY KEY,
+				agent_name  TEXT NOT NULL DEFAULT '',
+				model       TEXT,
+				temperature DOUBLE PRECISION,
+				max_tokens  INTEGER,
+				created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
+				expires_at  TIMESTAMP NOT NULL
+			)`,
+			`CREATE INDEX IF NOT EXISTS idx_session_expires ON session_overrides(expires_at)`,
+		} {
+			if _, err := db.Exec(stmt); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 	_, err := db.Exec(`
 		CREATE TABLE IF NOT EXISTS session_overrides (
 			session_id  TEXT PRIMARY KEY,
@@ -60,13 +83,35 @@ func createTable(db *sql.DB) error {
 	return err
 }
 
+// ph returns the placeholder for position n (1-indexed).
+func (m *Manager) ph(n int) string {
+	if m.dialect == store.DialectPostgres {
+		return fmt.Sprintf("$%d", n)
+	}
+	return "?"
+}
+
+// rebind rewrites ? placeholders for the dialect.
+func (m *Manager) rebind(query string) string {
+	return store.Rebind(m.dialect, query)
+}
+
+// nowExpr returns the SQL expression for "current time" for the dialect.
+func (m *Manager) nowExpr() string {
+	if m.dialect == store.DialectPostgres {
+		return "NOW()"
+	}
+	return "datetime('now')"
+}
+
 // Get retrieves a non-expired session override.
 func (m *Manager) Get(sessionID string) (*Override, error) {
-	row := m.db.QueryRow(`
+	query := fmt.Sprintf(`
 		SELECT session_id, agent_name, model, temperature, max_tokens, expires_at
 		FROM session_overrides
-		WHERE session_id = ? AND expires_at > datetime('now')
-	`, sessionID)
+		WHERE session_id = %s AND expires_at > %s
+	`, m.ph(1), m.nowExpr())
+	row := m.db.QueryRow(query, sessionID)
 
 	var o Override
 	var model sql.NullString
@@ -118,10 +163,17 @@ func (m *Manager) Set(o *Override) error {
 		model = &o.Model
 	}
 
-	_, err := m.db.Exec(`
-		INSERT OR REPLACE INTO session_overrides (session_id, agent_name, model, temperature, max_tokens, expires_at)
-		VALUES (?, ?, ?, ?, ?, datetime(?))
-	`, o.SessionID, o.AgentName, model, temp, maxTok, expiresAt.UTC().Format("2006-01-02 15:04:05"))
+	var query string
+	if m.dialect == store.DialectPostgres {
+		query = `INSERT INTO session_overrides (session_id, agent_name, model, temperature, max_tokens, expires_at)
+			VALUES (?, ?, ?, ?, ?, ?::timestamp)
+			ON CONFLICT (session_id) DO UPDATE SET agent_name = EXCLUDED.agent_name, model = EXCLUDED.model,
+				temperature = EXCLUDED.temperature, max_tokens = EXCLUDED.max_tokens, expires_at = EXCLUDED.expires_at`
+	} else {
+		query = `INSERT OR REPLACE INTO session_overrides (session_id, agent_name, model, temperature, max_tokens, expires_at)
+			VALUES (?, ?, ?, ?, ?, datetime(?))`
+	}
+	_, err := m.db.Exec(m.rebind(query), o.SessionID, o.AgentName, model, temp, maxTok, expiresAt.UTC().Format("2006-01-02 15:04:05"))
 	if err != nil {
 		return fmt.Errorf("upsert session override: %w", err)
 	}
@@ -130,7 +182,7 @@ func (m *Manager) Set(o *Override) error {
 
 // Delete removes a session override.
 func (m *Manager) Delete(sessionID string) error {
-	_, err := m.db.Exec(`DELETE FROM session_overrides WHERE session_id = ?`, sessionID)
+	_, err := m.db.Exec(m.rebind(`DELETE FROM session_overrides WHERE session_id = ?`), sessionID)
 	if err != nil {
 		return fmt.Errorf("delete session override: %w", err)
 	}
@@ -139,7 +191,8 @@ func (m *Manager) Delete(sessionID string) error {
 
 // CleanExpired removes all expired session overrides and returns the count deleted.
 func (m *Manager) CleanExpired() (int64, error) {
-	result, err := m.db.Exec(`DELETE FROM session_overrides WHERE expires_at <= datetime('now')`)
+	query := fmt.Sprintf(`DELETE FROM session_overrides WHERE expires_at <= %s`, m.nowExpr())
+	result, err := m.db.Exec(query)
 	if err != nil {
 		return 0, fmt.Errorf("clean expired sessions: %w", err)
 	}
@@ -148,12 +201,13 @@ func (m *Manager) CleanExpired() (int64, error) {
 
 // ListActive returns all non-expired session overrides.
 func (m *Manager) ListActive() ([]Override, error) {
-	rows, err := m.db.Query(`
+	query := fmt.Sprintf(`
 		SELECT session_id, agent_name, model, temperature, max_tokens, expires_at
 		FROM session_overrides
-		WHERE expires_at > datetime('now')
+		WHERE expires_at > %s
 		ORDER BY expires_at ASC
-	`)
+	`, m.nowExpr())
+	rows, err := m.db.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("list active sessions: %w", err)
 	}

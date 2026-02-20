@@ -16,7 +16,7 @@ var doctorCmd = &cobra.Command{
   - API key validity (lightweight models list request)
   - Budget configuration sanity (daily < monthly)
   - Firewall rule regex syntax
-  - SQLite database integrity`,
+  - Database connectivity and integrity (SQLite or PostgreSQL)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, cfgPath, err := loadConfig()
 		if err != nil {

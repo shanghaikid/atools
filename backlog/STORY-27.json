@@ -1,0 +1,23 @@
+{
+  "id": "STORY-27",
+  "title": "Optional PostgreSQL backend for agix",
+  "description": "Add optional PostgreSQL support alongside the default SQLite backend. Detection is automatic based on the database connection string (postgres:// prefix). Introduces a Dialect type and helper functions for SQL differences between the two databases.",
+  "status": "done",
+  "branch": "feat/STORY-27-postgres-backend",
+  "tasks": [
+    {"id": "T1", "title": "Create dialect.go with types and helpers", "status": "done"},
+    {"id": "T2", "title": "Refactor sqlite.go → store.go with dialect support", "status": "done"},
+    {"id": "T3", "title": "Update cache.go for dialect support", "status": "done"},
+    {"id": "T4", "title": "Update session.go for dialect support", "status": "done"},
+    {"id": "T5", "title": "Update audit.go for dialect support", "status": "done"},
+    {"id": "T6", "title": "Update start.go to pass dialect through", "status": "done"},
+    {"id": "T7", "title": "Add lib/pq dependency", "status": "done"},
+    {"id": "T8", "title": "Update doctor command for postgres health check", "status": "done"},
+    {"id": "T9", "title": "Update tests and add dialect helper tests", "status": "done"},
+    {"id": "T10", "title": "Update CLAUDE.md documentation", "status": "done"}
+  ],
+  "audit_log": [
+    {"timestamp": "2026-02-20T00:00:00Z", "from": "backlog", "to": "implementing", "reason": "Plan approved, starting implementation"},
+    {"timestamp": "2026-02-20T00:00:01Z", "from": "implementing", "to": "done", "reason": "All tasks complete, tests pass, build succeeds"}
+  ]
+}

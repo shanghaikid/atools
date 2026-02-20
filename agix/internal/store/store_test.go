@@ -744,3 +744,58 @@ func TestStoreClose(t *testing.T) {
 		t.Errorf("Close() error: %v", err)
 	}
 }
+
+func TestDetectDialect(t *testing.T) {
+	tests := []struct {
+		dsn  string
+		want Dialect
+	}{
+		{"/home/user/.agix/agix.db", DialectSQLite},
+		{"~/.agix/agix.db", DialectSQLite},
+		{"test.db", DialectSQLite},
+		{"postgres://user:pass@localhost:5432/agix", DialectPostgres},
+		{"postgresql://user:pass@localhost/agix?sslmode=disable", DialectPostgres},
+		{"POSTGRES://USER@HOST/DB", DialectPostgres},
+		{"PostgreSQL://user@host/db", DialectPostgres},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.dsn, func(t *testing.T) {
+			got := DetectDialect(tc.dsn)
+			if got != tc.want {
+				t.Errorf("DetectDialect(%q) = %q, want %q", tc.dsn, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestRebind(t *testing.T) {
+	tests := []struct {
+		name    string
+		dialect Dialect
+		input   string
+		want    string
+	}{
+		{"sqlite no change", DialectSQLite, "SELECT * FROM t WHERE a = ? AND b = ?", "SELECT * FROM t WHERE a = ? AND b = ?"},
+		{"postgres numbered", DialectPostgres, "SELECT * FROM t WHERE a = ? AND b = ?", "SELECT * FROM t WHERE a = $1 AND b = $2"},
+		{"postgres single", DialectPostgres, "DELETE FROM t WHERE id = ?", "DELETE FROM t WHERE id = $1"},
+		{"no placeholders", DialectPostgres, "SELECT 1", "SELECT 1"},
+		{"sqlite passthrough", DialectSQLite, "INSERT INTO t VALUES (?, ?, ?)", "INSERT INTO t VALUES (?, ?, ?)"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := Rebind(tc.dialect, tc.input)
+			if got != tc.want {
+				t.Errorf("Rebind(%q, %q) = %q, want %q", tc.dialect, tc.input, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestStoreDialect(t *testing.T) {
+	s := newTestStore(t)
+	if s.Dialect() != DialectSQLite {
+		t.Errorf("Dialect() = %q, want %q", s.Dialect(), DialectSQLite)
+	}
+}

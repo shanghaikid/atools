@@ -40,7 +40,7 @@ var sessionListCmd = &cobra.Command{
 			}
 		}
 
-		mgr, err := session.New(st.DB(), ttl)
+		mgr, err := session.New(st.DB(), ttl, st.Dialect())
 		if err != nil {
 			return fmt.Errorf("init session manager: %w", err)
 		}
@@ -109,7 +109,7 @@ var sessionCleanCmd = &cobra.Command{
 			}
 		}
 
-		mgr, err := session.New(st.DB(), ttl)
+		mgr, err := session.New(st.DB(), ttl, st.Dialect())
 		if err != nil {
 			return fmt.Errorf("init session manager: %w", err)
 		}

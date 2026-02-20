@@ -80,7 +80,7 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 		}
 
 		// Initialize audit logger
-		auditLogger := audit.New(st.DB(), cfg.Audit.Enabled)
+		auditLogger := audit.New(st.DB(), cfg.Audit.Enabled, st.Dialect())
 		defer auditLogger.Close()
 
 		// Build proxy options
@@ -151,7 +151,7 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 				Enabled:             true,
 				SimilarityThreshold: cfg.Cache.SimilarityThreshold,
 				TTLMinutes:          cfg.Cache.TTLMinutes,
-			}, st.DB(), embedder)
+			}, st.DB(), embedder, st.Dialect())
 			if err != nil {
 				return fmt.Errorf("initialize cache: %w", err)
 			}
@@ -260,7 +260,7 @@ The gateway activates features based on your config (~/.agix/config.yaml):
 					ttl = d
 				}
 			}
-			sm, err := session.New(st.DB(), ttl)
+			sm, err := session.New(st.DB(), ttl, st.Dialect())
 			if err != nil {
 				return fmt.Errorf("initialize session manager: %w", err)
 			}

@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/agent-platform/agix/internal/store"
 	_ "modernc.org/sqlite"
 )
 
@@ -23,7 +24,7 @@ func openTestDB(t *testing.T) *sql.DB {
 
 func TestNew_NilWhenDisabled(t *testing.T) {
 	db := openTestDB(t)
-	c, err := New(Config{Enabled: false}, db, nil)
+	c, err := New(Config{Enabled: false}, db, nil, store.DialectSQLite)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -34,7 +35,7 @@ func TestNew_NilWhenDisabled(t *testing.T) {
 
 func TestNew_Defaults(t *testing.T) {
 	db := openTestDB(t)
-	c, err := New(Config{Enabled: true}, db, nil)
+	c, err := New(Config{Enabled: true}, db, nil, store.DialectSQLite)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -48,7 +49,7 @@ func TestNew_Defaults(t *testing.T) {
 
 func TestExactMatch(t *testing.T) {
 	db := openTestDB(t)
-	c, err := New(Config{Enabled: true, TTLMinutes: 60}, db, nil)
+	c, err := New(Config{Enabled: true, TTLMinutes: 60}, db, nil, store.DialectSQLite)
 	if err != nil {
 		t.Fatalf("New() error: %v", err)
 	}
@@ -76,7 +77,7 @@ func TestExactMatch(t *testing.T) {
 
 func TestExactMatch_DifferentModel(t *testing.T) {
 	db := openTestDB(t)
-	c, err := New(Config{Enabled: true, TTLMinutes: 60}, db, nil)
+	c, err := New(Config{Enabled: true, TTLMinutes: 60}, db, nil, store.DialectSQLite)
 	if err != nil {
 		t.Fatalf("New() error: %v", err)
 	}
@@ -97,7 +98,7 @@ func TestExactMatch_DifferentModel(t *testing.T) {
 
 func TestExactMatch_Expired(t *testing.T) {
 	db := openTestDB(t)
-	c, err := New(Config{Enabled: true, TTLMinutes: 1}, db, nil)
+	c, err := New(Config{Enabled: true, TTLMinutes: 1}, db, nil, store.DialectSQLite)
 	if err != nil {
 		t.Fatalf("New() error: %v", err)
 	}
@@ -127,7 +128,7 @@ func TestExactMatch_Expired(t *testing.T) {
 
 func TestCleanup(t *testing.T) {
 	db := openTestDB(t)
-	c, err := New(Config{Enabled: true, TTLMinutes: 1}, db, nil)
+	c, err := New(Config{Enabled: true, TTLMinutes: 1}, db, nil, store.DialectSQLite)
 	if err != nil {
 		t.Fatalf("New() error: %v", err)
 	}

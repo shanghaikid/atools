@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/agent-platform/agix/internal/store"
 )
 
 // EventType constants for audit events.
@@ -53,15 +55,17 @@ type ContentLogDetails struct {
 // Logger writes audit events to the database asynchronously.
 type Logger struct {
 	db      *sql.DB
+	dialect store.Dialect
 	enabled bool
 	eventCh chan *Event
 	done    chan struct{}
 }
 
 // New creates a new audit Logger. If not enabled, Log calls are no-ops.
-func New(db *sql.DB, enabled bool) *Logger {
+func New(db *sql.DB, enabled bool, dialect store.Dialect) *Logger {
 	l := &Logger{
 		db:      db,
+		dialect: dialect,
 		enabled: enabled,
 		eventCh: make(chan *Event, 256),
 		done:    make(chan struct{}),
@@ -134,7 +138,7 @@ func (l *Logger) QueryRecent(limit int, eventType, agentFilter string) ([]Event,
 	query += " ORDER BY timestamp DESC LIMIT ?"
 	args = append(args, limit)
 
-	rows, err := l.db.Query(query, args...)
+	rows, err := l.db.Query(store.Rebind(l.dialect, query), args...)
 	if err != nil {
 		return nil, fmt.Errorf("query audit events: %w", err)
 	}
@@ -202,7 +206,7 @@ func (l *Logger) insertBatch(events []*Event) {
 	}
 
 	stmt, err := tx.Prepare(
-		`INSERT INTO audit_events (timestamp, event_type, agent_name, details) VALUES (?, ?, ?, ?)`,
+		store.Rebind(l.dialect, `INSERT INTO audit_events (timestamp, event_type, agent_name, details) VALUES (?, ?, ?, ?)`),
 	)
 	if err != nil {
 		log.Printf("ERROR: prepare audit batch stmt: %v", err)
@@ -226,7 +230,7 @@ func (l *Logger) insertBatch(events []*Event) {
 func (l *Logger) insert(e *Event) error {
 	ts := e.Timestamp.UTC().Format("2006-01-02T15:04:05Z")
 	_, err := l.db.Exec(
-		`INSERT INTO audit_events (timestamp, event_type, agent_name, details) VALUES (?, ?, ?, ?)`,
+		store.Rebind(l.dialect, `INSERT INTO audit_events (timestamp, event_type, agent_name, details) VALUES (?, ?, ?, ?)`),
 		ts, e.EventType, e.AgentName, string(e.Details),
 	)
 	if err != nil {
