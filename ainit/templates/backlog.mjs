@@ -2,7 +2,7 @@
 // Backlog CLI — zero-dependency Node.js script for managing backlog.json + backlog/STORY-N.json
 // Usage: node backlog.mjs <command> [args]
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, rmdirSync, statSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync, statSync } from 'fs';
 import { join, dirname } from 'path';
 
 // ── Helpers ──
@@ -21,19 +21,18 @@ function lock(root) {
       try {
         const stat = statSync(lockDir);
         if (Date.now() - stat.mtimeMs > 30000) {
-          try { rmdirSync(lockDir); } catch (_) {}
+          try { rmSync(lockDir, { recursive: true }); } catch (_) {}
           continue;
         }
       } catch (_) {}
-      const sleepUntil = Date.now() + retryDelay;
-      while (Date.now() < sleepUntil) {} // busy-wait (no async in this script)
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, retryDelay);
     }
   }
   fatal('could not acquire lock after 5s — another backlog.mjs process may be stuck. Remove .backlog.lock manually if needed.');
 }
 
 function unlock(root) {
-  try { rmdirSync(join(root, '.backlog.lock')); } catch (_) {}
+  try { rmSync(join(root, '.backlog.lock'), { recursive: true }); } catch (_) {}
 }
 
 function deepMerge(target, source) {
@@ -64,7 +63,8 @@ function findRoot() {
 }
 
 function fatal(msg) {
-  console.error(JSON.stringify({ error: msg }));
+  process.stderr.write(`error: ${msg}\n`);
+  console.log(JSON.stringify({ error: msg }));
   process.exit(1);
 }
 
@@ -147,8 +147,8 @@ function cmdShow(root, args) {
 
 function cmdCreate(root, args) {
   const { flags } = parseFlags(args);
-  if (!flags.title) fatal('--title is required');
-  if (!flags.desc) fatal('--desc is required');
+  if (!flags.title || !String(flags.title).trim()) fatal('--title is required (non-empty)');
+  if (!flags.desc || !String(flags.desc).trim()) fatal('--desc is required (non-empty)');
 
   lock(root);
   try {
@@ -355,6 +355,28 @@ function cmdLog(root, args) {
   }
 }
 
+function cmdDelete(root, args) {
+  if (!args[0]) fatal('usage: backlog delete <id>');
+  const id = normalizeId(args[0]);
+
+  lock(root);
+  try {
+    // Verify story exists
+    loadStory(root, id);
+
+    const index = loadIndex(root);
+    index.stories = index.stories.filter(s => s.id !== id);
+    saveIndex(root, index);
+
+    const sp = storyPath(root, id);
+    try { rmSync(sp); } catch (_) {}
+
+    console.log(JSON.stringify({ id, deleted: true }));
+  } finally {
+    unlock(root);
+  }
+}
+
 // ── Main ──
 
 const args = process.argv.slice(2);
@@ -373,7 +395,8 @@ Commands:
   set <id> <field> '<json>' [--merge]            Set design/implementation/review/security_review/testing
   add-task <id> --title "..." [--assignee coder] [--desc "..."]
   task-status <id> <task-id> <new-status>      Update task status
-  log <id> --agent <name> --action "..." [--detail "..."]`);
+  log <id> --agent <name> --action "..." [--detail "..."]
+  delete <id>                                  Delete story from index and backlog/`);
   process.exit(0);
 }
 
@@ -389,6 +412,7 @@ const commands = {
   'add-task': () => cmdAddTask(root, rest),
   'task-status': () => cmdTaskStatus(root, rest),
   log: () => cmdLog(root, rest),
+  delete: () => cmdDelete(root, rest),
 };
 
 if (!commands[cmd]) fatal(`unknown command: ${cmd}`);

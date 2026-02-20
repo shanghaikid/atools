@@ -216,8 +216,8 @@
     {
       "id": "STORY-31",
       "title": "backlog.mjs modernization",
-      "status": "ready",
-      "branch": null,
+      "status": "implementing",
+      "branch": "feat/STORY-31-backlog-mjs-modernization",
       "merge_commit": null
     },
     {
