@@ -11,14 +11,13 @@ TEMPLATE_DIR="$HOME/.claude/ainit-templates"
 DRY_RUN=false
 
 # --- Parse flags ---
-POSITIONAL=()
+PROJECT_DIR="."
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=true ;;
-    *)         POSITIONAL+=("$arg") ;;
+    *)         PROJECT_DIR="$arg" ;;
   esac
 done
-PROJECT_DIR="${POSITIONAL[0]:-.}"
 cd "$PROJECT_DIR"
 
 # --- Node.js check ---
@@ -76,7 +75,8 @@ for f in "$TEMPLATE_DIR"/agents/*.md; do
   copy_template "$f" ".claude/agents/$(basename "$f")"
 done
 if ! $DRY_RUN; then
-  echo "  .claude/agents/ ($(ls .claude/agents/*.md 2>/dev/null | wc -l | tr -d ' ') agents)"
+  agent_count=0; for _ in .claude/agents/*.md; do [ -f "$_" ] && agent_count=$((agent_count+1)); done
+  echo "  .claude/agents/ ($agent_count agents)"
 fi
 
 # --- Step 2: Copy skills (always overwrite) ---
@@ -86,7 +86,8 @@ if [ -d "$TEMPLATE_DIR/skills" ]; then
     [ -f "$f" ] && copy_template "$f" ".claude/skills/$(basename "$f")"
   done
   if ! $DRY_RUN; then
-    echo "  .claude/skills/ ($(ls .claude/skills/*.md 2>/dev/null | wc -l | tr -d ' ') skills)"
+    skill_count=0; for _ in .claude/skills/*.md; do [ -f "$_" ] && skill_count=$((skill_count+1)); done
+    echo "  .claude/skills/ ($skill_count skills)"
   fi
 fi
 

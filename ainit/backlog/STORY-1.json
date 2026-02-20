@@ -4,7 +4,7 @@
   "description": "As a user, I want ainit to initialize both a new empty folder and an existing directory that already has code, so I can adopt the multi-agent workflow for any project.",
   "priority": "high",
   "sprint": 1,
-  "status": "implementing",
+  "status": "done",
   "branch": "feat/STORY-1-init-modes",
   "merge_commit": null,
   "acceptance_criteria": [
@@ -19,42 +19,42 @@
     {
       "id": "TASK-1",
       "title": "Auto-create target directory if it doesn't exist",
-      "status": "pending",
+      "status": "done",
       "assignee": "coder",
       "description": "When the user passes a directory path that doesn't exist, create it (including parents) before proceeding with initialization."
     },
     {
       "id": "TASK-2",
       "title": "Detect language from existing project files",
-      "status": "pending",
+      "status": "done",
       "assignee": "coder",
       "description": "Scan target directory for marker files: go.mod (Go), package.json (TypeScript/JS), pyproject.toml/setup.py/requirements.txt (Python). Use detection result to set the langKey for defaults."
     },
     {
       "id": "TASK-3",
       "title": "Extract project metadata from existing files",
-      "status": "pending",
+      "status": "done",
       "assignee": "coder",
       "description": "Parse go.mod for module name, package.json for name/description/scripts, pyproject.toml for project name/description. Use extracted info to pre-fill prompt defaults (project name, description, build/test/lint commands)."
     },
     {
       "id": "TASK-4",
       "title": "Detect existing directory structure for DirStructure default",
-      "status": "pending",
+      "status": "done",
       "assignee": "coder",
       "description": "When initializing an existing directory, scan top-level subdirectories and generate a tree-like DirStructure default string instead of using the language template default."
     },
     {
       "id": "TASK-5",
       "title": "Add overwrite confirmation for all generated files",
-      "status": "pending",
+      "status": "done",
       "assignee": "coder",
       "description": "Currently only CLAUDE.md has an overwrite check. Extend to workflow.md and backlog.json. For backlog.json, add a stronger warning since it may contain existing story data."
     },
     {
       "id": "TASK-6",
       "title": "Add tests for new-dir and existing-dir scenarios",
-      "status": "pending",
+      "status": "done",
       "assignee": "tester",
       "description": "Write tests covering: (1) new directory creation, (2) language detection from marker files, (3) metadata extraction, (4) overwrite confirmation logic, (5) directory structure detection."
     }
@@ -69,6 +69,12 @@
       "agent": "team-lead",
       "action": "story_created",
       "detail": "Created STORY-1 from user requirement: support initializing new folders and existing code directories."
+    },
+    {
+      "timestamp": "2026-02-21T11:00:00Z",
+      "agent": "team-lead",
+      "action": "status_changed",
+      "detail": "implementing → done. Functionality superseded by monorepo STORY-5 (fix all 14 issues) and STORY-7 (smart post-install customization). Language detection implemented in ainit-setup.sh detect_project_name(). Overwrite protection handled by safe_copy pattern."
     }
   ]
 }
