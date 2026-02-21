@@ -2,9 +2,9 @@
   "id": "STORY-33",
   "title": "Comprehensive agix documentation update",
   "description": "The agix README.md is severely outdated and CLAUDE.md has inaccuracies. 18 internal packages have zero README coverage. The Roadmap section lists 7 features as 'not yet implemented' that are fully implemented. Fix all documentation gaps including: DeepSeek provider, firewall, semantic cache, context compression, quality gate, A/B experiments, request tracing, audit log, session overrides, webhooks, budget alerts, response policy, tool bundles, web dashboard, smart routing, failover, rate limiting, prompt injection. Also fix CLAUDE.md inaccuracies (wrong flag names, wrong defaults, outdated roadmap, incomplete directory listing).",
-  "status": "reviewing/testing",
+  "status": "done",
   "branch": "feat/STORY-33-agix-docs-update",
-  "merge_commit": null,
+  "merge_commit": "c46a046",
   "tasks": [
     {"id": "T1", "title": "Update agix/README.md — add all 18 undocumented features with config examples and CLI usage", "status": "completed"},
     {"id": "T2", "title": "Fix agix/CLAUDE.md — correct inaccuracies (--by→--group-by, logs default 50→20, update directory listing to 18 packages)", "status": "completed"},
@@ -15,6 +15,7 @@
   "audit_log": [
     {"timestamp": "2026-02-21T00:00:00Z", "from": "backlog", "to": "ready", "reason": "Documentation audit revealed 18 undocumented features, outdated roadmap, and multiple inaccuracies in existing docs"},
     {"timestamp": "2026-02-21T00:00:01Z", "from": "ready", "to": "implementing", "reason": "Feature branch created, starting documentation updates"},
-    {"timestamp": "2026-02-21T11:30:00Z", "from": "implementing", "to": "reviewing/testing", "reason": "All 5 documentation tasks completed: README.md fully updated with all 18 features, CLAUDE.md corrected (--group-by flag, default log count, 25 packages listed, all 15 cmd files documented), roadmap section removed, HTTP API endpoints documented, doctor checks documented"}
+    {"timestamp": "2026-02-21T11:30:00Z", "from": "implementing", "to": "reviewing/testing", "reason": "All 5 documentation tasks completed: README.md fully updated with all 18 features, CLAUDE.md corrected (--group-by flag, default log count, 25 packages listed, all 15 cmd files documented), roadmap section removed, HTTP API endpoints documented, doctor checks documented"},
+    {"timestamp": "2026-02-21T11:35:00Z", "from": "reviewing/testing", "to": "done", "reason": "Feature branch merged to main (c46a046), all documentation complete and verified"}
   ]
 }

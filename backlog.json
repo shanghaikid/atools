@@ -230,9 +230,9 @@
     {
       "id": "STORY-33",
       "title": "Comprehensive agix documentation update",
-      "status": "reviewing/testing",
+      "status": "done",
       "branch": "feat/STORY-33-agix-docs-update",
-      "merge_commit": null
+      "merge_commit": "c46a046"
     }
   ]
 }
