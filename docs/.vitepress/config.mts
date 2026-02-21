@@ -26,6 +26,19 @@ export default defineConfig({
             { text: '配置文件', link: '/agix/config' },
           ],
         },
+        {
+          text: '使用指南',
+          items: [
+            { text: '指南导航', link: '/agix/guides/' },
+            { text: '💰 成本追踪与预算', link: '/agix/guides/cost-tracking' },
+            { text: '🧠 智能优化', link: '/agix/guides/intelligence-optimization' },
+            { text: '🔒 安全与控制', link: '/agix/guides/safety-control' },
+            { text: '📊 可观测性', link: '/agix/guides/observability' },
+            { text: '🚀 可靠性与扩展', link: '/agix/guides/reliability-scale' },
+            { text: '⚙️ 高级功能', link: '/agix/guides/advanced-features' },
+            { text: '🔧 故障排查与FAQ', link: '/agix/guides/troubleshooting' },
+          ],
+        },
       ],
       '/ainit/': [
         {
