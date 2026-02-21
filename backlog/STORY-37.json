@@ -1,0 +1,23 @@
+{
+  "id": "STORY-37",
+  "title": "CLI 高级用法文档（doctor、logs、trace、experiment 详细说明）",
+  "status": "ready",
+  "branch": "feat/STORY-37-docs-cli-advanced",
+  "created_at": "2026-02-22",
+  "description": "现有 CLI 文档（docs/agix/cli.md）只覆盖了基础命令，缺少以下高级用法：agix doctor 各子检查项的输出格式和含义；agix logs 的完整过滤参数组合（--model、--format、--since、--agent 等）；agix trace 的详细输出格式和 Span 字段说明；agix experiment 的完整 A/B 测试工作流。",
+  "tasks": [
+    { "id": 1, "desc": "阅读 agix doctor 实现，梳理所有健康检查项和输出格式", "done": false },
+    { "id": 2, "desc": "阅读 agix logs 实现，梳理所有过滤参数和输出格式选项", "done": false },
+    { "id": 3, "desc": "阅读 agix trace 实现，梳理 Span 结构和字段含义", "done": false },
+    { "id": 4, "desc": "阅读 agix experiment 实现，梳理 A/B 测试工作流", "done": false },
+    { "id": 5, "desc": "更新 docs/agix/cli.md，添加各命令的高级用法章节（含示例输出）", "done": false }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-22T00:00:00Z",
+      "from_status": null,
+      "to_status": "ready",
+      "reason": "文档缺口分析：CLI 高级参数和命令详情在现有文档中缺失"
+    }
+  ]
+}

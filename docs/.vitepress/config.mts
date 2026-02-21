@@ -24,6 +24,7 @@ export default defineConfig({
             { text: '核心功能', link: '/agix/features' },
             { text: 'CLI 命令参考', link: '/agix/cli' },
             { text: '配置文件', link: '/agix/config' },
+            { text: 'HTTP API 参考', link: '/agix/api-reference' },
           ],
         },
         {

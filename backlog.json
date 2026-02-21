@@ -1,8 +1,71 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 35,
+  "last_story_id": 44,
   "stories": [
+    {
+      "id": "STORY-44",
+      "title": "可观测性集成文档（OpenTelemetry、审计日志保留、Trace Span 详解）",
+      "status": "ready",
+      "branch": "feat/STORY-44-docs-observability",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-43",
+      "title": "生产部署指南（Docker、systemd、安全加固、监控）",
+      "status": "ready",
+      "branch": "feat/STORY-43-docs-production-deployment",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-42",
+      "title": "数据库操作文档（SQLite→PostgreSQL 迁移、多实例、备份恢复）",
+      "status": "ready",
+      "branch": "feat/STORY-42-docs-database-operations",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-41",
+      "title": "多语言集成示例文档（Node.js、Go、LangChain、LlamaIndex）",
+      "status": "ready",
+      "branch": "feat/STORY-41-docs-integration-examples",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-40",
+      "title": "模型与定价完整文档（定价表、自定义模型、DeepSeek 最新模型）",
+      "status": "ready",
+      "branch": "feat/STORY-40-docs-models-pricing",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-39",
+      "title": "MCP 工具深度文档（自定义 MCP Server、工具调试、错误处理）",
+      "status": "ready",
+      "branch": "feat/STORY-39-docs-mcp-deep-dive",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-38",
+      "title": "配置参考文档完善（默认值、热重载、环境变量优先级、验证规则）",
+      "status": "ready",
+      "branch": "feat/STORY-38-docs-config-reference",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-37",
+      "title": "CLI 高级用法文档（doctor、logs、trace、experiment 详细说明）",
+      "status": "ready",
+      "branch": "feat/STORY-37-docs-cli-advanced",
+      "merge_commit": null
+    },
+    {
+      "id": "STORY-36",
+      "title": "HTTP API 完整参考文档（Sessions、Webhooks 端点 + 响应 Header 说明）",
+      "status": "ready",
+      "branch": "feat/STORY-36-docs-http-api-reference",
+      "merge_commit": null
+    },
     {
       "id": "STORY-35",
       "title": "Translate all agix documentation guides to Chinese",

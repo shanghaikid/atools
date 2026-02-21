@@ -1,0 +1,36 @@
+{
+  "id": "STORY-36",
+  "title": "HTTP API 完整参考文档（Sessions、Webhooks 端点 + 响应 Header 说明）",
+  "status": "done",
+  "branch": "feat/STORY-36-docs-http-api-reference",
+  "created_at": "2026-02-22",
+  "description": "补充缺失的 HTTP API 端点文档和响应 Header 说明。当前文档缺少 /v1/sessions/{id} GET/POST 操作细节、/v1/webhooks/{name} POST 端点说明，以及 X-Cache、X-Firewall-Warning、X-Quality-Warning、X-Response-Policy、Retry-After 等响应 Header 的含义和使用场景。",
+  "tasks": [
+    { "id": 1, "desc": "阅读 agix 源码，梳理所有 HTTP 端点和响应 Header", "done": true },
+    { "id": 2, "desc": "新建 docs/agix/api-reference.md，记录所有端点（请求/响应格式、示例）", "done": true },
+    { "id": 3, "desc": "补充 Sessions API 的 GET/PUT/DELETE 操作、参数说明和使用场景", "done": true },
+    { "id": 4, "desc": "补充 Webhooks API 的请求格式、模板渲染说明", "done": true },
+    { "id": 5, "desc": "补充所有响应 Header 的含义、取值范围和客户端使用示例", "done": true },
+    { "id": 6, "desc": "更新 docs/.vitepress/config.mts 侧边栏，添加 API 参考入口", "done": true }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-22T00:00:00Z",
+      "from_status": null,
+      "to_status": "ready",
+      "reason": "文档缺口分析：Sessions 和 Webhooks 端点以及响应 Header 均未在现有文档中覆盖"
+    },
+    {
+      "timestamp": "2026-02-22T01:00:00Z",
+      "from_status": "ready",
+      "to_status": "implementing",
+      "reason": "已读源码 proxy.go、session.go、webhook.go、dashboard.go、alert.go，掌握所有端点和 Header 细节"
+    },
+    {
+      "timestamp": "2026-02-22T02:00:00Z",
+      "from_status": "implementing",
+      "to_status": "done",
+      "reason": "完成 docs/agix/api-reference.md 及侧边栏更新"
+    }
+  ]
+}

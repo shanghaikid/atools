@@ -1,0 +1,26 @@
+{
+  "id": "STORY-42",
+  "title": "数据库操作文档（SQLite→PostgreSQL 迁移、多实例、备份恢复）",
+  "status": "ready",
+  "branch": "feat/STORY-42-docs-database-operations",
+  "created_at": "2026-02-22",
+  "description": "现有文档仅简单提到 PostgreSQL 支持，缺少：SQLite 迁移到 PostgreSQL 的完整步骤；多实例 agix 共享 PostgreSQL 的配置方法；数据库备份和恢复操作；数据模型和 Schema 说明；常用查询模式（按 Agent 查成本等）。",
+  "tasks": [
+    { "id": 1, "desc": "阅读 agix store 实现，梳理 SQLite 和 PostgreSQL 的 Schema 差异", "done": false },
+    { "id": 2, "desc": "阅读迁移相关代码（如果存在）", "done": false },
+    { "id": 3, "desc": "在 docs/agix/guides/ 下新建 database.md", "done": false },
+    { "id": 4, "desc": "编写「SQLite → PostgreSQL 迁移」章节（含数据导出/导入步骤）", "done": false },
+    { "id": 5, "desc": "编写「多实例 PostgreSQL 配置」章节", "done": false },
+    { "id": 6, "desc": "编写「备份与恢复」章节", "done": false },
+    { "id": 7, "desc": "编写「常用查询示例」章节", "done": false },
+    { "id": 8, "desc": "更新侧边栏配置", "done": false }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-22T00:00:00Z",
+      "from_status": null,
+      "to_status": "ready",
+      "reason": "文档缺口分析：数据库运维操作文档完全缺失"
+    }
+  ]
+}

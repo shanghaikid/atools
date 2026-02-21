@@ -1,0 +1,25 @@
+{
+  "id": "STORY-44",
+  "title": "可观测性集成文档（OpenTelemetry、审计日志保留、Trace Span 详解）",
+  "status": "ready",
+  "branch": "feat/STORY-44-docs-observability",
+  "created_at": "2026-02-22",
+  "description": "现有可观测性文档缺少：OpenTelemetry/Jaeger 集成方法；审计日志的查询方式（CLI vs API）和保留策略；Trace Span 的完整字段列表和含义；如何通过 Prometheus 等工具采集 agix 指标（如果支持）。",
+  "tasks": [
+    { "id": 1, "desc": "阅读 agix tracing 和 audit 实现，确认是否支持 OTLP 导出", "done": false },
+    { "id": 2, "desc": "梳理所有 Trace Span 类型和字段", "done": false },
+    { "id": 3, "desc": "确认审计日志的查询 API 和保留策略配置", "done": false },
+    { "id": 4, "desc": "更新 docs/agix/guides/observability.md", "done": false },
+    { "id": 5, "desc": "添加「Trace Span 字段参考」章节", "done": false },
+    { "id": 6, "desc": "添加「审计日志查询与保留」章节", "done": false },
+    { "id": 7, "desc": "添加「OpenTelemetry 集成」章节（如果 agix 支持 OTLP）", "done": false }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-22T00:00:00Z",
+      "from_status": null,
+      "to_status": "ready",
+      "reason": "文档缺口分析：可观测性集成和 Trace Span 详细说明缺失"
+    }
+  ]
+}

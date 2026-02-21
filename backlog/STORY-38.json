@@ -1,0 +1,23 @@
+{
+  "id": "STORY-38",
+  "title": "配置参考文档完善（默认值、热重载、环境变量优先级、验证规则）",
+  "status": "ready",
+  "branch": "feat/STORY-38-docs-config-reference",
+  "created_at": "2026-02-22",
+  "description": "现有 docs/agix/config.md 缺少：所有可选字段的默认值；配置热重载行为（是否需要重启 server）；配置优先级（config 文件 vs 环境变量 vs CLI flags）；各字段的验证规则和错误提示；性能调优相关配置项说明。",
+  "tasks": [
+    { "id": 1, "desc": "阅读 agix 配置加载代码，梳理所有字段的默认值和验证逻辑", "done": false },
+    { "id": 2, "desc": "确认配置热重载的实现方式（信号、文件 watch 还是无）", "done": false },
+    { "id": 3, "desc": "梳理配置优先级：文件 → 环境变量 → CLI flags", "done": false },
+    { "id": 4, "desc": "更新 docs/agix/config.md：每个字段补充默认值列、验证规则和错误消息示例", "done": false },
+    { "id": 5, "desc": "新增「配置优先级与热重载」章节", "done": false }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-22T00:00:00Z",
+      "from_status": null,
+      "to_status": "ready",
+      "reason": "文档缺口分析：配置字段默认值和优先级在现有文档中缺失"
+    }
+  ]
+}

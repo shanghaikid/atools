@@ -1,0 +1,25 @@
+{
+  "id": "STORY-41",
+  "title": "多语言集成示例文档（Node.js、Go、LangChain、LlamaIndex）",
+  "status": "ready",
+  "branch": "feat/STORY-41-docs-integration-examples",
+  "created_at": "2026-02-22",
+  "description": "现有文档只有 Python SDK 示例，缺少：Node.js/TypeScript 集成示例；Go client 示例；LangChain 集成方法；LlamaIndex 集成方法；环境变量配置指南（如何在各语言中设置 OPENAI_BASE_URL、OPENAI_API_KEY 等）。",
+  "tasks": [
+    { "id": 1, "desc": "在 docs/agix/guides/ 下新建 integrations.md", "done": false },
+    { "id": 2, "desc": "编写 Node.js/TypeScript 集成示例（openai npm 包）", "done": false },
+    { "id": 3, "desc": "编写 Go client 集成示例", "done": false },
+    { "id": 4, "desc": "编写 LangChain（Python）集成示例", "done": false },
+    { "id": 5, "desc": "编写 LlamaIndex 集成示例", "done": false },
+    { "id": 6, "desc": "编写「环境变量配置」章节（各语言通用设置方法）", "done": false },
+    { "id": 7, "desc": "更新侧边栏配置", "done": false }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-22T00:00:00Z",
+      "from_status": null,
+      "to_status": "ready",
+      "reason": "文档缺口分析：仅有 Python 示例，缺少其他语言和框架的集成文档"
+    }
+  ]
+}

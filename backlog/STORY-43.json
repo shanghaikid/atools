@@ -1,0 +1,25 @@
+{
+  "id": "STORY-43",
+  "title": "生产部署指南（Docker、systemd、安全加固、监控）",
+  "status": "ready",
+  "branch": "feat/STORY-43-docs-production-deployment",
+  "created_at": "2026-02-22",
+  "description": "缺少生产环境部署的完整文档：Docker 容器化部署（Dockerfile 示例）；systemd 服务配置；网络拓扑建议（是否需要反向代理）；安全加固清单（TLS、API key 保护、网络隔离）；性能调优建议；多实例负载均衡方案。",
+  "tasks": [
+    { "id": 1, "desc": "在 docs/agix/guides/ 下新建 deployment.md", "done": false },
+    { "id": 2, "desc": "编写「Docker 部署」章节（含 Dockerfile 和 docker-compose 示例）", "done": false },
+    { "id": 3, "desc": "编写「systemd 服务」章节（含 unit 文件示例）", "done": false },
+    { "id": 4, "desc": "编写「安全加固」章节（TLS 配置、API key 管理、网络访问控制）", "done": false },
+    { "id": 5, "desc": "编写「性能调优」章节（并发、连接池、缓存配置建议）", "done": false },
+    { "id": 6, "desc": "编写「多实例与负载均衡」章节", "done": false },
+    { "id": 7, "desc": "更新侧边栏配置", "done": false }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-22T00:00:00Z",
+      "from_status": null,
+      "to_status": "ready",
+      "reason": "文档缺口分析：生产部署相关文档完全缺失"
+    }
+  ]
+}
