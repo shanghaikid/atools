@@ -152,7 +152,7 @@ curl http://localhost:8080/v1/chat/completions \
 
 Session Override 允许按 Session ID 动态覆盖请求参数（模型、temperature、max_tokens），无需修改 Agent 代码。需在配置文件中启用 `session_overrides`。
 
-### GET /v1/sessions/{id}
+### GET /v1/sessions/&#123;id&#125; {#get-sessions-id}
 
 获取指定 Session 的当前覆盖配置。
 
@@ -189,7 +189,7 @@ Session Override 允许按 Session ID 动态覆盖请求参数（模型、temper
 
 ---
 
-### PUT /v1/sessions/{id}
+### PUT /v1/sessions/&#123;id&#125; {#put-sessions-id}
 
 创建或更新 Session 覆盖配置（Upsert）。
 
@@ -240,7 +240,7 @@ curl http://localhost:8080/v1/chat/completions \
 
 ---
 
-### DELETE /v1/sessions/{id}
+### DELETE /v1/sessions/&#123;id&#125; {#delete-sessions-id}
 
 删除 Session 覆盖配置。
 
@@ -270,7 +270,7 @@ echo -n '请求体内容' | openssl dgst -sha256 -hmac "your-secret" -hex
 # 在 Header 中使用：sha256=计算出的hex值
 ```
 
-**请求体**：任意 JSON 或文本（透传给 Prompt 模板作为 `{{.Payload}}`）
+**请求体**：任意 JSON 或文本（透传给 Prompt 模板作为 <code v-pre>{{.Payload}}</code>）
 
 **成功响应（202 Accepted）**：
 
@@ -306,9 +306,13 @@ webhooks:
 
 **Prompt 模板变量**：
 
+<div v-pre>
+
 | 变量 | 说明 |
 |---|---|
 | `{{.Payload}}` | 原始请求体内容（字符串） |
+
+</div>
 
 ---
 

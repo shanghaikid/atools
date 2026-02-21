@@ -62,9 +62,9 @@
     {
       "id": "STORY-36",
       "title": "HTTP API 完整参考文档（Sessions、Webhooks 端点 + 响应 Header 说明）",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-36-docs-http-api-reference",
-      "merge_commit": null
+      "merge_commit": "14e015f"
     },
     {
       "id": "STORY-35",
