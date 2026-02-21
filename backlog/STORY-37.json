@@ -3,6 +3,7 @@
   "title": "CLI 高级用法文档（doctor、logs、trace、experiment 详细说明）",
   "status": "done",
   "branch": "feat/STORY-37-docs-cli-advanced",
+  "merge_commit": "96d24c9",
   "created_at": "2026-02-22",
   "description": "现有 CLI 文档（docs/agix/cli.md）只覆盖了基础命令，缺少以下高级用法：agix doctor 各子检查项的输出格式和含义；agix logs 的完整过滤参数组合（--model、--format、--since、--agent 等）；agix trace 的详细输出格式和 Span 字段说明；agix experiment 的完整 A/B 测试工作流。",
   "tasks": [
