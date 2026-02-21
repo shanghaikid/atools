@@ -62,7 +62,7 @@
     {
       "id": "STORY-37",
       "title": "CLI 高级用法文档（doctor、logs、trace、experiment 详细说明）",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-37-docs-cli-advanced",
       "merge_commit": null
     },
