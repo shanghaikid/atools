@@ -1,8 +1,15 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 44,
+  "last_story_id": 45,
   "stories": [
+    {
+      "id": "STORY-45",
+      "title": "拆分 advanced-features.md 为 guides/advanced/ 子目录多页",
+      "status": "done",
+      "branch": "feat/STORY-45-docs-advanced-split",
+      "merge_commit": "876f3ff"
+    },
     {
       "id": "STORY-44",
       "title": "可观测性集成文档（OpenTelemetry、审计日志保留、Trace Span 详解）",
