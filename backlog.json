@@ -1,8 +1,15 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 34,
+  "last_story_id": 35,
   "stories": [
+    {
+      "id": "STORY-35",
+      "title": "Translate all agix documentation guides to Chinese",
+      "status": "ready",
+      "branch": "feat/STORY-35-docs-translation-to-chinese",
+      "merge_commit": null
+    },
     {
       "id": "STORY-34",
       "title": "Comprehensive agix documentation guides",

@@ -1,37 +1,37 @@
-# Cost Tracking & Budget Management
+# 费用追踪与预算管理
 
-## Overview
+## 概述
 
-agix automatically tracks every LLM request, extracts token usage, and calculates costs based on provider pricing. This enables per-agent budget enforcement and detailed cost analytics.
+agix 自动追踪每一个 LLM 请求，提取 Token 用量，并根据提供商定价计算费用。这使得按 Agent 执行预算控制和详细的费用分析成为可能。
 
-## How Cost Tracking Works
+## 费用追踪的工作原理
 
-### Request Flow
+### 请求流程
 
-When an agent sends a request through agix:
+当 Agent 通过 agix 发送请求时：
 
-1. Agent sends `POST /v1/chat/completions` with optional `X-Agent-Name` header
-2. Proxy forwards to the upstream LLM provider
-3. Response arrives with token counts (`prompt_tokens`, `completion_tokens`)
-4. Proxy calculates cost using the pricing table:
-   - Cost = (prompt_tokens × prompt_price) + (completion_tokens × completion_price)
-5. Record is written to SQLite/PostgreSQL
-6. Response headers include cost information
+1. Agent 发送 `POST /v1/chat/completions`，可附带可选的 `X-Agent-Name` 请求头
+2. 代理将请求转发至上游 LLM 提供商
+3. 响应返回时携带 Token 计数（`prompt_tokens`、`completion_tokens`）
+4. 代理使用定价表计算费用：
+   - 费用 = (prompt_tokens × 输入单价) + (completion_tokens × 输出单价)
+5. 记录写入 SQLite/PostgreSQL
+6. 响应头中包含费用信息
 
-### Response Headers
+### 响应头
 
-Every response includes these headers:
+每个响应都包含以下请求头：
 
 ```
-X-Cost-USD: 0.015          # Cost in USD
-X-Input-Tokens: 120        # Prompt tokens
-X-Output-Tokens: 45        # Completion tokens
-X-Trace-ID: trace-abc123   # For observability
+X-Cost-USD: 0.015          # 费用（美元）
+X-Input-Tokens: 120        # 输入 Token 数
+X-Output-Tokens: 45        # 输出 Token 数
+X-Trace-ID: trace-abc123   # 用于可观测性追踪
 ```
 
-### Data Storage
+### 数据存储
 
-All requests are persisted to the database:
+所有请求均持久化至数据库：
 
 ```sql
 CREATE TABLE requests (
@@ -48,25 +48,25 @@ CREATE TABLE requests (
 );
 ```
 
-## Viewing Costs
+## 查看费用
 
-### Overall Statistics
+### 整体统计
 
 ```bash
-# Today's costs
+# 今日费用
 agix stats
 
-# Last 7 days
+# 最近 7 天
 agix stats --period 7d
 
-# Specific month (YYYY-MM format)
+# 指定月份（YYYY-MM 格式）
 agix stats --period 2026-01
 
-# JSON output
+# JSON 格式输出
 agix stats --format json
 ```
 
-Example output:
+示例输出：
 ```
 Total requests:  245
 Total input:     18,450 tokens
@@ -75,55 +75,55 @@ Total cost:      $12.45
 Avg cost/request: $0.051
 ```
 
-### Per-Agent Breakdown
+### 按 Agent 分类统计
 
 ```bash
-# Cost by agent
+# 按 Agent 统计费用
 agix stats --group-by agent
 
-# Cost by model
+# 按模型统计费用
 agix stats --group-by model
 
-# Daily costs (great for charts)
+# 按日统计费用（适合生成图表）
 agix stats --group-by day
 ```
 
-### Request Logs
+### 请求日志
 
 ```bash
-# Last 20 requests
+# 最近 20 条请求
 agix logs
 
-# Last 100 requests
+# 最近 100 条请求
 agix logs -n 100
 
-# Real-time tail
+# 实时追踪
 agix logs --tail
 
-# Filter by agent
+# 按 Agent 过滤
 agix logs --agent code-reviewer
 ```
 
-Log columns:
-- Timestamp
-- Agent name
-- Model used
-- Input/output tokens
-- Cost (USD)
-- Response time (ms)
+日志列说明：
+- 时间戳
+- Agent 名称
+- 使用的模型
+- 输入/输出 Token 数
+- 费用（美元）
+- 响应时间（毫秒）
 
-## Budget Enforcement
+## 预算管理
 
-### Setting Budgets
+### 设置预算
 
-Configure budgets in `~/.agix/config.yaml`:
+在 `~/.agix/config.yaml` 中配置预算：
 
 ```yaml
 budgets:
   code-reviewer:
     daily_limit_usd: 10.0
     monthly_limit_usd: 200.0
-    alert_at_percent: 80      # Warn at 80% spent
+    alert_at_percent: 80      # 消耗达 80% 时发出警告
 
   docs-writer:
     daily_limit_usd: 5.0
@@ -131,32 +131,32 @@ budgets:
     alert_at_percent: 75
 ```
 
-Or use CLI:
+也可以使用 CLI：
 
 ```bash
-# Set both limits
+# 同时设置日限额和月限额
 agix budget set code-reviewer -d 10.0 -m 200.0
 
-# Set only daily limit
+# 仅设置日限额
 agix budget set code-reviewer -d 5.0
 
-# View budgets
+# 查看预算
 agix budget
 
-# Remove budget
+# 移除预算
 agix budget remove code-reviewer
 ```
 
-### Budget Behavior
+### 预算触发行为
 
-When an agent hits their budget:
+当 Agent 达到预算上限时：
 
-1. Request arrives at proxy
-2. Proxy checks: current_spend vs daily_limit + monthly_limit
-3. If over budget: returns `429 Too Many Requests`
-4. Response includes `Retry-After` header with seconds to wait
+1. 请求到达代理
+2. 代理检查：当前消费 vs 日限额 + 月限额
+3. 若超出预算：返回 `429 Too Many Requests`
+4. 响应中包含 `Retry-After` 请求头，表示需等待的秒数
 
-Example error response:
+错误响应示例：
 
 ```json
 HTTP/1.1 429 Too Many Requests
@@ -170,67 +170,67 @@ Retry-After: 3600
 }
 ```
 
-### Fail-Open Safety
+### 故障开放安全机制
 
-If the database is unavailable during budget check:
+若数据库在预算检查期间不可用：
 
-- Request is **allowed through** (fail-open)
-- Cost is recorded when database recovers
-- Budget check tries again on next request
+- 请求将**被放行**（故障开放）
+- 费用在数据库恢复后补充记录
+- 下次请求时重新进行预算检查
 
-This ensures temporary database issues don't block agents.
+这确保了数据库的临时故障不会阻塞 Agent 运行。
 
-## Cost Optimization Patterns
+## 费用优化模式
 
-### Pattern 1: Monitor High-Cost Agents
+### 模式一：监控高消费 Agent
 
 ```bash
-# Find expensive agents
+# 找出消费较高的 Agent
 agix stats --group-by agent
 
-# Drill down on specific agent
+# 深入查看特定 Agent
 agix logs --agent expensive-agent -n 50
 agix stats --agent expensive-agent --period 7d
 ```
 
-**Action**: Set a daily budget to control costs:
+**操作建议**：设置日限额以控制费用：
 
 ```bash
 agix budget set expensive-agent -d 50.0
 ```
 
-### Pattern 2: Track Model Costs
+### 模式二：追踪模型费用
 
 ```bash
-# Which models are most expensive?
+# 哪些模型费用最高？
 agix stats --group-by model
 
-# Track gpt-4o vs gpt-4o-mini usage
+# 分别追踪 gpt-4o 与 gpt-4o-mini 的用量
 agix logs --model gpt-4o
 agix logs --model gpt-4o-mini
 ```
 
-**Action**: Enable smart routing to automatically use cheaper models for simple requests (see Smart Routing guide).
+**操作建议**：启用智能路由，对简单请求自动使用更廉价的模型（参见智能路由指南）。
 
-### Pattern 3: Daily Cost Trending
+### 模式三：每日费用趋势
 
 ```bash
-# Export daily costs
+# 导出每日费用
 agix stats --group-by day --format json > daily_costs.json
 
-# Visualize costs over time
+# 可视化费用趋势
 agix stats --group-by day
 ```
 
-### Pattern 4: Budget Alerts
+### 模式四：预算告警
 
-Configure webhook notifications when spending hits thresholds:
+配置 Webhook 通知，在消费达到阈值时触发：
 
 ```yaml
 budgets:
   code-reviewer:
     daily_limit_usd: 10.0
-    alert_at_percent: 80  # Alert at $8.00
+    alert_at_percent: 80  # 消费达 $8.00 时告警
 
 webhooks:
   definitions:
@@ -238,21 +238,21 @@ webhooks:
       secret: "webhook_secret"
       model: "gpt-4o-mini"
       prompt_template: |
-        Agent {{.AgentName}} has reached {{.SpentPercent}}% of daily budget.
-        Spent: ${{.Spent}} / ${{.Limit}}
+        Agent <AgentName> has reached <SpentPercent>% of daily budget.
+        Spent: $<Spent> / $<Limit>
       callback_url: "https://api.example.com/alerts/budget"
 ```
 
-## Pricing Table
+## 定价表
 
-agix includes pricing for these models:
+agix 内置以下模型的定价：
 
 ### OpenAI
-- gpt-5.2, gpt-5.1, gpt-5
-- gpt-5-mini, gpt-5-nano
-- gpt-4.1, gpt-4.1-mini, gpt-4.1-nano
-- gpt-4o, gpt-4o-mini
-- o1, o3, o3-mini, o4-mini
+- gpt-5.2、gpt-5.1、gpt-5
+- gpt-5-mini、gpt-5-nano
+- gpt-4.1、gpt-4.1-mini、gpt-4.1-nano
+- gpt-4o、gpt-4o-mini
+- o1、o3、o3-mini、o4-mini
 
 ### Anthropic
 - claude-opus-4-6
@@ -264,53 +264,53 @@ agix includes pricing for these models:
 - deepseek-chat
 - deepseek-reasoner
 
-**Note**: Versioned models (e.g., `gpt-4o-2024-08-06`) are matched via longest-prefix matching against the pricing table.
+**注意**：带版本号的模型（如 `gpt-4o-2024-08-06`）通过最长前缀匹配与定价表进行关联。
 
-## Common Issues
+## 常见问题
 
-### Q: Why is my cost calculation different from the LLM provider's invoice?
+### Q：为什么我的费用计算结果与 LLM 提供商的账单不一致？
 
-**A**: agix uses moment-of-use pricing from the model listings. Provider invoices may include:
-- Volume discounts
-- Batch processing rates
-- Different pricing changes that occurred during the period
-- Rounding differences
+**A**：agix 使用模型列表中的实时定价。提供商账单可能包含：
+- 批量折扣
+- 批处理费率
+- 计费周期内发生的不同定价变更
+- 四舍五入差异
 
-Use `agix stats --format json` to export raw data and compare with your provider invoice.
+可使用 `agix stats --format json` 导出原始数据，与提供商账单对比。
 
-### Q: Can I set budgets in tokens instead of dollars?
+### Q：可以按 Token 数而非美元设置预算吗？
 
-**A**: Currently budgets are USD only. If you need token-based limits, use rate limiting:
+**A**：目前预算仅支持美元单位。如需基于 Token 的限制，可使用频率限制：
 
 ```yaml
 rate_limits:
   expensive-agent:
-    requests_per_hour: 10  # Limit to 10 requests/hour
+    requests_per_hour: 10  # 限制每小时最多 10 次请求
 ```
 
-### Q: How do I export costs to a spreadsheet?
+### Q：如何将费用导出到电子表格？
 
-**A**: Use CSV export:
+**A**：使用 CSV 导出：
 
 ```bash
 agix export --format csv -o costs.csv
 agix export --format csv --period 2026-01 -o january_costs.csv
 ```
 
-Open in Excel/Google Sheets for analysis.
+在 Excel 或 Google Sheets 中打开进行分析。
 
-### Q: Can budgets reset at a specific time?
+### Q：预算可以在指定时间重置吗？
 
-**A**: Budgets reset at midnight UTC. If you need a different timezone:
+**A**：预算在 UTC 午夜重置。如需按其他时区重置：
 
-1. Create multiple agents in your application with different UTC offset names
-2. Or coordinate resets manually via API (set session overrides with TTL)
+1. 在应用中创建带有不同 UTC 偏移名称的多个 Agent
+2. 或通过 API 手动协调重置（设置带 TTL 的会话覆盖）
 
-## Best Practices
+## 最佳实践
 
-1. **Set per-agent budgets** — prevents runaway costs from any single agent
-2. **Monitor daily trends** — `agix stats --group-by day` weekly
-3. **Use rate limiting** — complement budgets with per-agent rate limits
-4. **Enable audit logging** — track which tools are called and when
-5. **Configure alerts** — webhook notifications at 80% of budget
-6. **Export regularly** — keep CSV exports for finance/reporting
+1. **为每个 Agent 设置预算** — 防止单个 Agent 失控造成费用超支
+2. **监控每日趋势** — 每周执行 `agix stats --group-by day`
+3. **使用频率限制** — 将频率限制与预算配合使用
+4. **启用审计日志** — 追踪工具调用的内容与时间
+5. **配置告警** — 在预算消耗达到 80% 时通过 Webhook 发送通知
+6. **定期导出** — 保存 CSV 导出记录，用于财务报告

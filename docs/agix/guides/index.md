@@ -1,197 +1,197 @@
-# agix Comprehensive Guides
+# agix 综合指南
 
-Welcome to the agix feature guides! These detailed how-to guides help you configure, use, and optimize agix for your specific use case.
+欢迎阅读 agix 功能指南！这些详细的操作指南将帮助你根据具体使用场景配置、使用和优化 agix。
 
-## Guide Categories
+## 指南分类
 
-### 💰 [Cost Tracking & Budget Management](./cost-tracking.md)
+### 💰 [费用追踪与预算管理](./cost-tracking.md)
 
-Understand how agix tracks costs, manages budgets, and helps you control spending.
+了解 agix 如何追踪费用、管理预算，并帮助你控制开销。
 
-**Topics covered:**
-- How cost tracking works (token extraction, pricing calculation)
-- Viewing costs with `agix stats` and `agix logs`
-- Per-agent budget enforcement and limits
-- Cost optimization patterns and best practices
-- Troubleshooting cost discrepancies
+**涵盖主题：**
+- 费用追踪的工作原理（Token 提取、定价计算）
+- 使用 `agix stats` 和 `agix logs` 查看费用
+- 按 Agent 执行预算控制与限额
+- 费用优化模式与最佳实践
+- 费用差异排查
 
-**Best for:** Finance teams, cost-conscious deployments, multi-tenant setups
-
----
-
-### 🧠 [Intelligence & Optimization](./intelligence-optimization.md)
-
-Learn how to optimize requests, reduce costs, and improve performance with advanced features.
-
-**Topics covered:**
-- Smart routing: automatically use cheaper models for simple requests
-- Semantic caching: cache responses for similar prompts
-- Context compression: summarize old messages for long conversations
-- A/B testing: traffic-split experiments to compare models
-
-**Best for:** Cost optimization, performance tuning, experimentation
+**适合人群：** 财务团队、注重成本的部署场景、多租户架构
 
 ---
 
-### 🔒 [Safety & Control](./safety-control.md)
+### 🧠 [智能与优化](./intelligence-optimization.md)
 
-Protect your system with prompt firewalls, response policies, and quality gates.
+学习如何通过高级功能优化请求、降低成本、提升性能。
 
-**Topics covered:**
-- Prompt firewall: detect and block injection attempts
-- Response policy: redact PII, enforce formats, truncate responses
-- Quality gate: auto-retry empty or refused responses
-- Session overrides: per-request configuration changes
+**涵盖主题：**
+- 智能路由：对简单请求自动使用更廉价的模型
+- 语义缓存：对相似提示词缓存响应结果
+- 上下文压缩：对长对话中的历史消息进行摘要
+- A/B 测试：流量分流实验，对比不同模型效果
 
-**Best for:** Security-conscious teams, regulated industries, content filtering
-
----
-
-### 📊 [Observability](./observability.md)
-
-Monitor, debug, and understand what's happening in your proxy.
-
-**Topics covered:**
-- Request tracing: detailed per-span diagnostics
-- Audit logging: security and tool call tracking
-- Health checks: `agix doctor` for system diagnosis
-- Metrics dashboard: web UI for cost visualization
-
-**Best for:** DevOps, debugging, production monitoring
+**适合人群：** 成本优化、性能调优、实验性场景
 
 ---
 
-### 🚀 [Reliability & Scale](./reliability-scale.md)
+### 🔒 [安全与管控](./safety-control.md)
 
-Build reliable, scalable systems with failover, rate limiting, and webhooks.
+通过提示词防火墙、响应策略和质量门控保护你的系统。
 
-**Topics covered:**
-- Multi-provider failover: automatic fallback chains
-- Rate limiting: per-agent request throttling
-- Budget alerts: webhook notifications on spending thresholds
-- Generic webhooks: receive events, process with LLM, fire callbacks
+**涵盖主题：**
+- 提示词防火墙：检测并拦截注入攻击
+- 响应策略：脱敏 PII、强制格式、截断响应
+- 质量门控：对空响应或拒绝响应自动重试
+- 会话覆盖：按请求动态修改配置
 
-**Best for:** Production deployments, high-volume systems, event-driven workflows
-
----
-
-### ⚙️ [Advanced Features](./advanced-features.md)
-
-Deep dive into specialized capabilities for complex use cases.
-
-**Topics covered:**
-- System prompt injection: enforce policies globally or per-agent
-- MCP tool bundles: pre-packaged tool sets for common workflows
-- PostgreSQL backend: scalable alternative to SQLite
-- DeepSeek provider: additional LLM provider support
-
-**Best for:** Enterprise deployments, custom integrations, high-volume systems
+**适合人群：** 注重安全的团队、受监管行业、内容过滤场景
 
 ---
 
-### 🔧 [Troubleshooting & FAQs](./troubleshooting.md)
+### 📊 [可观测性](./observability.md)
 
-Quick solutions to common problems and answers to frequently asked questions.
+监控、调试并深入了解代理内部的运行状况。
 
-**Topics covered:**
-- Common issues: 429 errors, high costs, API key problems, slow responses
-- Database troubleshooting: SQLite locks, PostgreSQL connection issues
-- MCP tools not working: debugging tool discovery and access
-- FAQs: cost reduction, multi-provider setup, data export, monitoring
+**涵盖主题：**
+- 请求追踪：详细的逐段诊断信息
+- 审计日志：安全审计与工具调用追踪
+- 健康检查：使用 `agix doctor` 进行系统诊断
+- 指标看板：用于费用可视化的 Web UI
 
-**Best for:** Problem-solving, getting unstuck, learning best practices
+**适合人群：** DevOps、调试排查、生产环境监控
 
 ---
 
-## Getting Started Path
+### 🚀 [可靠性与扩展](./reliability-scale.md)
 
-**New to agix?** Start here:
+通过故障转移、频率限制和 Webhook 构建可靠、可扩展的系统。
 
-1. Read the [main README](../index.md) for overview
-2. Follow [Quick Start](../quickstart.md) to get running
-3. Review [Configuration](../config.md) to understand options
-4. Pick your first guide based on your needs:
-   - **Cost-conscious?** → [Cost Tracking](./cost-tracking.md)
-   - **Want to save money?** → [Intelligence & Optimization](./intelligence-optimization.md)
-   - **Need security?** → [Safety & Control](./safety-control.md)
-   - **Running in production?** → [Observability](./observability.md) + [Reliability & Scale](./reliability-scale.md)
+**涵盖主题：**
+- 多提供商故障转移：自动回退链路
+- 频率限制：按 Agent 限制请求速率
+- 预算告警：消费达到阈值时触发 Webhook 通知
+- 通用 Webhook：接收事件、调用 LLM 处理、触发回调
 
-## Common Workflows
+**适合人群：** 生产部署、高并发系统、事件驱动工作流
 
-### Scenario 1: Reduce costs by 50%
+---
 
-1. Enable smart routing ([Intelligence & Optimization](./intelligence-optimization.md))
-2. Enable semantic caching (same guide)
-3. Set up budget alerts ([Reliability & Scale](./reliability-scale.md))
-4. Monitor with dashboard ([Observability](./observability.md))
+### ⚙️ [高级功能](./advanced-features.md)
 
-### Scenario 2: Secure multi-tenant setup
+深入探索适用于复杂场景的专项能力。
 
-1. Enable prompt firewall ([Safety & Control](./safety-control.md))
-2. Enable response policy with PII redaction (same guide)
-3. Set per-agent tool access ([Advanced Features](./advanced-features.md))
-4. Enable audit logging ([Observability](./observability.md))
-5. Set rate limits ([Reliability & Scale](./reliability-scale.md))
+**涵盖主题：**
+- 系统提示词注入：全局或按 Agent 强制执行策略
+- MCP 工具包：为常见工作流预打包的工具集
+- PostgreSQL 后端：可替代 SQLite 的可扩展方案
+- DeepSeek 提供商：额外的 LLM 提供商支持
 
-### Scenario 3: Scale to high volume
+**适合人群：** 企业级部署、自定义集成、高并发系统
 
-1. Migrate to PostgreSQL ([Advanced Features](./advanced-features.md))
-2. Set up multi-provider failover ([Reliability & Scale](./reliability-scale.md))
-3. Enable tracing for monitoring ([Observability](./observability.md))
-4. Configure webhooks for alerting (same guide)
-5. Review [Troubleshooting](./troubleshooting.md) for production issues
+---
 
-### Scenario 4: Enterprise with policies
+### 🔧 [故障排查与常见问题](./troubleshooting.md)
 
-1. Inject system prompts ([Advanced Features](./advanced-features.md))
-2. Enable firewall with custom rules ([Safety & Control](./safety-control.md))
-3. Set per-agent budgets ([Cost Tracking](./cost-tracking.md))
-4. Install MCP tool bundles ([Advanced Features](./advanced-features.md))
-5. Monitor everything ([Observability](./observability.md))
+快速解决常见问题，获取高频问题的解答。
 
-## Feature Checklist
+**涵盖主题：**
+- 常见问题：429 错误、高费用、API Key 问题、响应缓慢
+- 数据库排查：SQLite 锁定、PostgreSQL 连接问题
+- MCP 工具不生效：调试工具发现与访问权限
+- 常见问题解答：降低费用、多提供商配置、数据导出、监控
 
-Use this to find which guides you need:
+**适合人群：** 问题排查、解除阻碍、学习最佳实践
+
+---
+
+## 入门路径
+
+**刚接触 agix？** 从这里开始：
+
+1. 阅读[主 README](../index.md) 了解概览
+2. 按照[快速开始](../quickstart.md)启动服务
+3. 查阅[配置参考](../config.md)了解各选项含义
+4. 根据你的需求选择第一篇指南：
+   - **注重成本？** → [费用追踪](./cost-tracking.md)
+   - **想省钱？** → [智能与优化](./intelligence-optimization.md)
+   - **需要安全管控？** → [安全与管控](./safety-control.md)
+   - **用于生产环境？** → [可观测性](./observability.md) + [可靠性与扩展](./reliability-scale.md)
+
+## 常见工作流
+
+### 场景一：将费用降低 50%
+
+1. 启用智能路由（参见[智能与优化](./intelligence-optimization.md)）
+2. 启用语义缓存（同一指南）
+3. 设置预算告警（参见[可靠性与扩展](./reliability-scale.md)）
+4. 通过看板进行监控（参见[可观测性](./observability.md)）
+
+### 场景二：安全的多租户架构
+
+1. 启用提示词防火墙（参见[安全与管控](./safety-control.md)）
+2. 启用响应策略并开启 PII 脱敏（同一指南）
+3. 设置按 Agent 的工具访问权限（参见[高级功能](./advanced-features.md)）
+4. 启用审计日志（参见[可观测性](./observability.md)）
+5. 设置频率限制（参见[可靠性与扩展](./reliability-scale.md)）
+
+### 场景三：扩展至高并发
+
+1. 迁移至 PostgreSQL（参见[高级功能](./advanced-features.md)）
+2. 配置多提供商故障转移（参见[可靠性与扩展](./reliability-scale.md)）
+3. 启用追踪以便监控（参见[可观测性](./observability.md)）
+4. 配置 Webhook 进行告警（同一指南）
+5. 查阅[故障排查](./troubleshooting.md)了解生产环境常见问题
+
+### 场景四：带策略的企业级部署
+
+1. 注入系统提示词（参见[高级功能](./advanced-features.md)）
+2. 启用防火墙并自定义规则（参见[安全与管控](./safety-control.md)）
+3. 设置按 Agent 的预算（参见[费用追踪](./cost-tracking.md)）
+4. 安装 MCP 工具包（参见[高级功能](./advanced-features.md)）
+5. 全面监控（参见[可观测性](./observability.md)）
+
+## 功能速查清单
+
+使用此清单找到你需要的指南：
 
 ```
-☐ Understand pricing and costs → Cost Tracking
-☐ Reduce spending → Intelligence & Optimization
-☐ Block prompt injection → Safety & Control
-☐ Redact PII from responses → Safety & Control
-☐ Auto-retry failed requests → Safety & Control
-☐ Override config per-request → Safety & Control
-☐ Debug slow requests → Observability
-☐ Audit who called what tool → Observability
-☐ Monitor system health → Observability
-☐ Handle provider failures → Reliability & Scale
-☐ Limit agent request rate → Reliability & Scale
-☐ Alert on high spending → Reliability & Scale
-☐ Integrate webhooks → Reliability & Scale
-☐ Inject system prompts → Advanced Features
-☐ Manage shared tools → Advanced Features
-☐ Scale with PostgreSQL → Advanced Features
-☐ Troubleshoot 429 errors → Troubleshooting
-☐ Fix slow responses → Troubleshooting
+☐ 了解定价和费用 → 费用追踪
+☐ 降低开支 → 智能与优化
+☐ 拦截提示词注入 → 安全与管控
+☐ 脱敏响应中的 PII → 安全与管控
+☐ 自动重试失败请求 → 安全与管控
+☐ 按请求覆盖配置 → 安全与管控
+☐ 调试慢请求 → 可观测性
+☐ 审计工具调用记录 → 可观测性
+☐ 监控系统健康状态 → 可观测性
+☐ 处理提供商故障 → 可靠性与扩展
+☐ 限制 Agent 请求速率 → 可靠性与扩展
+☐ 高消费告警 → 可靠性与扩展
+☐ 集成 Webhook → 可靠性与扩展
+☐ 注入系统提示词 → 高级功能
+☐ 管理共享工具 → 高级功能
+☐ 使用 PostgreSQL 扩展 → 高级功能
+☐ 排查 429 错误 → 故障排查
+☐ 修复响应缓慢问题 → 故障排查
 ```
 
-## Tips for Success
+## 成功使用建议
 
-1. **Start small** — Enable one feature at a time, test thoroughly
-2. **Monitor impact** — Check `agix stats` daily to see effects
-3. **Use rate limiting defensively** — Catch runaway agents early
-4. **Set budget alerts** — Don't wait until agents hit limits
-5. **Test firewall rules** — Use "log" action first to validate
-6. **Review audit logs weekly** — Catch security issues early
-7. **Run doctor regularly** — Catch config issues before they cause problems
-8. **Backup data regularly** — Daily backups of SQLite or `pg_dump` for PostgreSQL
+1. **从小处着手** — 每次启用一个功能，充分测试后再继续
+2. **监控效果** — 每天查看 `agix stats`，观察变化
+3. **防御性地使用频率限制** — 尽早发现失控的 Agent
+4. **提前设置预算告警** — 不要等 Agent 触达上限才行动
+5. **测试防火墙规则** — 先使用 "log" 模式验证规则有效性
+6. **每周审查审计日志** — 及早发现安全隐患
+7. **定期运行 doctor 命令** — 在配置问题造成影响前提前发现
+8. **定期备份数据** — 每日备份 SQLite，或对 PostgreSQL 执行 `pg_dump`
 
-## Need Help?
+## 需要帮助？
 
-- **Can't find what you need?** Check the [CLI reference](../cli.md)
-- **Want to understand the architecture?** Read [agix/CLAUDE.md](https://github.com/ryjiang/agent-platform/tree/main/tools/agix#readme) for technical details
-- **Having issues?** See [Troubleshooting](./troubleshooting.md) or run `agix doctor`
-- **Want to contribute?** Check the GitHub repository
+- **找不到你需要的内容？** 查阅 [CLI 参考](../cli.md)
+- **想了解架构设计？** 阅读 [agix/CLAUDE.md](https://github.com/ryjiang/agent-platform/tree/main/tools/agix#readme) 获取技术细节
+- **遇到问题？** 查看[故障排查](./troubleshooting.md)或运行 `agix doctor`
+- **想参与贡献？** 访问 GitHub 仓库
 
 ---
 
-**Happy optimizing! 🚀**
+**祝使用愉快，优化顺利！🚀**

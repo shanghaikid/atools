@@ -1,162 +1,162 @@
-# Advanced Features
+# 高级功能
 
-## Overview
+## 概述
 
-agix includes several advanced capabilities for specialized use cases:
+agix 包含适用于专门用例的多项高级能力：
 
-- **System prompt injection** — Inject global or per-agent system prompts
-- **MCP tool bundles** — Pre-packaged tool sets for common workflows
-- **PostgreSQL backend** — Scalable alternative to SQLite for large deployments
-- **DeepSeek provider support** — Route to DeepSeek models alongside OpenAI/Anthropic
+- **系统提示词注入** — 注入全局或按 Agent 的系统提示词
+- **MCP 工具包** — 适用于常见工作流的预打包工具集
+- **PostgreSQL 后端** — 可扩展的大规模部署替代方案
+- **DeepSeek 提供商支持** — 与 OpenAI/Anthropic 并列的额外 LLM 提供商
 
-## System Prompt Injection
+## 系统提示词注入
 
-System prompt injection allows you to prepend or append text to the system prompt of every request.
+系统提示词注入允许你向每个请求的系统提示词前置或后置文本。
 
-### How It Works
+### 工作原理
 
-1. Request arrives from agent
-2. If prompt injection enabled:
-   - Select applicable prompt (global or per-agent)
-   - Prepend or append to existing system prompt
-3. Forward modified request to LLM
-4. LLM processes with injected prompt
+1. 请求从 Agent 到达
+2. 如果启用了提示词注入：
+   - 选择适用的提示词（全局或按 Agent）
+   - 前置或后置到现有系统提示词
+3. 转发修改后的请求到 LLM
+4. LLM 使用注入的提示词处理
 
-### Configuration
+### 配置
 
 ```yaml
 prompt_templates:
   enabled: true
 
-  # Global template applied to all agents
-  global: "You are a helpful assistant. Follow company policies."
+  # 适用于所有 Agent 的全局模板
+  global: "你是一个有帮助的助手。遵循公司政策。"
 
-  # Per-agent overrides
+  # 按 Agent 的覆盖
   agents:
-    code-reviewer: "You are an expert code reviewer. Focus on security and performance."
-    docs-writer: "You are a technical writer. Use clear, concise language."
-    compliance-checker: "You are a compliance officer. Check all responses against policy."
+    code-reviewer: "你是专家代码审查官。关注安全性和性能。"
+    docs-writer: "你是技术文档编辑。使用清晰、简洁的语言。"
+    compliance-checker: "你是合规官。根据政策检查所有响应。"
 
-  # Position: prepend (before user prompt) or append (after)
-  position: "prepend"              # Default: prepend
+  # 位置：prepend（在用户提示词前）或 append（在后）
+  position: "prepend"              # 默认：prepend
 ```
 
-### Real-World Example: Enforcing Company Policies
+### 真实示例：执行公司政策
 
 ```yaml
 prompt_templates:
   enabled: true
 
   global: |
-    You are a company AI assistant.
+    你是公司 AI 助手。
 
-    IMPORTANT:
-    - Never recommend competitor products
-    - Always mention company products first
-    - Adhere to data privacy regulations
-    - Do not engage in political discussions
+    重要：
+    - 从不推荐竞争对手产品
+    - 总是首先提及公司产品
+    - 遵守数据隐私法规
+    - 不参与政治讨论
 
   agents:
     customer-support:
       template: |
-        You are a friendly customer support agent.
-        Prioritize customer satisfaction.
-        Offer the best solution, not the most profitable.
+        你是友好的客户支持 Agent。
+        优先考虑客户满意度。
+        提供最佳方案，而不是最有利可图的方案。
       position: "prepend"
 
     sales-agent:
       template: |
-        You are a sales assistant.
-        Recommend company products that fit customer needs.
-        Highlight competitive advantages.
+        你是销售助手。
+        推荐适合客户需求的公司产品。
+        突显竞争优势。
 ```
 
-### Impact on Cost
+### 对成本的影响
 
-Injected prompts increase token usage:
+注入的提示词增加 Token 用量：
 
 ```
-Without injection:
-- User: "Hello" (10 tokens)
-- LLM processes: 10 tokens
+不注入：
+- 用户："Hello" （10 tokens）
+- LLM 处理：10 tokens
 
-With injection:
-- System: "You are a helpful assistant..." (20 tokens)
-- User: "Hello" (10 tokens)
-- LLM processes: 30 tokens
-- Cost increase: 2x tokens for system prompt
+注入后：
+- 系统："你是有帮助的助手..." （20 tokens）
+- 用户："Hello" （10 tokens）
+- LLM 处理：30 tokens
+- 成本增加：系统提示词 Token 数的 2 倍
 ```
 
-### Position: Prepend vs Append
+### 位置：Prepend vs Append
 
-**Prepend** (default):
-- System prompt comes first
-- Has priority in LLM reasoning
-- More reliable
+**Prepend**（默认）：
+- 系统提示词优先
+- 在 LLM 推理中有优先级
+- 更可靠
 
-**Append**:
-- System prompt comes after user message
-- User message has priority
-- Useful for soft guidelines
+**Append**：
+- 系统提示词在用户消息后
+- 用户消息有优先级
+- 适合软性指南
 
 ```yaml
-# Example: Soft guideline (append)
+# 示例：软性指南 (append)
 agents:
   flexible-agent:
-    template: "Try to be helpful and not boring."
+    template: "尽量帮助，不要太无聊。"
     position: "append"
 ```
 
-## MCP Tool Bundles
+## MCP 工具包
 
-Tool bundles are pre-packaged sets of MCP servers for common workflows.
+工具包是适用于常见工作流的预打包 MCP 服务器集合。
 
-### Built-In Bundles
+### 内置包
 
-agix includes several pre-configured bundles:
+agix 包含几个预配置的包：
 
 ```bash
-# List available bundles
+# 列出可用的包
 agix bundle list
 
-# Output:
-# Name          Description
-# basic         File operations (read, write, browse)
-# github        GitHub repo access (read, search, contribute)
-# code-review   Code analysis and review tools
-# devops        Infrastructure and deployment tools
-# docs-writer   Documentation and publishing tools
+# 输出：
+# 名称          描述
+# basic         文件操作（读、写、浏览）
+# github        GitHub 仓库访问（读、搜索、贡献）
+# code-review   代码分析和审查工具
+# devops        基础设施和部署工具
+# docs-writer   文档和发布工具
 ```
 
-### Installing a Bundle
+### 安装包
 
 ```bash
-# Install a bundle
+# 安装包
 agix bundle install basic
 
-# Show bundle details
+# 显示包详情
 agix bundle show github
-# Output:
-# Bundle: github
-# Description: GitHub repository access
-# Servers:
-#   - github: GitHub client (requires GITHUB_TOKEN env var)
+# 输出：
+# 包：github
+# 描述：GitHub 仓库访问
+# 服务器：
+#   - github：GitHub 客户端（需要 GITHUB_TOKEN 环境变量）
 ```
 
-### Creating Custom Bundles
+### 创建自定义包
 
-Define a bundle in config:
+在配置中定义包：
 
 ```yaml
 bundles: ["basic", "github", "custom"]
 
 tools:
   servers:
-    # Bundle: basic (implicit, from built-in)
+    # 包：basic（隐式，来自内置）
 
-    # Bundle: github (implicit, from built-in)
+    # 包：github（隐式，来自内置）
 
-    # Custom tools (not in bundles)
+    # 自定义工具（不在包中）
     custom-api:
       command: "npx"
       args: ["-y", "@company/custom-api-server"]
@@ -166,18 +166,18 @@ tools:
       command: "/usr/local/bin/internal-tools-server"
 ```
 
-Then reference in config:
+然后在配置中引用：
 
 ```yaml
 bundles:
-  - basic           # Use built-in bundle
-  - github          # Use built-in bundle
-  - code-review     # Would use built-in if available
+  - basic           # 使用内置包
+  - github          # 使用内置包
+  - code-review     # 如果可用，使用内置包
 ```
 
-### Tool Access Control
+### 工具访问控制
 
-Control which agents can use which tools:
+控制哪些 Agent 可以使用哪些工具：
 
 ```yaml
 tools:
@@ -192,30 +192,30 @@ tools:
       env: ["GITHUB_TOKEN=ghp_xxx"]
 
   agents:
-    # Code reviewer: read-only file access
+    # 代码审查官：只读文件访问
     code-reviewer:
       allow: ["read_file", "list_directory"]
 
-    # Docs writer: full filesystem + github
+    # 文档编辑：完整文件系统 + github
     docs-writer:
-      allow: ["*"]                 # All tools allowed
+      allow: ["*"]                 # 允许所有工具
 
-    # Security agent: only sandbox execution
+    # 安全 Agent：仅限沙箱执行
     security-agent:
       deny: ["delete_file", "modify_permissions"]
 
-    # Everyone else: no tools by default
+    # 其他人：默认无工具
 ```
 
-### Real-World Example: Documentation Workflow
+### 真实示例：文档工作流
 
 ```bash
-# Install documentation bundle
+# 安装文档包
 agix bundle install docs-writer
 
-# Config:
+# 配置：
 bundles:
-  - docs-writer              # Includes filesystem + github + publishing tools
+  - docs-writer              # 包含文件系统 + github + 发布工具
 
 tools:
   agents:
@@ -223,20 +223,20 @@ tools:
       allow: ["read_file", "write_file", "list_directory", "git_commit"]
 ```
 
-Now `docs-agent` can:
-- Read code files for examples
-- Write documentation
-- Commit changes to git
+现在 `docs-agent` 可以：
+- 读取代码文件以获取示例
+- 编写文档
+- 提交更改到 git
 
-All without agent code changes!
+全部无需修改 Agent 代码！
 
-## PostgreSQL Backend
+## PostgreSQL 后端
 
-For large deployments with many requests, PostgreSQL provides better scalability than SQLite.
+对于具有许多请求的大规模部署，PostgreSQL 提供比 SQLite 更好的可扩展性。
 
-### Setup
+### 设置
 
-1. Create PostgreSQL database:
+1. 创建 PostgreSQL 数据库：
 
 ```bash
 createdb agix
@@ -244,95 +244,95 @@ psql agix -c "CREATE ROLE agix WITH PASSWORD 'password' CREATEDB;"
 ALTER ROLE agix CREATEDB;
 ```
 
-2. Configure agix:
+2. 配置 agix：
 
 ```yaml
 database: "postgres://agix:password@localhost:5432/agix?sslmode=disable"
 ```
 
-3. Run agix (schema created automatically):
+3. 运行 agix（模式自动创建）：
 
 ```bash
 agix start
 ```
 
-### Configuration Variations
+### 配置变化
 
-**Production (with SSL):**
+**生产环境（使用 SSL）：**
 ```yaml
 database: "postgres://agix:password@prod-db.example.com:5432/agix?sslmode=require"
 ```
 
-**With SSL certificate:**
+**使用 SSL 证书：**
 ```yaml
 database: "postgres://agix:password@prod-db.example.com:5432/agix?sslmode=verify-full&sslrootcert=/path/to/ca.pem"
 ```
 
-**Connection pooling via pgBouncer:**
+**通过 pgBouncer 的连接池：**
 ```yaml
 database: "postgres://agix:password@pgbouncer.example.com:6432/agix?sslmode=disable"
 ```
 
 ### SQLite vs PostgreSQL
 
-| Feature | SQLite | PostgreSQL |
-|---------|--------|------------|
-| Setup | Automatic (file) | Requires server |
-| Queries | Single-machine | Distributed |
-| Concurrency | Good (WAL mode) | Excellent |
-| Disk space | MB-GB | Unlimited |
-| Backups | File copy | `pg_dump` |
-| Replication | None | Yes (streaming) |
+| 功能 | SQLite | PostgreSQL |
+|------|--------|------------|
+| 设置 | 自动（文件） | 需要服务器 |
+| 查询 | 单机器 | 分布式 |
+| 并发 | 良好（WAL 模式） | 优秀 |
+| 磁盘空间 | MB-GB | 无限 |
+| 备份 | 文件复制 | `pg_dump` |
+| 复制 | 无 | 是（流复制） |
 
-**Use SQLite when:**
-- Single server
-- <1M requests/day
-- Don't need distributed backup
+**使用 SQLite 时：**
+- 单服务器
+- <1M 请求/天
+- 不需要分布式备份
 
-**Use PostgreSQL when:**
-- Multiple servers
-- >1M requests/day
-- Need high availability
-- Require backup/replication
+**使用 PostgreSQL 时：**
+- 多个服务器
+- >1M 请求/天
+- 需要高可用性
+- 需要备份/复制
 
-### Migration: SQLite → PostgreSQL
+### 迁移：SQLite → PostgreSQL
 
 ```bash
-# 1. Export SQLite data
+# 1. 导出 SQLite 数据
 agix export --format json > backup.json
 
-# 2. Update config to use PostgreSQL
+# 2. 更新配置为使用 PostgreSQL
 vim ~/.agix/config.yaml
 # database: "postgres://..."
 
-# 3. Restart agix (schema created)
+# 3. 重启 agix（创建模式）
 agix start
 
-# 4. Import data (manual, depends on your script)
-# Use the JSON backup to populate PostgreSQL
+# 4. 导入数据（手动，取决于你的脚本）
+# 使用 JSON 备份来填充 PostgreSQL
 ```
 
-### Performance Tuning
+### 性能调优
 
-For PostgreSQL with high request volume:
+对于具有高请求量的 PostgreSQL：
 
 ```sql
--- Create indexes for common queries
+-- 为常见查询创建索引
 CREATE INDEX idx_requests_agent_timestamp
   ON requests (agent_name, timestamp DESC);
 
 CREATE INDEX idx_requests_model
   ON requests (model, timestamp DESC);
 
--- Analyze for query optimization
+-- 分析以进行查询优化
 ANALYZE requests;
 ```
 
-## DeepSeek Provider Support
+## DeepSeek 提供商支持
 
-agix supports DeepSeek models alongside OpenAI and Anthropic.
+agix 支持 DeepSeek 模型与 OpenAI 和 Anthropic 并列。
 
-### Configuration
+### 配置
 
 ```yaml
 keys:
@@ -340,20 +340,20 @@ keys:
   anthropic: "sk-ant-..."
   deepseek: "sk-..."
 
-# DeepSeek models are routed automatically
-# Just use model names like "deepseek-chat"
+# DeepSeek 模型自动路由
+# 仅需使用模型名称如 "deepseek-chat"
 ```
 
-### Supported Models
+### 支持的模型
 
 ```
-deepseek-chat        # General purpose chat
-deepseek-reasoner    # Reasoning/analysis
+deepseek-chat        # 通用聊天
+deepseek-reasoner    # 推理/分析
 ```
 
-### Routing
+### 路由
 
-Model name → Provider mapping:
+模型名称 → 提供商映射：
 
 ```
 gpt-* → OpenAI
@@ -361,66 +361,66 @@ claude-* → Anthropic
 deepseek-* → DeepSeek
 ```
 
-### Cost Example
+### 成本示例
 
-Comparing providers:
+比较提供商：
 
 ```
-Task: Summarize 2000 words
+任务：总结 2000 字
 
-OpenAI (gpt-4o-mini):
-- Input: 500 tokens × $0.00015 = $0.075
-- Output: 200 tokens × $0.0006 = $0.00012
-- Total: $0.07512
+OpenAI (gpt-4o-mini)：
+- 输入：500 tokens × $0.00015 = $0.075
+- 输出：200 tokens × $0.0006 = $0.00012
+- 总计：$0.07512
 
-Anthropic (claude-haiku):
-- Input: 500 tokens × $0.00008 = $0.04
-- Output: 200 tokens × $0.00024 = $0.000048
-- Total: $0.040048
+Anthropic (claude-haiku)：
+- 输入：500 tokens × $0.00008 = $0.04
+- 输出：200 tokens × $0.00024 = $0.000048
+- 总计：$0.040048
 
-DeepSeek (deepseek-chat):
-- Input: 500 tokens × $0.00014 = $0.07
-- Output: 200 tokens × $0.00028 = $0.000056
-- Total: $0.070056
+DeepSeek (deepseek-chat)：
+- 输入：500 tokens × $0.00014 = $0.07
+- 输出：200 tokens × $0.00028 = $0.000056
+- 总计：$0.070056
 
-Best option: Anthropic Haiku (55% cheaper than GPT-4o-mini)
+最佳选项：Anthropic Haiku（比 GPT-4o-mini 便宜 55%）
 ```
 
-### Failover Pattern: Cross-Provider
+### 故障转移模式：跨提供商
 
 ```yaml
 failover:
   chains:
     gpt-4o:
-      - "gpt-4o-mini"         # Cheaper OpenAI
-      - "deepseek-chat"       # Cross-provider
-      - "claude-opus-4-6"     # Last resort
+      - "gpt-4o-mini"         # 更便宜的 OpenAI
+      - "deepseek-chat"       # 跨提供商
+      - "claude-opus-4-6"     # 最后的手段
 
     claude-opus-4-6:
-      - "claude-sonnet-4-5-20250929"  # Cheaper Anthropic
-      - "deepseek-chat"              # Cross-provider
-      - "gpt-4o"                     # Last resort
+      - "claude-sonnet-4-5-20250929"  # 更便宜的 Anthropic
+      - "deepseek-chat"              # 跨提供商
+      - "gpt-4o"                     # 最后的手段
 ```
 
-## Combining Advanced Features
+## 组合高级功能
 
-### Real-World Example: Enterprise SaaS Setup
+### 真实示例：企业 SaaS 设置
 
 ```yaml
-# PostgreSQL for scalability
+# 为扩展性使用 PostgreSQL
 database: "postgres://agix:password@prod-db.example.com:5432/agix?sslmode=require"
 
-# System prompts for safety
+# 为安全注入系统提示词
 prompt_templates:
   enabled: true
   global: |
-    You are an enterprise AI assistant.
-    Follow GDPR and company security policies.
+    你是企业 AI 助手。
+    遵守 GDPR 和公司安全政策。
   agents:
     customer-support:
-      template: "Always be helpful and professional."
+      template: "总是友好和专业。"
 
-# Tool bundles for productivity
+# 为生产力使用工具包
 bundles:
   - basic
   - github
@@ -429,12 +429,12 @@ bundles:
 tools:
   agents:
     developer-bot:
-      allow: ["*"]                # Full access for trusted bot
+      allow: ["*"]                # 为可信 Bot 完整访问
 
     customer-support:
-      deny: ["delete_file", "modify_permissions", "git_commit"]  # Read-only
+      deny: ["delete_file", "modify_permissions", "git_commit"]  # 只读
 
-# Cross-provider failover
+# 跨提供商故障转移
 failover:
   chains:
     gpt-4o:
@@ -442,7 +442,7 @@ failover:
       - "claude-opus-4-6"
       - "deepseek-chat"
 
-# Rate limiting + budgets
+# 频率限制 + 预算
 rate_limits:
   api-consumer:
     requests_per_minute: 100
@@ -455,11 +455,11 @@ budgets:
     alert_at_percent: 80
 ```
 
-## Best Practices
+## 最佳实践
 
-1. **Use system prompts sparingly** — Only for critical policies, not general guidance
-2. **Install only needed bundles** — Reduces complexity and tool surface area
-3. **Migrate to PostgreSQL early** — Better to plan this before high traffic
-4. **Cross-provider failover** — DeepSeek as cheap fallback, Anthropic for quality
-5. **Test provider switching** — Quality may differ between providers
-6. **Monitor bundle updates** — Built-in bundles may get new/changed tools
+1. **谨慎使用系统提示词** — 仅用于关键政策，不用于一般性指导
+2. **仅安装所需的包** — 减少复杂性和工具表面积
+3. **早期迁移到 PostgreSQL** — 最好在高流量前计划
+4. **跨提供商故障转移** — DeepSeek 作为廉价回退，Anthropic 获得质量
+5. **测试提供商切换** — 提供商之间的质量可能有所不同
+6. **监控包更新** — 内置包可能会获得新的/更改的工具

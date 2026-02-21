@@ -1,59 +1,59 @@
-# Observability
+# 可观测性
 
-## Overview
+## 概述
 
-agix provides comprehensive observability to monitor performance, debug issues, and track security events:
+agix 提供全面的可观测性来监控性能、调试问题和追踪安全事件：
 
-- **Request tracing** — Detailed per-request spans showing all pipeline steps
-- **Audit logging** — Security event log with optional content capture
-- **Health checks** — `agix doctor` command to diagnose configuration and connectivity
-- **Metrics dashboard** — Web UI with cost visualization and budget monitoring
+- **请求追踪** — 详细的逐段信息，显示所有管道步骤
+- **审计日志** — 带有可选内容捕获的安全事件日志
+- **健康检查** — `agix doctor` 命令来诊断配置和连接性
+- **指标仪表板** — 成本可视化和预算监控的 Web UI
 
-## Request Tracing
+## 请求追踪
 
-Request tracing provides detailed timing and diagnostics for each request flowing through the proxy.
+请求追踪提供通过代理流动的每个请求的详细计时和诊断。
 
-### How It Works
+### 工作原理
 
-Every request receives a `Trace-ID` and generates multiple spans:
+每个请求都接收一个 `Trace-ID` 并生成多个 span：
 
-1. Request arrives → create root span
-2. Each step in the pipeline creates a child span:
-   - Budget check
-   - Firewall scan
-   - Prompt template injection
-   - Cache lookup
-   - Router analysis
-   - Provider API call
-   - Token counting
-   - Cost calculation
-   - Response policy
-   - Database write
-3. All spans collected under the trace ID
-4. Trace available for inspection
+1. 请求到达 → 创建根 span
+2. 管道中的每一步都创建一个子 span：
+   - 预算检查
+   - 防火墙扫描
+   - 提示词模板注入
+   - 缓存查找
+   - 路由器分析
+   - 提供商 API 调用
+   - Token 计数
+   - 成本计算
+   - 响应策略
+   - 数据库写入
+3. 所有 span 都在追踪 ID 下收集
+4. 追踪可供检查
 
-### Viewing Traces
+### 查看追踪
 
 ```bash
-# List recent traces
+# 列出最近的追踪
 agix trace list
 
-# View detailed trace with all spans
+# 查看带有所有 span 的详细追踪
 agix trace abc-123
 
-# Filter by agent
+# 按 Agent 过滤
 agix trace list --agent code-reviewer
 ```
 
-Example output:
+示例输出：
 
 ```
-Trace ID: trace-abc-123
-Status: SUCCESS
-Duration: 1250ms
-Request: gpt-4o, 250 input tokens
+追踪 ID：trace-abc-123
+状态：SUCCESS
+时长：1250ms
+请求：gpt-4o，250 输入 tokens
 
-Spans:
+Span：
 ├─ proxy.request (1250ms)
 │  ├─ budget.check (5ms)
 │  ├─ firewall.scan (15ms)
@@ -66,121 +66,121 @@ Spans:
 │  ├─ policy.apply (10ms)
 │  └─ store.write (50ms)
 
-Cost: $0.015
+成本：$0.015
 ```
 
-### Response Header
+### 响应请求头
 
-Every response includes the trace ID:
+每个响应都包含追踪 ID：
 
 ```
 X-Trace-ID: trace-abc-123
 ```
 
-Save this to correlate with backend logs.
+保存此以关联到后端日志。
 
-### Tracing Configuration
+### 追踪配置
 
 ```yaml
 tracing:
   enabled: true
-  sample_rate: 1.0                 # 0-1, log all by default
+  sample_rate: 1.0                 # 0-1，默认记录所有
 
-  # sample_rate examples:
-  # 1.0 = log all requests (verbose, high disk usage)
-  # 0.5 = log 50% of requests (balanced)
-  # 0.1 = log 10% of requests (performance, sampling)
-  # 0.0 = disable tracing
+  # sample_rate 示例：
+  # 1.0 = 记录所有请求（详细，高磁盘使用）
+  # 0.5 = 记录 50% 的请求（均衡）
+  # 0.1 = 记录 10% 的请求（性能，采样）
+  # 0.0 = 禁用追踪
 ```
 
-### Use Case: Debug Slow Requests
+### 用例：调试慢请求
 
 ```bash
-# Identify slow traces
+# 识别慢追踪
 agix trace list | grep "Duration: [2-9][0-9][0-9][0-9]ms"
 
-# View detailed span breakdown
+# 查看详细 span 分析
 agix trace trace-slow-123
 
-# Check which span is bottleneck:
-# If api.call > 1000ms → upstream provider is slow
-# If cache.lookup > 100ms → database issue
-# If firewall.scan > 100ms → regex performance issue
+# 检查哪个 span 是瓶颈：
+# 如果 api.call > 1000ms → 上游提供商很慢
+# 如果 cache.lookup > 100ms → 数据库问题
+# 如果 firewall.scan > 100ms → 正则表达式性能问题
 ```
 
-## Audit Logging
+## 审计日志
 
-Audit logging tracks security events: tool calls, firewall blocks, policy applications, authentication.
+审计日志追踪安全事件：工具调用、防火墙阻止、策略应用、身份验证。
 
-### How It Works
+### 工作原理
 
-1. Security-relevant event occurs (tool call, block, redaction)
-2. Event logged with:
-   - Timestamp
-   - Agent name
-   - Event type
-   - Details (tool name, block reason, etc.)
-   - Optional content (request/response if enabled)
-3. Log persists to database
+1. 发生安全相关事件（工具调用、阻止、脱敏）
+2. 事件以以下内容记录：
+   - 时间戳
+   - Agent 名称
+   - 事件类型
+   - 详情（工具名、阻止原因等）
+   - 可选内容（如果启用，请求/响应）
+3. 日志持久化到数据库
 
-### Configuration
+### 配置
 
 ```yaml
 audit:
   enabled: true
-  content_log: true                # Log full request/response bodies
+  content_log: true                # 记录完整的请求/响应正文
 
-  # Flag high-risk tools as dangerous
+  # 将高风险工具标记为危险
   dangerous_tools: ["delete_file", "execute_cmd", "modify_permissions"]
 ```
 
-### Viewing Audit Events
+### 查看审计事件
 
 ```bash
-# List security events
+# 列出安全事件
 agix audit list
 
-# Filter by event type
+# 按事件类型过滤
 agix audit list --type tool_call
 agix audit list --type firewall_block
 agix audit list --type response_redaction
 
-# Filter by agent
+# 按 Agent 过滤
 agix audit list --agent code-reviewer
 
-# Show more events
+# 显示更多事件
 agix audit list -n 50
 ```
 
-Example output:
+示例输出：
 
 ```
-Timestamp          Agent           Type               Details
-2026-02-21 10:15   code-reviewer   tool_call          called: read_file (args: src/main.go)
-2026-02-21 10:16   docs-writer     tool_call          called: write_file (args: README.md)
-2026-02-21 10:17   security-scan   firewall_block     rule: block_injection matched
-2026-02-21 10:18   test-agent      response_redaction emails masked: 3 occurrences
+时间戳            Agent           类型               详情
+2026-02-21 10:15   code-reviewer   tool_call          调用：read_file （参数：src/main.go）
+2026-02-21 10:16   docs-writer     tool_call          调用：write_file （参数：README.md）
+2026-02-21 10:17   security-scan   firewall_block     规则：block_injection 匹配
+2026-02-21 10:18   test-agent      response_redaction 邮箱已脱敏：3 个出现次数
 ```
 
-### Event Types
+### 事件类型
 
-| Type | Meaning | Risk |
-|------|---------|------|
-| `tool_call` | Tool was executed | Medium (tools can modify system) |
-| `firewall_block` | Injection attempt blocked | High |
-| `firewall_warn` | Suspicious pattern detected | Medium |
-| `response_redaction` | Output was redacted | Low |
-| `budget_exceeded` | Agent hit budget limit | Low |
-| `rate_limit_exceeded` | Agent exceeded rate limit | Low |
+| 类型 | 含义 | 风险 |
+|------|------|------|
+| `tool_call` | 工具已执行 | 中等（工具可以修改系统） |
+| `firewall_block` | 注入尝试被阻止 | 高 |
+| `firewall_warn` | 检测到可疑模式 | 中等 |
+| `response_redaction` | 输出被脱敏 | 低 |
+| `budget_exceeded` | Agent 达到预算上限 | 低 |
+| `rate_limit_exceeded` | Agent 超过频率限制 | 低 |
 
-### Content Logging
+### 内容日志
 
-When `content_log: true`, request/response bodies are captured:
+当 `content_log: true` 时，捕获请求/响应正文：
 
 ```bash
 agix audit list --type tool_call -n 1 | jq '.content'
 
-# Output:
+# 输出：
 # {
 #   "request": {
 #     "model": "gpt-4o",
@@ -192,171 +192,171 @@ agix audit list --type tool_call -n 1 | jq '.content'
 # }
 ```
 
-**⚠️ Security note**: Content logs may contain sensitive data. Keep them secure and set retention policies.
+**⚠️ 安全说明**：内容日志可能包含敏感数据。保护它们并设置保留策略。
 
-### Real-World Example: Investigating Tool Misuse
+### 真实示例：调查工具误用
 
 ```bash
-# 1. Agent started calling delete_file unexpectedly
-# 2. Review tool call history
+# 1. Agent 开始意外调用 delete_file
+# 2. 审查工具调用历史
 agix audit list --type tool_call --agent suspicious-agent -n 100
 
-# 3. Look for the delete_file call
-# Output shows: agent called delete_file with sensitive paths
+# 3. 寻找 delete_file 调用
+# 输出显示：Agent 用敏感路径调用了 delete_file
 
-# 4. Revoke the agent's tool access
+# 4. 撤销 Agent 的工具访问权限
 vim ~/.agix/config.yaml
-# Edit: suspicious-agent: deny: ["delete_file"]
+# 编辑：suspicious-agent: deny: ["delete_file"]
 
-# 5. Restart proxy
+# 5. 重启代理
 agix start
 ```
 
-## Health Checks (agix doctor)
+## 健康检查（agix doctor）
 
-The `agix doctor` command performs comprehensive diagnostics to verify configuration and connectivity.
+`agix doctor` 命令执行全面诊断来验证配置和连接性。
 
-### Running Doctor
+### 运行 Doctor
 
 ```bash
 agix doctor
 ```
 
-Output example:
+输出示例：
 
 ```
-Configuration Health Check
-  ✓ Config file exists at ~/.agix/config.yaml
-  ✓ Config file permissions OK (0600)
-  ✓ All required fields present
+配置健康检查
+  ✓ 配置文件存在于 ~/.agix/config.yaml
+  ✓ 配置文件权限正确（0600）
+  ✓ 所有必需字段都存在
 
-API Key Validation
-  ✓ OpenAI API key valid
-  ✓ Anthropic API key valid
-  ✓ DeepSeek API key valid
+API 密钥验证
+  ✓ OpenAI API 密钥有效
+  ✓ Anthropic API 密钥有效
+  ✓ DeepSeek API 密钥有效
 
-Database
-  ✓ SQLite database accessible
-  ✓ Database integrity check passed
-  ✓ Schema version: 1
+数据库
+  ✓ SQLite 数据库可访问
+  ✓ 数据库完整性检查通过
+  ✓ 模式版本：1
 
-MCP Servers
-  ✓ filesystem server started (pid: 12345)
-  ✓ github server started (pid: 12346)
+MCP 服务器
+  ✓ filesystem 服务器已启动（pid：12345）
+  ✓ github 服务器已启动（pid：12346）
 
-Budget Configuration
-  ✓ All budgets logically consistent
+预算配置
+  ✓ 所有预算逻辑一致
 
-Firewall Rules
-  ✓ All regex patterns compile successfully
+防火墙规则
+  ✓ 所有正则表达式模式编译成功
 
-Overall Status: PASS (all checks passed)
+总体状态：通过（所有检查都通过）
 ```
 
-### Doctor Checks
+### Doctor 检查
 
-Doctor performs these checks:
+Doctor 执行这些检查：
 
-1. **Config file permissions** — Verify 0600 (owner only)
-2. **API key validity** — Test actual API calls to each provider
-3. **Database connectivity** — Check file exists and is healthy
-4. **MCP server startup** — Verify tools can be executed
-5. **Budget logic** — Daily ≤ monthly, percentage in range
-6. **Firewall rules** — Validate regex patterns
-7. **Prompt template validity** — Check template syntax
+1. **配置文件权限** — 验证 0600（仅限所有者）
+2. **API 密钥有效性** — 对每个提供商进行实际 API 调用
+3. **数据库连接性** — 检查文件是否存在且健康
+4. **MCP 服务器启动** — 验证工具可以执行
+5. **预算逻辑** — 日 ≤ 月，百分比在范围内
+6. **防火墙规则** — 验证正则表达式模式
+7. **提示词模板有效性** — 检查模板语法
 
-### Common Doctor Issues
+### 常见 Doctor 问题
 
-**Issue**: "API key invalid"
+**问题**："API 密钥无效"
 
 ```
-Cause: Key expired or wrong format
-Fix: Update key in config.yaml
+原因：密钥过期或格式错误
+修复：更新 config.yaml 中的密钥
 $ vim ~/.agix/config.yaml
 ```
 
-**Issue**: "Database integrity check failed"
+**问题**："数据库完整性检查失败"
 
 ```
-Cause: Corrupted SQLite file
-Fix: Backup and rebuild
+原因：SQLite 文件损坏
+修复：备份并重建
 $ cp ~/.agix/agix.db ~/.agix/agix.db.backup
 $ rm ~/.agix/agix.db
-# Next agix command will recreate it
+# 下一个 agix 命令将重新创建它
 ```
 
-**Issue**: "MCP server failed to start"
+**问题**："MCP 服务器启动失败"
 
 ```
-Cause: Command not found or syntax error
-Fix: Verify command in config
+原因：找不到命令或语法错误
+修复：验证配置中的命令
 $ npm list -g @modelcontextprotocol/server-filesystem
-# Install if missing
+# 如果缺少，请安装
 $ npm install -g @modelcontextprotocol/server-filesystem
 ```
 
-## Metrics Dashboard
+## 指标仪表板
 
-The web dashboard provides real-time visualization of costs and budgets.
+Web 仪表板提供成本和预算的实时可视化。
 
-### Enabling Dashboard
+### 启用仪表板
 
 ```yaml
 dashboard:
-  enabled: true                    # Serves at /dashboard/
+  enabled: true                    # 在 /dashboard/ 提供
 ```
 
-### Accessing Dashboard
+### 访问仪表板
 
 ```
 http://localhost:8080/dashboard/
 ```
 
-### Dashboard Features
+### 仪表板功能
 
-1. **Cost Overview**
-   - Today's total cost
-   - Daily trend (last 30 days)
-   - Cost by agent (pie chart)
-   - Cost by model (bar chart)
+1. **成本概览**
+   - 今日总成本
+   - 每日趋势（最后 30 天）
+   - 按 Agent 的成本（饼图）
+   - 按模型的成本（柱状图）
 
-2. **Budget Monitoring**
-   - Budget status per agent
-   - Visual progress bars (0-100%)
-   - Remaining budget in USD
-   - Days until reset
+2. **预算监控**
+   - 每个 Agent 的预算状态
+   - 可视化进度条（0-100%）
+   - 剩余预算（美元）
+   - 重置前的天数
 
-3. **Real-Time Metrics**
-   - Current request rate
-   - Average response time
-   - Cache hit rate
-   - Token efficiency
+3. **实时指标**
+   - 当前请求率
+   - 平均响应时间
+   - 缓存命中率
+   - Token 效率
 
-4. **Alerts**
-   - Agents approaching budget limit
-   - Recent firewall blocks
-   - Failed requests
+4. **告警**
+   - 接近预算上限的 Agent
+   - 最近防火墙阻止
+   - 失败的请求
 
-### API Endpoints (for custom dashboards)
+### API 端点（用于自定义仪表板）
 
 ```bash
-# Get aggregated stats
+# 获取聚合统计
 curl http://localhost:8080/api/stats
 
-# Get per-agent stats
+# 获取按 Agent 的统计
 curl http://localhost:8080/api/agents
 
-# Get budget info
+# 获取预算信息
 curl http://localhost:8080/api/budgets
 
-# Get daily costs
+# 获取每日成本
 curl http://localhost:8080/api/costs/daily
 
-# Get recent logs
+# 获取最近日志
 curl http://localhost:8080/api/logs
 ```
 
-Example JSON response:
+示例 JSON 响应：
 
 ```json
 {
@@ -385,70 +385,70 @@ Example JSON response:
 }
 ```
 
-## Observability Pipeline
+## 可观测性管道
 
-### Real-World Monitoring Setup
+### 真实监控设置
 
 ```yaml
-# 1. Enable all observability features
+# 1. 启用所有可观测性功能
 tracing:
   enabled: true
-  sample_rate: 0.5              # Log 50% of requests
+  sample_rate: 0.5              # 记录 50% 的请求
 
 audit:
   enabled: true
-  content_log: false            # Don't log full bodies (privacy)
+  content_log: false            # 不记录完整正文（隐私）
 
 dashboard:
   enabled: true
 
-# 2. Set up periodic reviews
-# Morning:
-#   agix stats --period 1d      # Yesterday's costs
-#   agix trace list             # Check for slow requests
+# 2. 设置定期审查
+# 早晨：
+#   agix stats --period 1d      # 昨天的成本
+#   agix trace list             # 检查慢请求
 #
-# Weekly:
-#   agix audit list -n 1000     # Review security events
-#   agix stats --group-by agent # Agent cost breakdown
+# 每周：
+#   agix audit list -n 1000     # 审查安全事件
+#   agix stats --group-by agent # Agent 成本分析
 #
-# Monthly:
-#   agix export --format csv --period 2026-02  # Export for reporting
-#   agix doctor                 # Verify system health
+# 每月：
+#   agix export --format csv --period 2026-02  # 导出供报告
+#   agix doctor                 # 验证系统健康
 ```
 
-### Alerting Pattern
+### 告警模式
 
 ```bash
 #!/bin/bash
-# Run daily via cron
+# 通过 cron 每日运行
 
 ALERT_EMAIL="ops@example.com"
 
-# Check if any agent exceeded 80% of daily budget
+# 检查任何 Agent 是否超出每日预算的 80%
 HIGH_SPEND=$(agix budget | grep "%" | grep -E "[8-9][0-9]%|100%")
 
 if [ ! -z "$HIGH_SPEND" ]; then
-  echo "⚠️  High spending detected:" > /tmp/alert.txt
+  echo "⚠️  检测到高支出：" > /tmp/alert.txt
   echo "$HIGH_SPEND" >> /tmp/alert.txt
-  mail -s "agix: Budget Alert" $ALERT_EMAIL < /tmp/alert.txt
+  mail -s "agix：预算告警" $ALERT_EMAIL < /tmp/alert.txt
 fi
 
-# Check for firewall blocks
+# 检查防火墙阻止
 BLOCKS=$(agix audit list --type firewall_block -n 10)
 if [ ! -z "$BLOCKS" ]; then
-  echo "🚨 Firewall blocks detected:" > /tmp/alert.txt
+  echo "🚨 检测到防火墙阻止：" > /tmp/alert.txt
   echo "$BLOCKS" >> /tmp/alert.txt
-  mail -s "agix: Firewall Alert" $ALERT_EMAIL < /tmp/alert.txt
+  mail -s "agix：防火墙告警" $ALERT_EMAIL < /tmp/alert.txt
 fi
 ```
 
-## Best Practices
+## 最佳实践
 
-1. **Enable tracing for debugging** — Helps identify performance bottlenecks
-2. **Monitor firewall blocks** — Daily review of audit logs for suspicious activity
-3. **Run doctor before deployment** — Verify all dependencies and configs
-4. **Check dashboard daily** — Catch runaway spending early
-5. **Set up alerting** — Automated notifications for budget/security events
-6. **Sample traces in production** — Use `sample_rate: 0.1-0.5` to reduce disk usage
-7. **Retain audit logs** — Keep for 90+ days for compliance
-8. **Export monthly data** — CSV exports for finance/reporting
+1. **启用追踪进行调试** — 帮助识别性能瓶颈
+2. **监控防火墙阻止** — 每日审查审计日志以发现可疑活动
+3. **在部署前运行 doctor** — 验证所有依赖项和配置
+4. **每天查看仪表板** — 早期发现失控支出
+5. **设置告警** — 预算/安全事件的自动通知
+6. **在生产中采样追踪** — 使用 `sample_rate: 0.1-0.5` 来减少磁盘使用
+7. **保留审计日志** — 为合规性保留 90+ 天
+8. **月度数据导出** — 用于财务/报告的 CSV 导出

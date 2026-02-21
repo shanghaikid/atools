@@ -1,0 +1,21 @@
+{
+  "id": "STORY-35",
+  "title": "Translate all agix documentation guides to Chinese",
+  "description": "Translate remaining English documentation guides to Chinese to provide comprehensive Chinese language support. Currently cost-tracking.md, intelligence-optimization.md, index.md have been translated, but reliability-scale.md, advanced-features.md, observability.md, safety-control.md, and troubleshooting.md remain in English.",
+  "status": "done",
+  "branch": "feat/STORY-35-docs-translation-to-chinese",
+  "merge_commit": null,
+  "tasks": [
+    {"id": "T1", "title": "Translate reliability-scale.md to Chinese", "status": "completed"},
+    {"id": "T2", "title": "Translate advanced-features.md to Chinese", "status": "completed"},
+    {"id": "T3", "title": "Translate observability.md to Chinese", "status": "completed"},
+    {"id": "T4", "title": "Translate safety-control.md to Chinese", "status": "completed"},
+    {"id": "T5", "title": "Translate troubleshooting.md to Chinese", "status": "completed"}
+  ],
+  "audit_log": [
+    {"timestamp": "2026-02-21T14:30:00Z", "from": "backlog", "to": "ready", "reason": "User requested comprehensive Chinese translation of remaining English documentation guides to provide complete Chinese language support for agix users"},
+    {"timestamp": "2026-02-21T15:00:00Z", "from": "ready", "to": "implementing", "reason": "Feature branch created, starting translation of 5 English guides"},
+    {"timestamp": "2026-02-21T15:30:00Z", "from": "implementing", "to": "reviewing/testing", "reason": "All 5 guides translated: reliability-scale.md, advanced-features.md, observability.md, safety-control.md, troubleshooting.md. All content converted from English to Chinese to provide complete Chinese documentation support"},
+    {"timestamp": "2026-02-21T15:45:00Z", "from": "reviewing/testing", "to": "done", "reason": "All translations verified and complete. 5 guides now fully available in Chinese. Feature branch d9e9c90 merged to main via squash"}
+  ]
+}

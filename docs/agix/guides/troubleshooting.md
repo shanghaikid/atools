@@ -1,287 +1,287 @@
-# Troubleshooting & FAQs
+# 故障排查与常见问题
 
-## Common Issues
+## 常见问题
 
-### Agent Gets 429 Too Many Requests
+### Agent 获得 429 Too Many Requests
 
-**Symptom**: Agent's requests are being rejected with 429 status
+**症状**：Agent 的请求被拒绝，返回 429 状态
 
-**Possible causes**:
+**可能的原因**：
 
-1. **Budget exceeded**
+1. **预算已超出**
    ```bash
-   # Check budget status
+   # 检查预算状态
    agix budget
 
-   # Output shows agent over limit
-   # Solution: Increase budget or wait for reset
+   # 输出显示 Agent 超出限制
+   # 解决方案：增加预算或等待重置
    agix budget set agent-name -d 100.0
    ```
 
-2. **Rate limit exceeded**
+2. **频率限制已超出**
    ```yaml
-   # Check config
+   # 检查配置
    rate_limits:
      expensive-agent:
-       requests_per_minute: 10    # Agent hitting this limit
+       requests_per_minute: 10    # Agent 达到此限制
 
-   # Solution: Increase limit or implement backoff in agent
+   # 解决方案：增加限制或在 Agent 中实现退避
    ```
 
-3. **Firewall blocking**
+3. **防火墙阻止**
    ```bash
-   # Check firewall blocks
+   # 检查防火墙阻止
    agix audit list --type firewall_block
 
-   # Solution: Adjust firewall rules if legitimate requests are being blocked
+   # 解决方案：如果合法请求被阻止，调整防火墙规则
    ```
 
-**Quick fix**: Check in this order:
+**快速修复**：按此顺序检查：
 ```bash
-agix budget                        # 1. Budget exceeded?
-agix stats --agent agent-name      # 2. Usage pattern?
-agix audit list --agent agent-name # 3. Firewall blocks?
+agix budget                        # 1. 预算超出？
+agix stats --agent agent-name      # 2. 使用模式？
+agix audit list --agent agent-name # 3. 防火墙阻止？
 ```
 
 ---
 
-### High Cost Surprises
+### 高成本惊人增长
 
-**Symptom**: Unexpected cost spike in daily stats
+**症状**：每日统计中出现意外的成本峰值
 
-**Possible causes**:
+**可能的原因**：
 
-1. **Agent in infinite retry loop**
+1. **Agent 在无限重试循环中**
    ```bash
-   # Check request rate
+   # 检查请求率
    agix logs --tail --agent problematic-agent
-   # Notice: 100s of requests in seconds?
+   # 注意：几秒内有 100 个请求？
 
-   # Solution: Restart agent, set rate limit
+   # 解决方案：重启 Agent，设置频率限制
    agix rate_limits set agent -m 5 --hour 100
    ```
 
-2. **Premium model being used incorrectly**
+2. **高级模型被错误使用**
    ```bash
-   # Check model usage
+   # 检查模型使用
    agix stats --group-by model
 
-   # See gpt-4o being used for simple tasks?
-   # Solution: Enable smart routing to auto-downgrade
+   # 看到 gpt-4o 用于简单任务？
+   # 解决方案：启用智能路由来自动降级
    ```
 
-3. **Cache disabled (cache hits at 0%)**
+3. **缓存禁用（缓存命中率 0%）**
    ```bash
-   # Check cache hit rate
+   # 检查缓存命中率
    curl http://localhost:8080/api/stats
 
-   # cache_hit_rate: 0?
-   # Solution: Enable cache if appropriate for your workload
+   # cache_hit_rate：0？
+   # 解决方案：如果适合你的工作负载，启用缓存
    ```
 
-**Debugging**: Track cost progression
+**调试**：追踪成本进展
 ```bash
-# Get hourly cost trend
-agix stats --group-by day -p 1d    # Today so far
-agix logs -n 500 | head -100       # Recent requests
+# 获取每小时成本趋势
+agix stats --group-by day -p 1d    # 今天目前
+agix logs -n 500 | head -100       # 最近请求
 ```
 
 ---
 
-### API Key Errors
+### API 密钥错误
 
-**Symptom**: 401/403 Unauthorized from upstream provider
+**症状**：来自上游提供商的 401/403 未授权
 
-**Solution**:
+**解决方案**：
 ```bash
-# 1. Verify key is correct
+# 1. 验证密钥是否正确
 vim ~/.agix/config.yaml
-# Double-check: keys.openai, keys.anthropic, etc.
+# 仔细检查：keys.openai, keys.anthropic 等
 
-# 2. Run doctor to validate
+# 2. 运行 doctor 来验证
 agix doctor
-# Output will show which key is invalid
+# 输出将显示哪个密钥无效
 
-# 3. Check key permissions
-# OpenAI: key should have "read" and "write" permissions
-# Anthropic: key format should be "sk-ant-..."
+# 3. 检查密钥权限
+# OpenAI：密钥应具有 "read" 和 "write" 权限
+# Anthropic：密钥格式应为 "sk-ant-..."
 ```
 
-**Real example**:
+**真实示例**：
 ```bash
 $ agix doctor
 ...
-API Key Validation
-  ✗ OpenAI API key invalid (401)
-  ✓ Anthropic API key valid
-  ✓ DeepSeek API key valid
+API 密钥验证
+  ✗ OpenAI API 密钥无效（401）
+  ✓ Anthropic API 密钥有效
+  ✓ DeepSeek API 密钥有效
 
-Solution: Update keys.openai in config.yaml
+解决方案：在 config.yaml 中更新 keys.openai
 ```
 
 ---
 
-### Slow Responses
+### 响应缓慢
 
-**Symptom**: Requests taking >5 seconds to complete
+**症状**：请求耗时 >5 秒才能完成
 
-**Diagnosis**:
+**诊断**：
 ```bash
-# 1. Check request traces
+# 1. 检查请求追踪
 agix trace list | grep "Duration: [5-9][0-9][0-9][0-9]ms"
 
-# 2. View detailed trace
+# 2. 查看详细追踪
 agix trace trace-id-here
 
-# 3. Check which span is slow:
-#    - api.call > 3000ms → upstream provider is slow
-#    - firewall.scan > 1000ms → regex patterns too complex
-#    - store.write > 500ms → database slow
+# 3. 检查哪个 span 很慢：
+#    - api.call > 3000ms → 上游提供商很慢
+#    - firewall.scan > 1000ms → 正则表达式模式太复杂
+#    - store.write > 500ms → 数据库慢
 ```
 
-**Solutions by component**:
+**按组件的解决方案**：
 
-**If api.call is slow (>3s)**:
-- Upstream provider is slow
-- Check provider status page
-- Consider failover to different model/provider
+**如果 api.call 很慢（>3s）**：
+- 上游提供商很慢
+- 检查提供商状态页面
+- 考虑故障转移到不同的模型/提供商
 
-**If firewall.scan is slow (>1s)**:
-- Custom regex patterns inefficient
-- Simplify patterns or use "log" action for testing
-- Disable rules not in production use
+**如果 firewall.scan 很慢（>1s）**：
+- 自定义正则表达式模式效率低
+- 简化模式或对测试使用 "log" 操作
+- 禁用未在生产使用的规则
 
-**If store.write is slow (>500ms)**:
-- Database issue (SQLite lock or PostgreSQL slow)
-- For SQLite: restart agix to unlock
-- For PostgreSQL: check indexes
+**如果 store.write 很慢（>500ms）**：
+- 数据库问题（SQLite 锁定或 PostgreSQL 慢）
+- 对于 SQLite：重启 agix 来解锁
+- 对于 PostgreSQL：检查索引
 
 ---
 
-### Database Errors
+### 数据库错误
 
-**Symptom**: "database is locked" or connection timeouts
+**症状**："database is locked" 或连接超时
 
-**For SQLite**:
+**对于 SQLite**：
 ```bash
-# 1. Restart agix (clears lock)
+# 1. 重启 agix（清除锁定）
 pkill agix
 sleep 2
 agix start
 
-# 2. Check integrity
+# 2. 检查完整性
 agix doctor
-# Should show: "✓ Database integrity check passed"
+# 应显示："✓ 数据库完整性检查通过"
 
-# 3. If failed, rebuild
+# 3. 如果失败，重建
 cp ~/.agix/agix.db ~/.agix/agix.db.backup
 rm ~/.agix/agix.db
-agix start  # Creates new schema
+agix start  # 创建新模式
 ```
 
-**For PostgreSQL**:
+**对于 PostgreSQL**：
 ```bash
-# 1. Check connection
+# 1. 检查连接
 psql postgres://user:pass@host/agix -c "SELECT 1"
 
-# 2. Check for locks
+# 2. 检查锁定
 psql agix -c "SELECT * FROM pg_locks WHERE NOT granted;"
 
-# 3. Kill stuck connections
+# 3. 杀死卡住的连接
 psql agix -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = 'agix';"
 
-# 4. Restart agix
+# 4. 重启 agix
 pkill agix
 agix start
 ```
 
 ---
 
-### MCP Tools Not Working
+### MCP 工具不工作
 
-**Symptom**: Agent gets "tool not found" errors
+**症状**：Agent 获得 "tool not found" 错误
 
-**Diagnosis**:
+**诊断**：
 ```bash
-# 1. List available tools
+# 1. 列出可用工具
 agix tools list
 
-# 2. Check if tools are discovered
-# If empty: MCP server didn't start properly
+# 2. 检查工具是否被发现
+# 如果为空：MCP 服务器没有正确启动
 
-# 3. Check MCP server logs
+# 3. 检查 MCP 服务器日志
 agix doctor | grep "MCP Servers"
-# Should show: "✓ filesystem server started (pid: 12345)"
+# 应显示："✓ filesystem server started (pid: 12345)"
 
-# If failed, run doctor for details
+# 如果失败，运行 doctor 获取详情
 ```
 
-**Common MCP issues**:
+**常见 MCP 问题**：
 
-1. **npm package not installed**
+1. **npm 包未安装**
    ```bash
    npm install -g @modelcontextprotocol/server-filesystem
 
-   # Test command
+   # 测试命令
    npx -y @modelcontextprotocol/server-filesystem /tmp
-   # Should respond to initialize command
+   # 应该响应初始化命令
    ```
 
-2. **Tool access denied by config**
+2. **工具访问被配置拒绝**
    ```yaml
-   # Check agent tool access
+   # 检查 Agent 工具访问
    tools:
      agents:
        agent-name:
-         deny: ["tool_name"]  # Tool is in deny list!
+         deny: ["tool_name"]  # 工具在拒绝列表中！
 
-   # Remove from deny list or add to allow list
+   # 从拒绝列表中移除或添加到允许列表
    ```
 
-3. **Tool requires environment variable**
+3. **工具需要环境变量**
    ```yaml
    tools:
      servers:
        github:
          command: "npx"
          args: ["-y", "@modelcontextprotocol/server-github"]
-         env: ["GITHUB_TOKEN=ghp_xxx"]   # Missing or empty!
+         env: ["GITHUB_TOKEN=ghp_xxx"]   # 缺失或为空！
    ```
 
 ---
 
-### Firewall Blocking Legitimate Requests
+### 防火墙阻止合法请求
 
-**Symptom**: Valid requests being rejected with "firewall blocked"
+**症状**：有效请求被拒绝，显示 "firewall blocked"
 
-**Solution**:
+**解决方案**：
 ```bash
-# 1. Check what rule matched
+# 1. 检查哪个规则匹配
 agix audit list --type firewall_block -n 5
 
-# 2. Review the rule
+# 2. 审查规则
 vim ~/.agix/config.yaml
 
-# 3. Either:
-#    a) Make rule more specific (better regex)
-#    b) Change action from "block" to "warn" (for testing)
-#    c) Remove rule if false positives
+# 3. 要么：
+#    a) 使规则更具体（更好的正则表达式）
+#    b) 将操作从 "block" 改为 "warn"（用于测试）
+#    c) 如果误报过多，移除规则
 
 firewall:
   rules:
     - name: "problematic_rule"
       pattern: "..."
-      action: "warn"    # Changed from "block"
+      action: "warn"    # 从 "block" 改为
 ```
 
-**Example: Fixing over-aggressive injection detection**
+**示例：修复过度激进的注入检测**
 ```yaml
-# Too aggressive: blocks "system" anywhere
+# 太激进：任何地方都阻止 "system"
 - name: "injection_old"
   pattern: "system"
   action: "block"
 
-# Better: only block "system prompt" together
+# 更好：仅在一起时阻止 "system prompt"
 - name: "injection_new"
   pattern: "(?i)system\\s+prompt"
   action: "block"
@@ -289,53 +289,53 @@ firewall:
 
 ---
 
-## Frequently Asked Questions
+## 常见问题
 
-### Q: Can I route specific agents to specific models?
+### Q：我可以将特定 Agent 路由到特定模型吗？
 
-**A**: Use session overrides:
+**A**：使用会话覆盖：
 
 ```python
-# Create session for agent
+# 为 Agent 创建会话
 session = requests.post("http://localhost:8080/v1/sessions/agent-session", json={
     "agent_name": "my-agent",
-    "model": "gpt-4o-mini"  # Force this model
+    "model": "gpt-4o-mini"  # 强制此模型
 }).json()
 
-# Use session in requests
+# 在请求中使用会话
 client = OpenAI(
     base_url="http://localhost:8080/v1",
     extra_headers={"X-Session-ID": session["session_id"]}
 )
 ```
 
-Or use smart routing for automatic cost optimization.
+或使用智能路由进行自动成本优化。
 
 ---
 
-### Q: How do I reduce costs?
+### Q：我如何降低成本？
 
-**A**: In priority order:
+**A**：按优先级顺序：
 
-1. **Enable smart routing** (easiest, 20-30% savings)
+1. **启用智能路由**（最简单，节省 20-30%）
    ```yaml
    routing:
      enabled: true
-     # Simple requests → cheaper models
+     # 简单请求 → 更便宜的模型
    ```
 
-2. **Enable semantic caching** (20-40% savings if applicable)
+2. **启用语义缓存**（如果适用，节省 20-40%）
    ```yaml
    cache:
      enabled: true
    ```
 
-3. **Switch to cheaper models** (30-50% savings)
-   - gpt-4o-mini instead of gpt-4o
-   - claude-haiku instead of claude-opus
-   - deepseek-chat for general tasks
+3. **切换到更便宜的模型**（节省 30-50%）
+   - gpt-4o-mini 而不是 gpt-4o
+   - claude-haiku 而不是 claude-opus
+   - deepseek-chat 用于一般任务
 
-4. **Set rate limits** (prevent runaway costs)
+4. **设置频率限制**（防止失控成本）
    ```yaml
    rate_limits:
      agent: {requests_per_minute: 10}
@@ -343,9 +343,9 @@ Or use smart routing for automatic cost optimization.
 
 ---
 
-### Q: Can I use multiple LLM providers?
+### Q：我可以使用多个 LLM 提供商吗？
 
-**A**: Yes! Route models to different providers:
+**A**：是的！将模型路由到不同的提供商：
 
 ```yaml
 keys:
@@ -353,50 +353,50 @@ keys:
   anthropic: "sk-ant-..."
   deepseek: "sk-..."
 
-# Requests automatically route:
+# 请求自动路由：
 # - gpt-4o → OpenAI
 # - claude-opus-4-6 → Anthropic
 # - deepseek-chat → DeepSeek
 ```
 
-Use failover for automatic provider switching on errors.
+使用故障转移进行提供商出错时的自动切换。
 
 ---
 
-### Q: How do I export data for reporting?
+### Q：我如何导出数据用于报告？
 
-**A**:
+**A**：
 ```bash
-# CSV export (Excel-friendly)
+# CSV 导出（Excel 友好）
 agix export --format csv -o costs.csv
 
-# JSON export (for analysis)
+# JSON 导出（用于分析）
 agix export --format json -o costs.json
 
-# Specific period
+# 特定时期
 agix export --format csv --period 2026-01 -o january.csv
 
-# Open in spreadsheet
+# 在电子表格中打开
 open costs.csv
 ```
 
 ---
 
-### Q: Can I reset budgets at a custom time?
+### Q：我可以在自定义时间重置预算吗？
 
-**A**: Currently budgets reset at midnight UTC. Workaround:
+**A**：目前预算在 UTC 午夜重置。变通方案：
 
 ```python
-# Create session with custom model for part of day
+# 创建自定义模型会话用于部分一天
 import os
 from datetime import datetime, timedelta
 
-# If before noon UTC, use expensive model
-# If after noon UTC, use cheap model
+# 如果 UTC 之前的中午，使用高级模型
+# 如果 UTC 之后的中午，使用廉价模型
 hour = datetime.utcnow().hour
 model = "gpt-4o" if hour < 12 else "gpt-4o-mini"
 
-# Create session with TTL until reset
+# 创建会话，TTL 到重置
 session = requests.post("http://localhost:8080/v1/sessions/my-session", json={
     "agent_name": "my-agent",
     "model": model,
@@ -406,11 +406,11 @@ session = requests.post("http://localhost:8080/v1/sessions/my-session", json={
 
 ---
 
-### Q: How do I monitor agix in production?
+### Q：我如何在生产中监控 agix？
 
-**A**: Setup:
+**A**：设置：
 
-1. **Enable all observability**
+1. **启用所有可观测性**
    ```yaml
    tracing:
      enabled: true
@@ -423,94 +423,94 @@ session = requests.post("http://localhost:8080/v1/sessions/my-session", json={
      enabled: true
    ```
 
-2. **Check daily**
+2. **每天检查**
    ```bash
-   agix stats --period 1d       # Yesterday's costs
-   agix logs -n 100              # Recent requests
-   agix audit list -n 50         # Security events
+   agix stats --period 1d       # 昨天的成本
+   agix logs -n 100              # 最近请求
+   agix audit list -n 50         # 安全事件
    ```
 
-3. **Setup alerting**
+3. **设置告警**
    ```bash
-   # Via cron job that checks budget status
+   # 通过检查预算状态的 cron 作业
    agix budget | grep "%" | grep -E "[8-9][0-9]%|100%"
-   # If matches, send alert
+   # 如果匹配，发送告警
    ```
 
-4. **Weekly review**
+4. **每周审查**
    ```bash
-   agix stats --group-by agent  # By-agent breakdown
-   agix export --format csv     # For reporting
+   agix stats --group-by agent  # 按 Agent 分析
+   agix export --format csv     # 用于报告
    ```
 
 ---
 
-### Q: What's the maximum request rate?
+### Q：最大请求速率是多少？
 
-**A**: Depends on your hardware and database:
+**A**：取决于你的硬件和数据库：
 
-- **SQLite**: 100-500 requests/second (single server)
-- **PostgreSQL**: 1000+ requests/second (with proper indexing)
+- **SQLite**：100-500 请求/秒（单服务器）
+- **PostgreSQL**：1000+ 请求/秒（使用适当索引）
 
-To test:
+要测试：
 ```bash
-# Monitor request throughput
+# 监控请求吞吐量
 agix logs --tail
 
-# Check database performance
+# 检查数据库性能
 agix doctor
 ```
 
-For high volume, use PostgreSQL with connection pooling.
+对于大量使用，使用带连接池的 PostgreSQL。
 
 ---
 
-### Q: Can I backup my data?
+### Q：我可以备份我的数据吗？
 
-**A**:
+**A**：
 
-**SQLite**:
+**SQLite**：
 ```bash
-# Simple file copy
+# 简单文件复制
 cp ~/.agix/agix.db /backup/agix.db
 
-# Or SQL export
+# 或 SQL 导出
 sqlite3 ~/.agix/agix.db ".dump" > backup.sql
 ```
 
-**PostgreSQL**:
+**PostgreSQL**：
 ```bash
-# Backup
+# 备份
 pg_dump agix > backup.sql
 
-# Restore
+# 恢复
 psql agix < backup.sql
 ```
 
 ---
 
-### Q: How do I troubleshoot quality gate issues?
+### Q：我如何排查质量门控问题？
 
-**A**:
+**A**：
 ```bash
-# Check for quality warnings in logs
+# 检查日志中的质量警告
 agix logs -n 100 | grep -i "quality"
 
-# Check trace for failed responses
+# 检查追踪中的失败响应
 agix trace list | head -20
 
-# Look for on_empty/on_truncated/on_refusal triggers
-# Review response_policy to see if truncation is happening
+# 查找 on_empty/on_truncated/on_refusal 触发器
+# 审查 response_policy 查看是否发生截断
 ```
 
 ---
 
-## Support
+## 支持
 
-For additional help:
+如需更多帮助：
 
-- **GitHub Issues**: Report bugs or request features
-- **Documentation**: Check `/docs/agix/` for detailed guides
-- **Health Check**: Run `agix doctor` to diagnose issues
-- **Audit Trail**: Review `agix audit list` for security events
-- **Logs**: Check `agix logs --tail` for real-time activity
+- **GitHub Issues**：报告 bug 或请求功能
+- **文档**：查看 `/docs/agix/` 获取详细指南
+- **健康检查**：运行 `agix doctor` 诊断问题
+- **审计追踪**：查看 `agix audit list` 查看安全事件
+- **日志**：检查 `agix logs --tail` 查看实时活动
