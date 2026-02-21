@@ -6,9 +6,9 @@
     {
       "id": "STORY-35",
       "title": "Translate all agix documentation guides to Chinese",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-35-docs-translation-to-chinese",
-      "merge_commit": null
+      "merge_commit": "8372a22"
     },
     {
       "id": "STORY-34",

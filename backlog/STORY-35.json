@@ -4,7 +4,7 @@
   "description": "Translate remaining English documentation guides to Chinese to provide comprehensive Chinese language support. Currently cost-tracking.md, intelligence-optimization.md, index.md have been translated, but reliability-scale.md, advanced-features.md, observability.md, safety-control.md, and troubleshooting.md remain in English.",
   "status": "done",
   "branch": "feat/STORY-35-docs-translation-to-chinese",
-  "merge_commit": null,
+  "merge_commit": "8372a22",
   "tasks": [
     {"id": "T1", "title": "Translate reliability-scale.md to Chinese", "status": "completed"},
     {"id": "T2", "title": "Translate advanced-features.md to Chinese", "status": "completed"},
