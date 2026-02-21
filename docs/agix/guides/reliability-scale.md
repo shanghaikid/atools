@@ -300,22 +300,26 @@ webhooks:
 
 ### Sending a Webhook
 
+Payload file (`webhook-payload.json`):
+
+```json
+{
+  "title": "Sales Report",
+  "data": "Q1 revenue up 25%"
+}
+```
+
+Send the webhook with HMAC signature:
+
 ```bash
-# Calculate HMAC signature
 SECRET="webhook_secret"
-PAYLOAD='{"title": "Sales Report", "data": "Q1 revenue up 25%"}'
+PAYLOAD=$(cat webhook-payload.json)
 SIGNATURE=$(echo -n "$PAYLOAD" | openssl dgst -sha256 -hmac "$SECRET" -hex | sed 's/^.* //')
 
-# Send webhook
 curl -X POST http://localhost:8080/v1/webhooks/summarize-report \
   -H "Content-Type: application/json" \
   -H "X-Webhook-Signature: sha256=$SIGNATURE" \
   -d "$PAYLOAD"
-
-# Response includes LLM output
-# {
-#   "result": "• Q1 sales exceeded targets\n• Revenue grew 25% YoY\n• Margins improved 3%"
-# }
 ```
 
 ### Real-World Example: Content Processing Pipeline
@@ -334,12 +338,7 @@ webhooks:
         Feedback:
         {{.Payload}}
 
-        Respond as JSON:
-        {
-          "sentiment": "...",
-          "topics": [...],
-          "suggested_response": "..."
-        }
+        Respond as JSON with keys: sentiment, topics, suggested_response
 
       callback_url: "https://api.example.com/feedback/processed"
 
