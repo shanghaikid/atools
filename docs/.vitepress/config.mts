@@ -36,7 +36,17 @@ export default defineConfig({
             { text: '🔒 安全与控制', link: '/agix/guides/safety-control' },
             { text: '📊 可观测性', link: '/agix/guides/observability' },
             { text: '🚀 可靠性与扩展', link: '/agix/guides/reliability-scale' },
-            { text: '⚙️ 高级功能', link: '/agix/guides/advanced-features' },
+            {
+              text: '⚙️ 高级功能',
+              collapsed: false,
+              items: [
+                { text: '概览', link: '/agix/guides/advanced/' },
+                { text: '系统提示词注入', link: '/agix/guides/advanced/prompt-injection' },
+                { text: 'MCP 工具包', link: '/agix/guides/advanced/mcp-bundle' },
+                { text: 'PostgreSQL 后端', link: '/agix/guides/advanced/postgres' },
+                { text: 'DeepSeek 提供商', link: '/agix/guides/advanced/deepseek' },
+              ],
+            },
             { text: '🔧 故障排查与FAQ', link: '/agix/guides/troubleshooting' },
           ],
         },

@@ -1,0 +1,25 @@
+{
+  "id": "STORY-45",
+  "title": "拆分 advanced-features.md 为 guides/advanced/ 子目录多页",
+  "status": "implementing",
+  "branch": "feat/STORY-45-docs-advanced-split",
+  "created_at": "2026-02-22",
+  "description": "将 docs/agix/guides/advanced-features.md 拆分为 guides/advanced/ 子目录下的独立页面，每个高级功能一个文件。同时更新侧边栏为二级嵌套结构。",
+  "tasks": [
+    { "id": 1, "desc": "创建 docs/agix/guides/advanced/index.md（概述 + 功能导航）", "done": false },
+    { "id": 2, "desc": "创建 prompt-injection.md", "done": false },
+    { "id": 3, "desc": "创建 mcp-bundle.md", "done": false },
+    { "id": 4, "desc": "创建 postgres.md", "done": false },
+    { "id": 5, "desc": "创建 deepseek.md", "done": false },
+    { "id": 6, "desc": "删除原 advanced-features.md", "done": false },
+    { "id": 7, "desc": "更新 config.mts 侧边栏为二级嵌套", "done": false }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-22T03:00:00Z",
+      "from_status": null,
+      "to_status": "implementing",
+      "reason": "用户要求将 advanced-features.md 拆分为子目录多页，采用方法2（子目录+独立文件）"
+    }
+  ]
+}
