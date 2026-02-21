@@ -1,8 +1,15 @@
 {
   "project": "agent-platform-tools",
   "current_sprint": 1,
-  "last_story_id": 33,
+  "last_story_id": 34,
   "stories": [
+    {
+      "id": "STORY-34",
+      "title": "Comprehensive agix documentation guides",
+      "status": "done",
+      "branch": "feat/STORY-34-agix-docs-guides",
+      "merge_commit": "05b25e7"
+    },
     {
       "id": "STORY-1",
       "title": "Optimize ainit slash command to use shell script instead of per-file LLM tool calls",

@@ -1,0 +1,22 @@
+{
+  "id": "STORY-34",
+  "title": "Comprehensive agix documentation guides",
+  "description": "Create detailed how-to guides for agix features to help users understand configuration, usage patterns, and best practices. Organize guides by feature category with real-world examples, troubleshooting, and common patterns.",
+  "status": "done",
+  "branch": "feat/STORY-34-agix-docs-guides",
+  "merge_commit": "05b25e7",
+  "tasks": [
+    {"id": "T1", "title": "Create Cost Tracking & Budget guide (examples, cost calculation, monitoring)", "status": "completed"},
+    {"id": "T2", "title": "Create Intelligence & Optimization guide (smart routing, semantic cache, context compression, A/B testing)", "status": "completed"},
+    {"id": "T3", "title": "Create Safety & Control guide (firewall, response policy, quality gate, session overrides)", "status": "completed"},
+    {"id": "T4", "title": "Create Observability guide (tracing, audit logging, doctor checks, dashboard)", "status": "completed"},
+    {"id": "T5", "title": "Create Reliability & Scale guide (failover chains, rate limiting, alerts, webhooks)", "status": "completed"},
+    {"id": "T6", "title": "Create Advanced Features guide (prompt injection, tool bundles, PostgreSQL backend)", "status": "completed"},
+    {"id": "T7", "title": "Create Troubleshooting and FAQs page with common issues and solutions", "status": "completed"}
+  ],
+  "audit_log": [
+    {"timestamp": "2026-02-21T12:00:00Z", "from": "backlog", "to": "ready", "reason": "User requested comprehensive how-to guides for agix features to complement the updated README and help users understand configuration and usage patterns"},
+    {"timestamp": "2026-02-21T12:30:00Z", "from": "ready", "to": "implementing", "reason": "Feature branch created, starting comprehensive guides"},
+    {"timestamp": "2026-02-21T13:00:00Z", "from": "implementing", "to": "done", "reason": "All 7 guides completed: cost-tracking, intelligence-optimization, safety-control, observability, reliability-scale, advanced-features, troubleshooting. Plus guides index. Total 3087 lines of comprehensive documentation with real-world examples. Feature branch merged (05b25e7)"}
+  ]
+}
