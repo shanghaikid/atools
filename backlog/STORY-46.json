@@ -1,7 +1,8 @@
 {
   "id": "STORY-46",
   "title": "拆分 cli.md 为 cli/ 子目录多页并更新侧边栏",
-  "status": "implementing",
+  "status": "done",
+  "merge_commit": "4620f96",
   "branch": "feat/STORY-46-docs-cli-split",
   "created_at": "2026-02-22",
   "description": "当前 docs/agix/cli.md 是单页文档，随着命令增多内容过长。拆分为 docs/agix/cli/ 子目录，每组命令独立成页，并在 VitePress 侧边栏中配置可折叠的 CLI 子菜单。",
@@ -24,6 +25,12 @@
       "from_status": null,
       "to_status": "implementing",
       "reason": "用户要求将单页 cli.md 拆分为子菜单结构，直接进入实现阶段"
+    },
+    {
+      "timestamp": "2026-02-22T05:00:00Z",
+      "from_status": "implementing",
+      "to_status": "done",
+      "reason": "9 个子页面全部创建，config.mts 侧边栏更新完成，squash merge 到 main"
     }
   ]
 }

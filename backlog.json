@@ -6,9 +6,9 @@
     {
       "id": "STORY-46",
       "title": "拆分 cli.md 为 cli/ 子目录多页并更新侧边栏",
-      "status": "implementing",
+      "status": "done",
       "branch": "feat/STORY-46-docs-cli-split",
-      "merge_commit": null
+      "merge_commit": "4620f96"
     },
     {
       "id": "STORY-45",
