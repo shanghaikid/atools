@@ -68,7 +68,13 @@ tools/agix/
 │   ├── budget.go                      # `agix budget` - manage budgets
 │   ├── export.go                      # `agix export` - CSV/JSON
 │   ├── tools.go                       # `agix tools list` - MCP tools
-│   └── doctor.go                      # `agix doctor` - health check
+│   ├── doctor.go                      # `agix doctor` - health check
+│   ├── audit.go                       # `agix audit list` - security events
+│   ├── bundle.go                      # `agix bundle` - MCP bundles
+│   ├── experiment.go                  # `agix experiment` - A/B tests
+│   ├── session.go                     # `agix session` - config overrides
+│   ├── trace.go                       # `agix trace` - request traces
+│   └── webhook.go                     # `agix webhook` - generic webhooks
 ├── internal/
 │   ├── config/
 │   │   ├── config.go                  # YAML config read/write
@@ -92,9 +98,60 @@ tools/agix/
 │   ├── doctor/
 │   │   ├── doctor.go                  # Health check runner + checkers
 │   │   └── doctor_test.go
-│   └── ui/
-│       ├── color.go                   # Terminal color utilities
-│       └── color_test.go
+│   ├── ui/
+│   │   ├── color.go                   # Terminal color utilities
+│   │   └── color_test.go
+│   ├── alert/
+│   │   ├── alert.go                   # Budget alert manager
+│   │   └── alert_test.go
+│   ├── audit/
+│   │   ├── audit.go                   # Security event logging
+│   │   └── audit_test.go
+│   ├── bundle/
+│   │   ├── bundle.go                  # MCP server bundles
+│   │   └── bundle_test.go
+│   ├── cache/
+│   │   ├── cache.go                   # Semantic response caching
+│   │   └── cache_test.go
+│   ├── compressor/
+│   │   ├── compressor.go              # Context window compression
+│   │   └── compressor_test.go
+│   ├── dashboard/
+│   │   ├── dashboard.go               # Web UI + API handlers
+│   │   └── dashboard_test.go
+│   ├── experiment/
+│   │   ├── experiment.go              # A/B testing (traffic splitting)
+│   │   └── experiment_test.go
+│   ├── failover/
+│   │   ├── failover.go                # Multi-provider fallback chains
+│   │   └── failover_test.go
+│   ├── firewall/
+│   │   ├── firewall.go                # Prompt injection detection
+│   │   └── firewall_test.go
+│   ├── promptinject/
+│   │   ├── promptinject.go            # System prompt injection
+│   │   └── promptinject_test.go
+│   ├── qualitygate/
+│   │   ├── qualitygate.go             # Response quality checks
+│   │   └── qualitygate_test.go
+│   ├── ratelimit/
+│   │   ├── ratelimit.go               # Per-agent rate limiting
+│   │   └── ratelimit_test.go
+│   ├── responsepolicy/
+│   │   ├── responsepolicy.go          # Response post-processing
+│   │   └── responsepolicy_test.go
+│   ├── router/
+│   │   ├── router.go                  # Smart model routing
+│   │   └── router_test.go
+│   ├── session/
+│   │   ├── session.go                 # Session config overrides
+│   │   └── session_test.go
+│   ├── trace/
+│   │   ├── trace.go                   # Request tracing + spans
+│   │   └── trace_test.go
+│   ├── webhook/
+│   │   ├── webhook.go                 # Generic webhook handler
+│   │   └── webhook_test.go
 ```
 
 ## Tech stack
@@ -254,26 +311,133 @@ The proxy communicates with MCP servers via stdio JSON-RPC 2.0:
 ## CLI commands
 
 ```bash
+# Core
 agix init                          # Create config with defaults
 agix start [--port 8080]           # Start proxy
 agix doctor                        # Check config and dependencies
+
+# Statistics
 agix stats                         # Overall stats (today)
-agix stats --by agent              # Per-agent breakdown
-agix stats --by model              # Per-model breakdown
-agix stats --by day                # Daily costs
+agix stats --group-by agent        # Per-agent breakdown
+agix stats --group-by model        # Per-model breakdown
+agix stats --group-by day          # Daily costs
 agix stats --period 2026-01        # Specific month
-agix logs                          # Recent 50 requests
+
+# Logs
+agix logs                          # Recent 20 requests
 agix logs --tail                   # Live tail (poll 500ms)
 agix logs --agent code-reviewer    # Filter by agent
 agix logs -n 100                   # Last 100 requests
+
+# Budget
 agix budget list                   # Show all budgets
 agix budget set <agent> [flags]    # Set budget
 agix budget remove <agent>         # Remove budget
+
+# Export
 agix export --format csv           # Export CSV
 agix export --format json          # Export JSON
 agix export --period 2026-01       # Specific month
+
+# Tools
 agix tools list                    # List all MCP tools
+agix bundle list                   # List MCP bundles
+agix bundle install <name>         # Install a bundle
+agix bundle remove <name>          # Remove a bundle
+
+# Observability
+agix audit list                    # Security events
+agix audit list --type tool_call   # Filter by type
+agix trace list                    # Recent request traces
+agix trace <trace-id>              # Show detailed trace
+agix experiment list               # List A/B tests
+agix experiment check <agent> <model>  # Check variant assignment
+
+# Session & Webhooks
+agix session list                  # Active session overrides
+agix session clean                 # Clean expired overrides
+agix webhook list                  # Configured webhooks
+agix webhook history               # Webhook execution history
 ```
+
+## HTTP API Reference
+
+### Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v1/chat/completions` | POST | Proxied LLM chat completions (OpenAI-compatible) |
+| `/v1/models` | GET | List available models and pricing |
+| `/v1/sessions/{id}` | GET/POST | Get/set session config overrides |
+| `/v1/webhooks/{name}` | POST | Receive webhook (HMAC-SHA256 verified) |
+| `/health` | GET | Health check endpoint |
+| `/dashboard/` | GET | Web dashboard (if enabled) |
+| `/api/stats` | GET | Aggregated usage statistics |
+| `/api/agents` | GET | Per-agent statistics |
+| `/api/budgets` | GET | Budget info and current spend |
+| `/api/costs/daily` | GET | Daily costs (last 30 days) |
+| `/api/logs` | GET | Recent request logs |
+
+### Request headers
+
+- `X-Agent-Name` — agent identifier (enables per-agent tracking, budgets, tool access)
+- `X-Session-ID` — session ID for per-session config overrides
+- `X-Webhook-Signature` — HMAC-SHA256 signature for webhook verification (format: `sha256=HEX`)
+
+### Response headers
+
+- `X-Cost-USD` — calculated cost for this request
+- `X-Input-Tokens` — prompt tokens used
+- `X-Output-Tokens` — completion tokens generated
+- `X-Trace-ID` — request trace ID for observability
+- `X-Cache` — "HIT" if response from semantic cache, "MISS" otherwise
+- `X-Firewall-Warning` — warnings from prompt firewall (if any matched rules)
+- `X-Quality-Warning` — quality gate issues (empty response, truncated, refusal)
+- `X-Response-Policy` — redaction rules applied (e.g., "email_mask, truncated")
+- `Retry-After` — seconds to wait if rate limited (429 response code)
+
+### Status codes
+
+- `200` — request processed successfully
+- `429` — rate limited or budget exceeded (check `Retry-After` header)
+- `500` — upstream provider error or server error
+- `503` — database error (fail-open, request still forwarded)
+
+## Health checks (agix doctor)
+
+The `agix doctor` command performs comprehensive health checks to verify the gateway is configured and ready:
+
+**Check: Config File Permissions**
+- Verifies config file has restrictive permissions (0600: owner read/write only)
+- Warns if readable by group or others (contains sensitive API keys)
+- Pass: permissions OK, Warn: overly permissive, Fail: never (warning-only)
+
+**Check: API Key Validity**
+- Makes HTTPS requests to each provider's endpoint with configured API keys
+- Tests OpenAI, Anthropic, and DeepSeek providers
+- Uses correct auth headers: `Authorization: Bearer {key}` (OpenAI/DeepSeek), `x-api-key` header (Anthropic)
+- Pass: all configured keys valid, Warn: no keys configured, Fail: invalid keys (401/403)
+
+**Check: Budget Configuration**
+- Validates budget rules make logical sense
+- Ensures daily limit ≤ monthly limit
+- Ensures alert_at_percent is in range [1, 100]
+- Pass: config valid, Warn: inconsistencies detected, Fail: never (warning-only)
+
+**Check: Firewall Rules**
+- Compiles each custom regex pattern (catches syntax errors)
+- Validates action field is one of: "block", "warn", "log"
+- Pass: all rules valid, Fail: invalid regex or unknown action
+
+**Check: Database Connectivity & Integrity**
+- Auto-detects database type (SQLite vs PostgreSQL)
+- For SQLite: checks file exists, runs `PRAGMA integrity_check`, verifies result is "ok"
+- For PostgreSQL: opens connection (5-second timeout), runs `SELECT version()`, verifies success
+- Pass: database healthy, Warn: SQLite file doesn't exist yet (will be created), Fail: connection/integrity issues
+
+**Exit code**
+- `0` if all checks pass
+- `N` (count of failed checks) if any checks fail
 
 ## User integration
 
@@ -350,11 +514,23 @@ Versioned model names (e.g., `gpt-4o-2024-08-06`) are matched via longest-prefix
 - **Extensibility**: add new providers by adding a case to `buildUpstreamRequest` and entries to the pricing table
 - **NO_COLOR support**: respects `NO_COLOR` env var for CI/pipeline environments
 
-## Roadmap (not yet implemented)
+## Implemented features
 
-- Webhook alerts when budget thresholds are hit
-- Web dashboard (optional, serve from the same binary)
-- Prompt caching stats
-- Multi-provider failover
-- Rate limiting per agent
-- Request/response content logging (opt-in, for debugging)
+All planned features are now implemented:
+- ✅ Budget alert webhooks (via alert package)
+- ✅ Web dashboard (via dashboard package, enabled in config)
+- ✅ Semantic response caching (via cache package)
+- ✅ Multi-provider failover with fallback chains (via failover package)
+- ✅ Per-agent rate limiting (via ratelimit package)
+- ✅ Audit logging with optional content capture (via audit package)
+- ✅ Prompt firewall injection detection (via firewall package)
+- ✅ Smart model routing by request complexity (via router package)
+- ✅ Context compression for long conversations (via compressor package)
+- ✅ A/B testing with traffic splitting (via experiment package)
+- ✅ Response policy with redaction/truncation (via responsepolicy package)
+- ✅ Quality gate for response validation (via qualitygate package)
+- ✅ Request tracing and observability spans (via trace package)
+- ✅ Session-level config overrides (via session package)
+- ✅ Generic webhook handling (via webhook package)
+- ✅ System prompt injection (via promptinject package)
+- ✅ MCP tool bundles (via bundle package)
