@@ -1,0 +1,29 @@
+{
+  "id": "STORY-46",
+  "title": "拆分 cli.md 为 cli/ 子目录多页并更新侧边栏",
+  "status": "implementing",
+  "branch": "feat/STORY-46-docs-cli-split",
+  "created_at": "2026-02-22",
+  "description": "当前 docs/agix/cli.md 是单页文档，随着命令增多内容过长。拆分为 docs/agix/cli/ 子目录，每组命令独立成页，并在 VitePress 侧边栏中配置可折叠的 CLI 子菜单。",
+  "tasks": [
+    { "id": 1, "desc": "创建 docs/agix/cli/index.md（概览 + 速查表）", "done": false },
+    { "id": 2, "desc": "创建 docs/agix/cli/init-start.md（init、start）", "done": false },
+    { "id": 3, "desc": "创建 docs/agix/cli/stats-logs.md（stats、logs、export）", "done": false },
+    { "id": 4, "desc": "创建 docs/agix/cli/budget.md（budget）", "done": false },
+    { "id": 5, "desc": "创建 docs/agix/cli/tools-bundle.md（tools、bundle）", "done": false },
+    { "id": 6, "desc": "创建 docs/agix/cli/doctor.md（doctor 完整文档）", "done": false },
+    { "id": 7, "desc": "创建 docs/agix/cli/trace.md（trace 完整文档）", "done": false },
+    { "id": 8, "desc": "创建 docs/agix/cli/experiment.md（experiment 完整文档）", "done": false },
+    { "id": 9, "desc": "创建 docs/agix/cli/advanced.md（audit、session、webhook）", "done": false },
+    { "id": 10, "desc": "删除 docs/agix/cli.md", "done": false },
+    { "id": 11, "desc": "更新 config.mts 侧边栏为可折叠 CLI 子菜单", "done": false }
+  ],
+  "audit_log": [
+    {
+      "timestamp": "2026-02-22T04:00:00Z",
+      "from_status": null,
+      "to_status": "implementing",
+      "reason": "用户要求将单页 cli.md 拆分为子菜单结构，直接进入实现阶段"
+    }
+  ]
+}
