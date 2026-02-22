@@ -107,7 +107,7 @@ if $DRY_RUN; then
   echo "  [dry-run] MKDIR backlog/"
 else
   if [ ! -f backlog.json ]; then
-    printf '{"project": "%s", "current_sprint": 1, "last_story_id": 0, "stories": []}\n' "$PROJECT_NAME" > backlog.json
+    printf '{"project": "%s", "current_sprint": 1, "last_story_id": 0, "last_epic_id": 0, "epics": [], "stories": []}\n' "$PROJECT_NAME" > backlog.json
     echo "  backlog.json (created)"
   else
     echo "  backlog.json (already exists, skipped)"

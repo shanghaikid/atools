@@ -45,6 +45,11 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Println("  ~/.claude/commands/ainit.md")
+	if err := inst.InstallFile("templates/commands/plan.md", filepath.Join(cmdDir, "plan.md")); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("  ~/.claude/commands/plan.md")
 
 	// 2. Install template files
 	templateDir := filepath.Join(claudeDir, "ainit-templates")

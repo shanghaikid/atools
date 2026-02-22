@@ -1,5 +1,14 @@
 Initialize this project for multi-agent collaboration. Follow these steps exactly:
 
+## Step 0 (Optional): Product Planning
+
+**For new products without a clear feature backlog**, run `/plan` first to:
+- Define the product vision, target users, and success metrics
+- Organize work into Epics and Phases
+- Generate `vision.md` and an initial set of Stories
+
+Skip this step if you already know exactly what Stories to implement, or if this is an existing project.
+
 ## Step 1: Run the setup script
 
 Run `bash ~/.claude/ainit-templates/ainit-setup.sh` in the project root. Supports `--dry-run` (preview without changes). Templates are always refreshed; user data (backlog.json, CLAUDE.md) is protected. This script automatically:
@@ -67,4 +76,6 @@ Edit `.claude/workflow.md`:
 Print a summary of:
 1. Files installed by the setup script
 2. Customizations made (which agents were edited, what was changed)
-3. The project is now ready for multi-agent collaboration. Users can start by saying: "Use the team-lead agent to implement XXX feature".
+3. If `vision.md` exists: show the product vision summary (Problem Statement + Phases)
+4. If `backlog.json` has epics: show the Epic list (id, title, phase, status)
+5. The project is now ready for multi-agent collaboration. Users can start by saying: "Use the team-lead agent to implement XXX feature".

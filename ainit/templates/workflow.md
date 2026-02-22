@@ -19,6 +19,14 @@ backlog/
 ## Architecture
 
 ```
+── Planning Layer (optional, run once per product / phase) ──
+/plan slash command
+  │
+  ├─▶ product-manager (opus) ──▶ vision.md + EPIC-N + initial STORY-N
+  │
+  └─ backlog.json: last_epic_id, epics[]
+
+── Execution Layer (per story) ──
 User requirement
   │
   ▼
@@ -92,6 +100,38 @@ Story (user requirement)
 - **Story** = user-facing requirement, has its own feature branch
 - **Task** = implementation-side breakdown, inline in the story file, has assignee and status
 - architect creates tasks, coder/tester update task status
+
+## Epic Lifecycle
+
+Epics are created by the `/plan` command (or manually via `node .claude/backlog.mjs create-epic`). They group related Stories within a Phase.
+
+### Epic Status Flow
+
+```
+planned → active → done
+```
+
+| Status | Meaning | When |
+|--------|---------|------|
+| planned | Epic defined, Stories not yet started | After `/plan` runs |
+| active | At least one Story is implementing | team-lead sets when first Story starts |
+| done | All Stories merged | team-lead sets when last Story in Epic is done |
+
+### Commands
+
+```bash
+# Create an epic
+node .claude/backlog.mjs create-epic --title "User Auth" --desc "Login, register, sessions" --phase 1
+
+# List all epics
+node .claude/backlog.mjs list-epics
+
+# Update epic status
+node .claude/backlog.mjs epic-status EPIC-1 active
+
+# Create a story linked to an epic
+node .claude/backlog.mjs create --title "Login page" --desc "..." --epic EPIC-1 --phase 1
+```
 
 ## Story Lifecycle
 
