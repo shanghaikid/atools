@@ -6,7 +6,7 @@
   "sprint": 1,
   "status": "done",
   "branch": "feat/STORY-3-product-planning-layer",
-  "merge_commit": null,
+  "merge_commit": "55e8e0c",
   "acceptance_criteria": [
     "make build compiles cleanly",
     "./ainit --dry-run shows ~/.claude/commands/plan.md in output",

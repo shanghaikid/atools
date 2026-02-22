@@ -6,9 +6,9 @@
     {
       "id": "STORY-3",
       "title": "Product Planning Layer (Vision / Epics / Phases)",
-      "status": "reviewing",
+      "status": "done",
       "branch": "feat/STORY-3-product-planning-layer",
-      "merge_commit": null
+      "merge_commit": "55e8e0c"
     },
     {
       "id": "STORY-1",
