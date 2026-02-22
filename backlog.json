@@ -62,9 +62,9 @@
     {
       "id": "STORY-38",
       "title": "配置参考文档完善（默认值、热重载、环境变量优先级、验证规则）",
-      "status": "reviewing/testing",
+      "status": "done",
       "branch": "feat/STORY-38-docs-config-reference",
-      "merge_commit": null
+      "merge_commit": "372354a"
     },
     {
       "id": "STORY-37",

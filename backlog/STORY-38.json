@@ -1,7 +1,7 @@
 {
   "id": "STORY-38",
   "title": "配置参考文档完善（默认值、热重载、环境变量优先级、验证规则）",
-  "status": "reviewing/testing",
+  "status": "done",
   "branch": "feat/STORY-38-docs-config-reference",
   "created_at": "2026-02-22",
   "description": "现有 docs/agix/config.md 缺少：所有可选字段的默认值；配置热重载行为（是否需要重启 server）；配置优先级（config 文件 vs 环境变量 vs CLI flags）；各字段的验证规则和错误提示；性能调优相关配置项说明。",
@@ -36,6 +36,12 @@
       "from_status": "implementing",
       "to_status": "reviewing/testing",
       "reason": "完成 docs/agix/config.md 更新：所有字段补充默认值列和验证规则列（含 doctor 检查行为）；新增「配置优先级与热重载」章节，涵盖优先级说明、无热重载说明、文件权限表、agix doctor 检查表"
+    },
+    {
+      "timestamp": "2026-02-22T09:10:00Z",
+      "from_status": "reviewing/testing",
+      "to_status": "done",
+      "reason": "文档内容准确反映代码实现，无遗漏字段，squash merge 至 main（merge_commit: 372354a），feature branch 已删除"
     }
   ]
 }
