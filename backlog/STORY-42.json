@@ -3,6 +3,7 @@
   "title": "数据库操作文档（SQLite→PostgreSQL 迁移、多实例、备份恢复）",
   "status": "done",
   "branch": "feat/STORY-42-docs-database-operations",
+  "merge_commit": "a077948",
   "created_at": "2026-02-22",
   "description": "现有文档仅简单提到 PostgreSQL 支持，缺少：SQLite 迁移到 PostgreSQL 的完整步骤；多实例 agix 共享 PostgreSQL 的配置方法；数据库备份和恢复操作；数据模型和 Schema 说明；常用查询模式（按 Agent 查成本等）。",
   "tasks": [
