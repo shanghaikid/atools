@@ -38,6 +38,7 @@ export default defineConfig({
               ],
             },
             { text: '配置文件', link: '/agix/config' },
+            { text: '模型与定价', link: '/agix/models' },
             { text: 'HTTP API 参考', link: '/agix/api-reference' },
           ],
         },

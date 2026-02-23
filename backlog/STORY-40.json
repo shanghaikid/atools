@@ -1,18 +1,18 @@
 {
   "id": "STORY-40",
   "title": "模型与定价完整文档（定价表、自定义模型、DeepSeek 最新模型）",
-  "status": "ready",
+  "status": "done",
   "branch": "feat/STORY-40-docs-models-pricing",
   "created_at": "2026-02-22",
   "description": "现有文档缺少：完整的支持模型定价表（含最新 DeepSeek 和 Anthropic 模型）；如何添加自定义模型和自定义定价；模型名称前缀匹配规则的详细说明；各模型能力对比和选型建议。",
   "tasks": [
-    { "id": 1, "desc": "阅读 agix pricing 实现，梳理所有内置模型和定价数据", "done": false },
-    { "id": 2, "desc": "阅读自定义模型添加的配置方式", "done": false },
-    { "id": 3, "desc": "在 docs/agix/ 下新建 models.md（或更新现有文件）", "done": false },
-    { "id": 4, "desc": "编写完整模型定价表（OpenAI、Anthropic、DeepSeek 各系列）", "done": false },
-    { "id": 5, "desc": "编写「添加自定义模型/定价」章节", "done": false },
-    { "id": 6, "desc": "编写「模型名称匹配规则」章节（前缀匹配逻辑说明）", "done": false },
-    { "id": 7, "desc": "更新侧边栏配置", "done": false }
+    { "id": 1, "desc": "阅读 agix pricing 实现，梳理所有内置模型和定价数据", "done": true },
+    { "id": 2, "desc": "阅读自定义模型添加的配置方式", "done": true },
+    { "id": 3, "desc": "在 docs/agix/ 下新建 models.md（或更新现有文件）", "done": true },
+    { "id": 4, "desc": "编写完整模型定价表（OpenAI、Anthropic、DeepSeek 各系列）", "done": true },
+    { "id": 5, "desc": "编写「添加自定义模型/定价」章节", "done": true },
+    { "id": 6, "desc": "编写「模型名称匹配规则」章节（前缀匹配逻辑说明）", "done": true },
+    { "id": 7, "desc": "更新侧边栏配置", "done": true }
   ],
   "audit_log": [
     {
@@ -20,6 +20,24 @@
       "from_status": null,
       "to_status": "ready",
       "reason": "文档缺口分析：完整定价表和自定义模型配置文档缺失"
+    },
+    {
+      "timestamp": "2026-02-23T00:00:00Z",
+      "from_status": "ready",
+      "to_status": "implementing",
+      "reason": "已阅读 pricing/models.go 和 config.go，掌握所有内置模型定价数据和自定义模型机制，开始编写文档"
+    },
+    {
+      "timestamp": "2026-02-23T01:00:00Z",
+      "from_status": "implementing",
+      "to_status": "reviewing/testing",
+      "reason": "创建 docs/agix/models.md（完整定价表、前缀匹配规则、自定义模型、选型建议），更新侧边栏"
+    },
+    {
+      "timestamp": "2026-02-23T02:00:00Z",
+      "from_status": "reviewing/testing",
+      "to_status": "done",
+      "reason": "文档内容完整，与源码 pricing/models.go 一致，自审通过"
     }
   ]
 }
