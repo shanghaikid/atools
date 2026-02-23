@@ -48,9 +48,9 @@
     {
       "id": "STORY-40",
       "title": "模型与定价完整文档（定价表、自定义模型、DeepSeek 最新模型）",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-40-docs-models-pricing",
-      "merge_commit": null
+      "merge_commit": "1597d2f"
     },
     {
       "id": "STORY-39",
