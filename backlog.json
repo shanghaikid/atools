@@ -41,9 +41,9 @@
     {
       "id": "STORY-41",
       "title": "多语言集成示例文档（Node.js、Go、LangChain、LlamaIndex）",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-41-docs-integration-examples",
-      "merge_commit": null
+      "merge_commit": "d3e509a"
     },
     {
       "id": "STORY-40",
