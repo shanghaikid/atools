@@ -1,8 +1,15 @@
 {
   "project": "ainit",
   "current_sprint": 1,
-  "last_story_id": 2,
+  "last_story_id": 3,
   "stories": [
+    {
+      "id": "STORY-3",
+      "title": "Product Planning Layer (Vision / Epics / Phases)",
+      "status": "done",
+      "branch": "feat/STORY-3-product-planning-layer",
+      "merge_commit": "55e8e0c"
+    },
     {
       "id": "STORY-1",
       "title": "Support initializing new and existing directories",

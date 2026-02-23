@@ -55,8 +55,9 @@ export default defineConfig({
               collapsed: false,
               items: [
                 { text: '概览', link: '/agix/guides/advanced/' },
-                { text: '系统提示词注入', link: '/agix/guides/advanced/prompt-injection' },
+                { text: 'MCP 工具深度指南', link: '/agix/guides/mcp-tools' },
                 { text: 'MCP 工具包', link: '/agix/guides/advanced/mcp-bundle' },
+                { text: '系统提示词注入', link: '/agix/guides/advanced/prompt-injection' },
                 { text: 'PostgreSQL 后端', link: '/agix/guides/advanced/postgres' },
                 { text: 'DeepSeek 提供商', link: '/agix/guides/advanced/deepseek' },
               ],

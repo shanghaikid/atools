@@ -1,0 +1,64 @@
+{
+  "id": "STORY-3",
+  "title": "Product Planning Layer (Vision / Epics / Phases)",
+  "description": "Add a product planning layer on top of the existing execution layer. Introduces /plan slash command for PM-style guided product planning, Epic/Phase concepts in the backlog system, vision.md output, and a product-manager agent. Enables users to plan products from 0→1 with structured Vision → Epics → Stories → Tasks hierarchy.",
+  "priority": "high",
+  "sprint": 1,
+  "status": "done",
+  "branch": "feat/STORY-3-product-planning-layer",
+  "merge_commit": "55e8e0c",
+  "acceptance_criteria": [
+    "make build compiles cleanly",
+    "./ainit --dry-run shows ~/.claude/commands/plan.md in output",
+    "backlog.json initialized by ainit-setup.sh includes last_epic_id and epics: []",
+    "node .claude/backlog.mjs create-epic --title 'test' --desc 'desc' --phase 1 creates EPIC-1 and updates backlog.json",
+    "node .claude/backlog.mjs list-epics returns epics array",
+    "node .claude/backlog.mjs create --title 't' --desc 'd' --epic EPIC-1 --phase 1 links story to epic",
+    "/plan command file exists at templates/commands/plan.md",
+    "templates/agents/product-manager.md exists"
+  ],
+  "tasks": [
+    { "id": "TASK-1", "title": "Register STORY-3 in backlog + create feature branch", "status": "done", "assignee": "team-lead", "description": "" },
+    { "id": "TASK-2", "title": "Create templates/commands/plan.md", "status": "in_progress", "assignee": "coder", "description": "New /plan slash command with 3-round PM questioning flow" },
+    { "id": "TASK-3", "title": "Create templates/agents/product-manager.md", "status": "pending", "assignee": "coder", "description": "PM agent that reads vision.md and decomposes Epics into Stories" },
+    { "id": "TASK-4", "title": "Update templates/backlog.mjs — add create-epic, list-epics, --epic/--phase to create", "status": "pending", "assignee": "coder", "description": "" },
+    { "id": "TASK-5", "title": "Update templates/backlog-schema.md — add Epic schema", "status": "pending", "assignee": "coder", "description": "" },
+    { "id": "TASK-6", "title": "Update templates/backlog-protocol.md — add planning layer", "status": "pending", "assignee": "coder", "description": "" },
+    { "id": "TASK-7", "title": "Update templates/workflow.md — add Planning Layer to arch diagram", "status": "pending", "assignee": "coder", "description": "" },
+    { "id": "TASK-8", "title": "Update templates/commands/ainit.md — add Step 0 for /plan", "status": "pending", "assignee": "coder", "description": "" },
+    { "id": "TASK-9", "title": "Update templates/ainit-setup.sh — init backlog.json with last_epic_id and epics", "status": "pending", "assignee": "coder", "description": "" },
+    { "id": "TASK-10", "title": "Update main.go — install plan.md command", "status": "pending", "assignee": "coder", "description": "" },
+    { "id": "TASK-11", "title": "Build verification", "status": "pending", "assignee": "tester", "description": "make build must pass" }
+  ],
+  "design": {
+    "summary": "Adds a two-tier planning system: Vision → Epics (EPIC-N) on top of the existing Story → Tasks layer. /plan slash command guides user through 3 rounds of PM questions and generates vision.md + Epics + initial Stories.",
+    "files_involved": [
+      "templates/commands/plan.md (new)",
+      "templates/agents/product-manager.md (new)",
+      "templates/backlog.mjs (modify)",
+      "templates/backlog-schema.md (modify)",
+      "templates/backlog-protocol.md (modify)",
+      "templates/workflow.md (modify)",
+      "templates/commands/ainit.md (modify)",
+      "templates/ainit-setup.sh (modify)",
+      "main.go (modify)"
+    ],
+    "decisions": [
+      "Epic IDs use EPIC-N format, parallel to STORY-N",
+      "Epic detail files stored in backlog/EPIC-N.json",
+      "backlog.json gains last_epic_id and epics[] array",
+      "vision.md uses a standardized markdown template",
+      "Phase is an integer (1, 2, 3) not a string"
+    ]
+  },
+  "implementation": null,
+  "review": null,
+  "security_review": null,
+  "testing": null,
+  "audit_log": [
+    { "timestamp": "2026-02-22T00:00:00.000Z", "agent": "team-lead", "action": "story_created", "detail": "Product Planning Layer (Vision / Epics / Phases)" },
+    { "timestamp": "2026-02-22T00:00:01.000Z", "agent": "team-lead", "action": "status_changed", "detail": "ready → implementing" },
+    { "timestamp": "2026-02-22T00:00:02.000Z", "agent": "coder", "action": "status_changed", "detail": "implementing → reviewing" },
+    { "timestamp": "2026-02-22T00:00:03.000Z", "agent": "team-lead", "action": "status_changed", "detail": "reviewing → done" }
+  ]
+}

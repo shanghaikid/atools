@@ -101,7 +101,17 @@ function saveStory(root, id, story) {
 }
 
 function normalizeId(raw) {
-  return raw.toUpperCase().startsWith('STORY-') ? raw.toUpperCase() : `STORY-${raw}`;
+  const up = raw.toUpperCase();
+  if (up.startsWith('STORY-') || up.startsWith('EPIC-')) return up;
+  return `STORY-${raw}`;
+}
+
+function normalizeEpicId(raw) {
+  return raw.toUpperCase().startsWith('EPIC-') ? raw.toUpperCase() : `EPIC-${raw}`;
+}
+
+function epicPath(root, id) {
+  return join(root, 'backlog', `${id}.json`);
 }
 
 function parseFlags(args) {
@@ -161,12 +171,17 @@ function cmdCreate(root, args) {
     const priority = flags.priority || 'medium';
     const criteria = Array.isArray(flags.criteria) ? flags.criteria : flags.criteria ? [flags.criteria] : [];
 
+    const epic = flags.epic ? normalizeEpicId(String(flags.epic)) : null;
+    const phase = flags.phase ? Number(flags.phase) : null;
+
     const story = {
       id,
       title: flags.title,
       description: flags.desc,
       priority,
       sprint: index.current_sprint,
+      ...(epic !== null && { epic }),
+      ...(phase !== null && { phase }),
       status: 'ready',
       branch,
       merge_commit: null,
@@ -186,7 +201,10 @@ function cmdCreate(root, args) {
     saveStory(root, id, story);
 
     index.last_story_id = newId;
-    index.stories.push({ id, title: flags.title, status: 'ready', branch, merge_commit: null });
+    const indexEntry = { id, title: flags.title, status: 'ready', branch, merge_commit: null };
+    if (epic !== null) indexEntry.epic = epic;
+    if (phase !== null) indexEntry.phase = phase;
+    index.stories.push(indexEntry);
     saveIndex(root, index);
 
     console.log(JSON.stringify({ id, branch }));
@@ -377,6 +395,78 @@ function cmdDelete(root, args) {
   }
 }
 
+function cmdCreateEpic(root, args) {
+  const { flags } = parseFlags(args);
+  if (!flags.title || !String(flags.title).trim()) fatal('--title is required (non-empty)');
+  if (!flags.desc || !String(flags.desc).trim()) fatal('--desc is required (non-empty)');
+  const phase = flags.phase ? Number(flags.phase) : 1;
+
+  lock(root);
+  try {
+    const index = loadIndex(root);
+    if (!Array.isArray(index.epics)) index.epics = [];
+    if (typeof index.last_epic_id !== 'number') index.last_epic_id = 0;
+
+    const newId = index.last_epic_id + 1;
+    const id = `EPIC-${newId}`;
+
+    const epic = {
+      id,
+      title: flags.title,
+      description: flags.desc,
+      phase,
+      status: 'planned',
+      stories: [],
+      audit_log: [
+        { timestamp: now(), agent: 'product-manager', action: 'epic_created', detail: flags.title }
+      ]
+    };
+
+    mkdirSync(join(root, 'backlog'), { recursive: true });
+    writeJSON(epicPath(root, id), epic);
+
+    index.last_epic_id = newId;
+    index.epics.push({ id, title: flags.title, phase, status: 'planned' });
+    saveIndex(root, index);
+
+    console.log(JSON.stringify({ id, phase }));
+  } finally {
+    unlock(root);
+  }
+}
+
+function cmdListEpics(root) {
+  const index = loadIndex(root);
+  console.log(JSON.stringify(Array.isArray(index.epics) ? index.epics : []));
+}
+
+function cmdEpicStatus(root, args) {
+  if (args.length < 2) fatal('usage: backlog epic-status <id> <new-status>');
+  const id = normalizeEpicId(args[0]);
+  const newStatus = args[1];
+  const valid = ['planned', 'active', 'done'];
+  if (!valid.includes(newStatus)) fatal(`invalid epic status: ${newStatus}. Valid: ${valid.join(', ')}`);
+
+  lock(root);
+  try {
+    const epicFile = epicPath(root, id);
+    if (!existsSync(epicFile)) fatal(`epic ${id} not found`);
+    const epic = readJSON(epicFile);
+    epic.status = newStatus;
+    writeJSON(epicFile, epic);
+
+    const index = loadIndex(root);
+    if (!Array.isArray(index.epics)) index.epics = [];
+    const entry = index.epics.find(e => e.id === id);
+    if (entry) entry.status = newStatus;
+    saveIndex(root, index);
+
+    console.log(JSON.stringify({ id, status: newStatus }));
+  } finally {
+    unlock(root);
+  }
+}
+
 // ── Main ──
 
 const args = process.argv.slice(2);
@@ -386,17 +476,22 @@ const rest = args.slice(1);
 if (!cmd) {
   console.log(`Usage: backlog <command> [args]
 
-Commands:
+Story Commands:
   list                                         List all stories
   show <id>                                    Show story details
-  create --title "..." --desc "..." [--priority high] [--criteria "c1" "c2"]
+  create --title "..." --desc "..." [--priority high] [--criteria "c1" "c2"] [--epic EPIC-N] [--phase N]
   status <id> <new-status>                     Update story status (dual-write)
   merge-commit <id> <hash>                     Set merge commit (dual-write)
-  set <id> <field> '<json>' [--merge]            Set design/implementation/review/security_review/testing
+  set <id> <field> '<json>' [--merge]          Set design/implementation/review/security_review/testing
   add-task <id> --title "..." [--assignee coder] [--desc "..."]
   task-status <id> <task-id> <new-status>      Update task status
   log <id> --agent <name> --action "..." [--detail "..."]
-  delete <id>                                  Delete story from index and backlog/`);
+  delete <id>                                  Delete story from index and backlog/
+
+Epic Commands:
+  create-epic --title "..." --desc "..." [--phase 1]   Create an epic (dual-write)
+  list-epics                                            List all epics
+  epic-status <id> <new-status>                         Update epic status (planned|active|done)`);
   process.exit(0);
 }
 
@@ -413,6 +508,9 @@ const commands = {
   'task-status': () => cmdTaskStatus(root, rest),
   log: () => cmdLog(root, rest),
   delete: () => cmdDelete(root, rest),
+  'create-epic': () => cmdCreateEpic(root, rest),
+  'list-epics': () => cmdListEpics(root),
+  'epic-status': () => cmdEpicStatus(root, rest),
 };
 
 if (!commands[cmd]) fatal(`unknown command: ${cmd}`);
