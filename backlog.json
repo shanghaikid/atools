@@ -34,7 +34,7 @@
     {
       "id": "STORY-42",
       "title": "数据库操作文档（SQLite→PostgreSQL 迁移、多实例、备份恢复）",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-42-docs-database-operations",
       "merge_commit": null
     },

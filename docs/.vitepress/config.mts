@@ -63,6 +63,7 @@ export default defineConfig({
                 { text: 'DeepSeek 提供商', link: '/agix/guides/advanced/deepseek' },
               ],
             },
+            { text: '💾 数据库操作', link: '/agix/guides/database' },
             { text: '🌐 多语言集成示例', link: '/agix/guides/integrations' },
             { text: '🔧 故障排查与FAQ', link: '/agix/guides/troubleshooting' },
           ],
