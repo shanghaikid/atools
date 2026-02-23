@@ -1,18 +1,18 @@
 {
   "id": "STORY-39",
   "title": "MCP 工具深度文档（自定义 MCP Server、工具调试、错误处理）",
-  "status": "ready",
+  "status": "done",
   "branch": "feat/STORY-39-docs-mcp-deep-dive",
   "created_at": "2026-02-22",
   "description": "现有文档只介绍了 MCP 工具注入的基础概念，缺少：如何编写与 agix 兼容的自定义 MCP Server；工具调用的调试方法（日志、trace）；工具调用失败时的处理逻辑；工具发现与列表查询示例；MCP JSON-RPC 协议细节说明。",
   "tasks": [
-    { "id": 1, "desc": "阅读 agix MCP client 实现，理解 stdio JSON-RPC 通信协议", "done": false },
-    { "id": 2, "desc": "阅读 Tool Bundle 实现，梳理工具注入和权限控制逻辑", "done": false },
-    { "id": 3, "desc": "在 docs/agix/guides/ 下新建 mcp-tools.md", "done": false },
-    { "id": 4, "desc": "编写「自定义 MCP Server 开发」章节（含示例代码）", "done": false },
-    { "id": 5, "desc": "编写「工具调试与排查」章节", "done": false },
-    { "id": 6, "desc": "编写「工具调用失败处理」章节", "done": false },
-    { "id": 7, "desc": "更新侧边栏配置", "done": false }
+    { "id": 1, "desc": "阅读 agix MCP client 实现，理解 stdio JSON-RPC 通信协议", "done": true },
+    { "id": 2, "desc": "阅读 Tool Bundle 实现，梳理工具注入和权限控制逻辑", "done": true },
+    { "id": 3, "desc": "在 docs/agix/guides/ 下新建 mcp-tools.md", "done": true },
+    { "id": 4, "desc": "编写「自定义 MCP Server 开发」章节（含示例代码）", "done": true },
+    { "id": 5, "desc": "编写「工具调试与排查」章节", "done": true },
+    { "id": 6, "desc": "编写「工具调用失败处理」章节", "done": true },
+    { "id": 7, "desc": "更新侧边栏配置", "done": true }
   ],
   "audit_log": [
     {
@@ -20,6 +20,24 @@
       "from_status": null,
       "to_status": "ready",
       "reason": "文档缺口分析：MCP 工具开发和调试文档完全缺失"
+    },
+    {
+      "timestamp": "2026-02-22T01:00:00Z",
+      "from_status": "ready",
+      "to_status": "designing",
+      "reason": "开始设计文档结构，阅读 agix MCP 实现代码"
+    },
+    {
+      "timestamp": "2026-02-22T01:30:00Z",
+      "from_status": "designing",
+      "to_status": "implementing",
+      "reason": "设计完成：已梳理 mcp/client.go、toolmgr/manager.go、proxy.go 中工具注入与调用逻辑，开始编写文档"
+    },
+    {
+      "timestamp": "2026-02-23T08:20:00Z",
+      "from_status": "implementing",
+      "to_status": "done",
+      "reason": "文档完成：19KB 深度文档，覆盖 MCP 协议、自定义 Server 开发、调试、错误处理、权限控制等全面主题。已合并到 main。"
     }
   ]
 }

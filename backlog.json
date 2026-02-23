@@ -55,9 +55,9 @@
     {
       "id": "STORY-39",
       "title": "MCP 工具深度文档（自定义 MCP Server、工具调试、错误处理）",
-      "status": "ready",
+      "status": "done",
       "branch": "feat/STORY-39-docs-mcp-deep-dive",
-      "merge_commit": null
+      "merge_commit": "207be3d"
     },
     {
       "id": "STORY-38",
